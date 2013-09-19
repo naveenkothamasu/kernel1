@@ -1,0 +1,116 @@
+3a4,5
+> #include<ctype.h>
+> #include<time.h>
+10a13,14
+> extern void printOutput(My402List *pList);
+> 
+18d21
+< 	printf("\n done with the printing....\n");
+22d24
+< 	int i=0;
+47d48
+< 	My402SortElem *current = NULL;
+50d50
+< 	int isMalFormed = FALSE;
+54,56d53
+< 	char transType='\0';
+< 	char transTime[10] = {'\0'};
+< 	char transAmount[10] = {'\0'};	
+62,65c59,70
+< 		
+< 	if(!(argc == 2 || argc == 1)){
+< 		fprintf(stderr, "\nError::Too many or too few arguments.");
+< 		fprintf(stderr, "\nPlease enter the command in either of the following formats:\n");
+---
+> 	printf("\nfirst char:%c",argc);		
+> 	if(!(argc == 2 || argc == 3) 
+> 		||(argc>1 && strcmp("sort",argv[1]) != 0)
+> 		||(argc==3 && !( isalpha(argv[2][0] != 0) 
+> 				|| argv[2][0] == '_' 
+> 				|| argv[2][0] == '/'
+> 			       )
+> 		  )
+> 	
+> 	){
+> 		fprintf(stderr,"\nmalformed command");
+> 		fprintf(stderr, "\nPlease enter the command in either of the following formats:");
+70a76
+> 	
+77,78c83,87
+< 		//FIXME: Is there a case for unable to open stdin? 
+< 		fprintf(stderr, "\nUnable to open the file: %s. Please check the given file name and its path and try again!\n", argv[2]);					return 0;	
+---
+> 		//FIXME: Is there a case for unable to open stdin?
+> 		//FIXME: input file is not in the correct format 
+> 		fprintf(stderr, "\nUnable to open the file: %s. Please check the given file name and its path and try again!\n", argv[2]);
+> 		perror(NULL);	
+> 		return 0;	
+149a159
+> 	int k=0;
+154a165,170
+> 	/*
+> 	k=0;
+> 	while(k!=strlen(pSortElem[0])-1 && !isdigit(*pSortElem[k++])){
+> 		return FALSE;	
+> 	}*/	
+> 	//At this point every char is a digit, now check if it is too big
+157,158c173,174
+< 		!(0<= atoi(pSortElem[1])
+<  		|| (unsigned int)atoi(pSortElem[1])< (unsigned int) time(NULL)/* current time*/
+---
+> 		!(0<= atoll(pSortElem[1])
+>  		|| (long long)atoll(pSortElem[1])< (long long) time(NULL)/* current time*/
+163a180
+> 	printf("\n...");
+174d190
+< 	//FIXME: check terminating char, \0 is copied?
+188c204,209
+< 	}	
+---
+> 	}
+> 		
+> 	if(atoll(pSortElem[2]) == 0){
+> 		return FALSE;	
+> 	}
+> 	
+191a213,215
+> 	}
+> 	if(strchr(pSortElem[3],'\t') != NULL ){
+> 		return FALSE;	
+199d222
+< 	char *str = NULL;	
+208d230
+< 	//printf("\n createSortElem: transAmount: %d\n", atoi(pSortElem[2]));	
+211,220d232
+< 	//printf("createSortElem: desc=%s", pLocalSortElem->transDesc);	
+< 	//printf("createSortElem: %d", strchr(pLocalSortElem->transDesc,'\n') != NULL ?1:0);	
+< 	/*
+< 	str = pLocalSortElem->transDesc;
+< 	while(*str!='\0')
+< 	{	
+< 		printf("char %c ", *str++);
+< 			
+< 	}*/	
+< 	//printf("right after...");
+226d237
+< 	char *str = NULL;	
+240,247d250
+< 	/* for removing trailing space	
+< 	while(input[i] == ' '){
+< 		input[i] = '\0';
+< 		if(i == 0){
+< 			break;	
+< 		}
+< 		i--;	
+< 	}*/
+266,275d268
+< 		/*	
+< 		str = strchr(input, '\n');
+< 		if(str != NULL){
+< 			printf("\nfound a new line char..\n");	
+< 			*str = '\0';	
+< 		}else{
+< 			printf("\n no new lines found\n");	
+< 		}
+< 		
+< 		*/
