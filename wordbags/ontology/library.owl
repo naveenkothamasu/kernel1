@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:wflow="http://www.isi.edu/2007/08/workflow.owl#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+    xmlns="http://www.isi.edu/wordbags/library.owl#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+      xml:base="http://www.isi.edu/wordbags/library.owl">
+      <wflow:WorkflowTemplate rdf:about="English_Words_Elaborated.owl#English_Words_Elaborated"/>
+      <wflow:WorkflowTemplate rdf:about="English_Words.owl#English_Words"/>
+      <wflow:WorkflowTemplate rdf:about="Words_coll.owl#Words_coll"/>
+      <wflow:WorkflowTemplate rdf:about="Test.owl#Test"/>
+      <wflow:WorkflowTemplate rdf:about="Simple.owl#Simple"/>
+      <wflow:WorkflowTemplate rdf:about="Words_abs.owl#Words_abs"/>
+      <wflow:WorkflowTemplate rdf:about="Words.owl#Words"/>
+      <wflow:WorkflowTemplate rdf:about="Words_coll_abs.owl#Words_coll_abs"/>
+</rdf:RDF>

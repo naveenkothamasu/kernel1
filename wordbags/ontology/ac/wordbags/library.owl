@@ -1,0 +1,291 @@
+<?xml version="1.0"?>
+<rdf:RDF
+    xmlns:dcdom="http://www.isi.edu/dc/wordbags/ontology.owl#"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:libraryowl="http://www.isi.edu/ac/wordbags/library.owl#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:ac="http://www.isi.edu/ac/ontology.owl#"
+      xml:base="http://www.isi.edu/ac/wordbags/library.owl">
+      <owl:Ontology rdf:about="">
+            <owl:imports rdf:resource="/dc/wordbags/ontology.owl"/>
+            <owl:imports rdf:resource="../ontology.owl"/>
+      </owl:Ontology>
+      <owl:Class rdf:ID="pdf2textClass">
+            <rdfs:subClassOf rdf:resource="#removeMarkupClass"/>
+      </owl:Class>
+      <owl:Class rdf:ID="html2textClass">
+            <rdfs:subClassOf rdf:resource="#removeMarkupClass"/>
+      </owl:Class>
+      <owl:Class rdf:ID="getSortedWordsClass">
+            <rdfs:subClassOf rdf:resource="../ontology.owl#Component"/>
+      </owl:Class>
+      <owl:Class rdf:ID="countDuplicatesClass">
+            <rdfs:subClassOf rdf:resource="../ontology.owl#Component"/>
+      </owl:Class>
+      <owl:Class rdf:ID="removePatternClass">
+            <rdfs:subClassOf rdf:resource="../ontology.owl#Component"/>
+      </owl:Class>
+      <owl:Class rdf:ID="mergeClass">
+            <rdfs:subClassOf rdf:resource="../ontology.owl#Component"/>
+      </owl:Class>
+      <owl:Class rdf:ID="compareClass">
+            <rdfs:subClassOf rdf:resource="../ontology.owl#Component"/>
+      </owl:Class>
+      <libraryowl:mergeClass rdf:ID="merge">
+            <ac:hasRule rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >[ ForwardRule5: (?c rdf:type pcdom:mergeClass) (?c pc:hasInput ?idv) (?idv pc:hasArgumentID 'Input1WordCountFiles') (?idv pc:hasBindingID ?ids) (?c pc:hasOutput ?odv1) (?odv1 pc:hasArgumentID 'Output1WordCountFile') (?odv1 pc:hasBindingID ?ods1) (?idv dcdom:hasLanguage ?prop) noValue(?odv1 dcdom:hasLanguage) -&gt; (?odv1 dcdom:hasLanguage ?prop) print(Setting language of ?odv1 { ?ods1 } to ?prop because the language of ?idv { ?ids } is ?prop) ]</ac:hasRule>
+            <ac:hasRule rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >[ BackwardRule5: (?c rdf:type pcdom:mergeClass) (?c pc:hasInput ?idv) (?idv pc:hasArgumentID 'Input1WordCountFiles') (?idv pc:hasBindingID ?ids) (?c pc:hasOutput ?odv1) (?odv1 pc:hasArgumentID 'Output1WordCountFile') (?odv1 pc:hasBindingID ?ods1) (?odv1 dcdom:hasLanguage ?prop) noValue(?idv dcdom:hasLanguage) -&gt; (?idv dcdom:hasLanguage ?prop) print(Setting language of ?idv { ?ids } to ?prop because the language of ?odv1 { ?ods1 } is ?prop) ]</ac:hasRule>
+            <ac:isConcrete rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+            >true</ac:isConcrete>
+            <ac:hasInput>
+                  <ac:DataArgument rdf:ID="mergeInput1">
+                        <rdf:type rdf:resource="/dc/wordbags/ontology.owl#WordCountFile"/>
+                        <ac:hasDimensionality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+                        >1</ac:hasDimensionality>
+                        <ac:hasArgumentID>Input1WordCountFiles</ac:hasArgumentID>
+                        <ac:hasArgumentName>-i1</ac:hasArgumentName>
+                        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+                  </ac:DataArgument>
+            </ac:hasInput>
+            <ac:hasOutput>
+                  <ac:DataArgument rdf:ID="mergeOutput1">
+                        <rdf:type rdf:resource="/dc/wordbags/ontology.owl#WordCountFile"/>
+                        <ac:hasDimensionality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+                        >0</ac:hasDimensionality>
+                        <ac:hasArgumentID>Output1WordCountFile</ac:hasArgumentID>
+                        <ac:hasArgumentName>-o1</ac:hasArgumentName>
+                        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+                  </ac:DataArgument>
+            </ac:hasOutput>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+      </libraryowl:mergeClass>
+      <libraryowl:pdf2textClass rdf:ID="pdf2text">
+            <ac:hasRule rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >[ Precondition_html2text: (?c rdf:type pcdom:pdf2textClass) (?c pc:hasInput ?idv1) (?idv1 pc:hasArgumentID 'Input1FormattedFile') noValue(?idv1 rdf:type dcdom:PDFFile) (?idv1 pc:hasBindingID ?ids1) -&gt; (?c pc:isInvalid 'true'^^http://www.w3.org/2001/XMLSchema#boolean) print(ERROR Cannot use Non-PDF file ?idv1 { ?ids1 } with pdf2text) ]</ac:hasRule>
+            <ac:isConcrete rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+            >true</ac:isConcrete>
+            <ac:hasInput>
+                  <ac:DataArgument rdf:ID="pdf2textInput1">
+                        <rdf:type rdf:resource="/dc/wordbags/ontology.owl#PDFFile"/>
+                        <ac:hasDimensionality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+                        >0</ac:hasDimensionality>
+                        <ac:hasArgumentID>Input1FormattedFile</ac:hasArgumentID>
+                        <ac:hasArgumentName>-i1</ac:hasArgumentName>
+                        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+                  </ac:DataArgument>
+            </ac:hasInput>
+            <ac:hasOutput>
+                  <ac:DataArgument rdf:ID="pdf2textOutput1">
+                        <rdf:type rdf:resource="/dc/wordbags/ontology.owl#TextFile"/>
+                        <ac:hasDimensionality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+                        >0</ac:hasDimensionality>
+                        <ac:hasArgumentID>Output1TextFile</ac:hasArgumentID>
+                        <ac:hasArgumentName>-o1</ac:hasArgumentName>
+                        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+                  </ac:DataArgument>
+            </ac:hasOutput>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+      </libraryowl:pdf2textClass>
+      <libraryowl:compareClass rdf:ID="compare">
+            <ac:hasInput>
+                  <ac:DataArgument rdf:ID="compareInput2">
+                        <rdf:type rdf:resource="/dc/wordbags/ontology.owl#WordCountFile"/>
+                        <ac:hasDimensionality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+                        >0</ac:hasDimensionality>
+                        <ac:hasArgumentID>Input2WordCountFile</ac:hasArgumentID>
+                        <ac:hasArgumentName>-i2</ac:hasArgumentName>
+                        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+                  </ac:DataArgument>
+            </ac:hasInput>
+            <ac:isConcrete rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+            >true</ac:isConcrete>
+            <ac:hasRule rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >[ Precondition_compare_1: (?c rdf:type pcdom:compareClass) (?c pc:hasInput ?idv1) (?idv1 pc:hasArgumentID 'Input1WordCountFile') (?c pc:hasInput ?idv2) (?idv2 pc:hasArgumentID 'Input2WordCountFile') (?idv1 dcdom:hasLanguage ?prop1) (?idv1 pc:hasBindingID ?ids1) (?idv2 dcdom:hasLanguage ?prop2) (?idv2 pc:hasBindingID ?ids2) notEqual(?prop1 ?prop2) -&gt; (?c pc:isInvalid 'true'^^http://www.w3.org/2001/XMLSchema#boolean) print(ERROR Cannot compare the ?prop1 language file ?idv1 { ?ids1 } with the ?prop2 language file ?idv2 { ?ids2 }) ]</ac:hasRule>
+            <ac:hasOutput>
+                  <ac:DataArgument rdf:ID="compareOutput1">
+                        <rdf:type rdf:resource="/dc/wordbags/ontology.owl#LikelihoodFile"/>
+                        <ac:hasDimensionality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+                        >0</ac:hasDimensionality>
+                        <ac:hasArgumentID>Output1LikelihoodFile</ac:hasArgumentID>
+                        <ac:hasArgumentName>-o1</ac:hasArgumentName>
+                        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+                  </ac:DataArgument>
+            </ac:hasOutput>
+            <ac:hasRule rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >[ CompareLanguage2: (?c rdf:type pcdom:compareClass) (?c pc:hasInput ?idv1) (?idv1 pc:hasArgumentID 'Input1WordCountFile') (?idv1 pc:hasBindingID ?ids1) (?c pc:hasInput ?idv2) (?idv2 pc:hasArgumentID 'Input2WordCountFile') (?idv2 pc:hasBindingID ?ids2) (?idv2 dcdom:hasLanguage ?prop) noValue(?idv1 dcdom:hasLanguage) -&gt; (?idv1 dcdom:hasLanguage ?prop) print(Compare can only compare files of same language. Therefore Setting language of ?idv1 { ?ids1 } to ?prop because the language of ?idv2 { ?ids2 } is ?prop) ]</ac:hasRule>
+            <ac:hasRule rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >[ BackwardRule6: (?c rdf:type pcdom:compareClass) (?c pc:hasInput ?idv1) (?idv1 pc:hasArgumentID 'Input1WordCountFile') (?idv1 pc:hasBindingID ?ids1) (?c pc:hasInput ?idv2) (?idv2 pc:hasArgumentID 'Input2WordCountFile') (?idv2 pc:hasBindingID ?ids2) noValue(?idv1 dcdom:hasLanguage) noValue(?idv2 dcdom:hasLanguage) uriConcat(?idv1 '_lang' ?lang) -&gt; (?idv1 dcdom:hasLanguage ?lang) (?idv2 dcdom:hasLanguage ?lang) print(Can only compare files of the same language. Therefore Setting language of ?idv1 { ?ids1 } and ?idv2 { ?ids2 } to ?lang) ]</ac:hasRule>
+            <ac:hasInput>
+                  <ac:DataArgument rdf:ID="compareInput1">
+                        <rdf:type rdf:resource="/dc/wordbags/ontology.owl#WordCountFile"/>
+                        <ac:hasDimensionality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+                        >0</ac:hasDimensionality>
+                        <ac:hasArgumentID>Input1WordCountFile</ac:hasArgumentID>
+                        <ac:hasArgumentName>-i1</ac:hasArgumentName>
+                        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+                  </ac:DataArgument>
+            </ac:hasInput>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+            <ac:hasRule rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >[ CompareLanguage1: (?c rdf:type pcdom:compareClass) (?c pc:hasInput ?idv1) (?idv1 pc:hasArgumentID 'Input1WordCountFile') (?idv1 pc:hasBindingID ?ids1) (?c pc:hasInput ?idv2) (?idv2 pc:hasArgumentID 'Input2WordCountFile') (?idv2 pc:hasBindingID ?ids2) (?idv1 dcdom:hasLanguage ?prop) noValue(?idv2 dcdom:hasLanguage) -&gt; (?idv2 dcdom:hasLanguage ?prop) print(Compare can only compare files of same language. Therefore Setting language of ?idv2 { ?ids2 } to ?prop because the language of ?idv1 { ?ids1 } is ?prop) ]</ac:hasRule>
+      </libraryowl:compareClass>
+      <libraryowl:getSortedWordsClass rdf:ID="getSortedWords">
+            <ac:hasRule rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >[ ForwardRule2Size: (?c rdf:type pcdom:getSortedWordsClass) (?c pc:hasInput ?idv) (?idv pc:hasArgumentID 'Input1TextFile') (?idv pc:hasBindingID ?ids) (?c pc:hasOutput ?odv1) (?odv1 pc:hasArgumentID 'Output1WordListFile') (?odv1 pc:hasBindingID ?ods1) (?idv dcdom:hasSize ?prop) noValue(?odv1 dcdom:hasSize) -&gt; (?odv1 dcdom:hasSize ?prop) print(Setting size of ?odv1 { ?ods1 } to ?prop because the size of ?idv { ?ids } is ?prop) ]</ac:hasRule>
+            <ac:hasRule rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >[ BackwardRule2: (?c rdf:type pcdom:getSortedWordsClass) (?c pc:hasInput ?idv) (?idv pc:hasArgumentID 'Input1TextFile') (?idv pc:hasBindingID ?ids) (?c pc:hasOutput ?odv1) (?odv1 pc:hasArgumentID 'Output1WordListFile') (?odv1 pc:hasBindingID ?ods1) (?odv1 dcdom:hasLanguage ?prop) noValue(?idv dcdom:hasLanguage) -&gt; (?idv dcdom:hasLanguage ?prop) print(Setting language of ?idv { ?ids } to ?prop because the language of ?odv1 { ?ods1 } is ?prop) ]</ac:hasRule>
+            <ac:hasRule rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >[ ForwardRule2: (?c rdf:type pcdom:getSortedWordsClass) (?c pc:hasInput ?idv) (?idv pc:hasArgumentID 'Input1TextFile') (?idv pc:hasBindingID ?ids) (?c pc:hasOutput ?odv1) (?odv1 pc:hasArgumentID 'Output1WordListFile') (?odv1 pc:hasBindingID ?ods1) (?idv dcdom:hasLanguage ?prop) noValue(?odv1 dcdom:hasLanguage) -&gt; (?odv1 dcdom:hasLanguage ?prop) print(Setting language of ?odv1 { ?ods1 } to ?prop because the language of ?idv { ?ids } is ?prop) ]</ac:hasRule>
+            <ac:isConcrete rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+            >true</ac:isConcrete>
+            <ac:hasInput>
+                  <ac:DataArgument rdf:ID="getSortedWordsInput1">
+                        <rdf:type rdf:resource="/dc/wordbags/ontology.owl#TextFile"/>
+                        <ac:hasDimensionality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+                        >0</ac:hasDimensionality>
+                        <ac:hasArgumentID>Input1TextFile</ac:hasArgumentID>
+                        <ac:hasArgumentName>-i1</ac:hasArgumentName>
+                        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+                  </ac:DataArgument>
+            </ac:hasInput>
+            <ac:hasOutput>
+                  <ac:DataArgument rdf:ID="getSortedWordsOutput1">
+                        <rdf:type rdf:resource="/dc/wordbags/ontology.owl#WordListFile"/>
+                        <ac:hasDimensionality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+                        >0</ac:hasDimensionality>
+                        <ac:hasArgumentID>Output1WordListFile</ac:hasArgumentID>
+                        <ac:hasArgumentName>-o1</ac:hasArgumentName>
+                        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+                  </ac:DataArgument>
+            </ac:hasOutput>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+      </libraryowl:getSortedWordsClass>
+      <rdf:Description rdf:ID="removeMarkupOutput1">
+            <ac:hasDimensionality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+            >0</ac:hasDimensionality>
+            <ac:hasArgumentID>Output1TextFile</ac:hasArgumentID>
+            <ac:hasArgumentName>-o1</ac:hasArgumentName>
+      </rdf:Description>
+      <libraryowl:html2textClass rdf:ID="html2text">
+            <ac:hasRule rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >[ Precondition_html2text: (?c rdf:type pcdom:html2textClass) (?c pc:hasInput ?idv1) (?idv1 pc:hasArgumentID 'Input1FormattedFile') noValue(?idv1 rdf:type dcdom:HTMLFile) (?idv1 pc:hasBindingID ?ids1) -&gt; (?c pc:isInvalid 'true'^^http://www.w3.org/2001/XMLSchema#boolean) print(ERROR Cannot use Non-HTML file ?idv1 { ?ids1 } with html2text) ]</ac:hasRule>
+            <ac:isConcrete rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+            >true</ac:isConcrete>
+            <ac:hasInput>
+                  <ac:DataArgument rdf:ID="html2textInput1">
+                        <rdf:type rdf:resource="/dc/wordbags/ontology.owl#HTMLFile"/>
+                        <ac:hasDimensionality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+                        >0</ac:hasDimensionality>
+                        <ac:hasArgumentID>Input1FormattedFile</ac:hasArgumentID>
+                        <ac:hasArgumentName>-i1</ac:hasArgumentName>
+                        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+                  </ac:DataArgument>
+            </ac:hasInput>
+            <ac:hasOutput>
+                  <ac:DataArgument rdf:ID="html2textOutput1">
+                        <rdf:type rdf:resource="/dc/wordbags/ontology.owl#TextFile"/>
+                        <ac:hasDimensionality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+                        >0</ac:hasDimensionality>
+                        <ac:hasArgumentID>Output1TextFile</ac:hasArgumentID>
+                        <ac:hasArgumentName>-o1</ac:hasArgumentName>
+                        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+                  </ac:DataArgument>
+            </ac:hasOutput>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+      </libraryowl:html2textClass>
+      <rdf:Description rdf:ID="removeMarkupInput1">
+            <ac:hasDimensionality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+            >0</ac:hasDimensionality>
+            <ac:hasArgumentID>Input1FormattedFile</ac:hasArgumentID>
+            <ac:hasArgumentName>-i1</ac:hasArgumentName>
+      </rdf:Description>
+      <owl:Thing rdf:ID="removePattern">
+            <ac:hasRule rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >[ ForwardRule3: (?c rdf:type pcdom:removePatternClass) (?c pc:hasInput ?idv) (?idv pc:hasArgumentID 'Input1WordListFile') (?idv pc:hasBindingID ?ids) (?c pc:hasOutput ?odv1) (?odv1 pc:hasArgumentID 'Output1WordListFile') (?odv1 pc:hasBindingID ?ods1) (?idv dcdom:hasLanguage ?prop) noValue(?odv1 dcdom:hasLanguage) -&gt; (?odv1 dcdom:hasLanguage ?prop) print(Setting language of ?odv1 { ?ods1 } to ?prop because the language of ?idv { ?ids } is ?prop) ]</ac:hasRule>
+            <ac:hasOutput>
+                  <ac:DataArgument rdf:ID="removePatternOutput1">
+                        <rdf:type rdf:resource="/dc/wordbags/ontology.owl#WordListFile"/>
+                        <ac:hasDimensionality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+                        >0</ac:hasDimensionality>
+                        <ac:hasArgumentID>Output1WordListFile</ac:hasArgumentID>
+                        <ac:hasArgumentName>-o1</ac:hasArgumentName>
+                        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+                  </ac:DataArgument>
+            </ac:hasOutput>
+            <ac:hasInput>
+                  <ac:DataArgument rdf:ID="removePatternInput1">
+                        <rdf:type rdf:resource="/dc/wordbags/ontology.owl#WordListFile"/>
+                        <ac:hasDimensionality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+                        >0</ac:hasDimensionality>
+                        <ac:hasArgumentID>Input1WordListFile</ac:hasArgumentID>
+                        <ac:hasArgumentName>-i1</ac:hasArgumentName>
+                        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+                  </ac:DataArgument>
+            </ac:hasInput>
+            <ac:hasRule rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >[ Precondition_removePattern_1: (?c rdf:type pcdom:removePatternClass) (?c pc:hasInput ?idv1) (?idv1 pc:hasArgumentID 'Input1WordListFile') (?idv pc:hasBindingID ?ids) (?c pc:hasInput ?idv2) (?idv2 pc:hasArgumentID 'Input2PatternFile') (?odv1 pc:hasBindingID ?ods1) (?idv1 dcdom:hasLanguage ?prop1) (?idv1 pc:hasBindingID ?ids1) (?idv2 dcdom:hasLanguage ?prop2) (?idv2 pc:hasBindingID ?ids2) notEqual(?prop1 ?prop2) -&gt; (?c pc:isInvalid 'true'^^http://www.w3.org/2001/XMLSchema#boolean) print(ERROR Cannot use the ?prop1 text file ?idv1 { ?ids1 } with the ?prop2 pattern file ?idv2 { ?ids2 }) ]</ac:hasRule>
+            <ac:hasRule rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >[ PatternLanguage1: (?c rdf:type pcdom:removePatternClass) (?c pc:hasInput ?idv) (?idv pc:hasArgumentID 'Input1WordListFile') (?idv pc:hasBindingID ?ids) (?c pc:hasInput ?idv2) (?idv1 pc:hasArgumentID 'Input2PatternFile') (?idv2 pc:hasBindingID ?ids2) (?idv dcdom:hasLanguage ?prop) noValue(?idv2 dcdom:hasLanguage) noValue(?idv2 rdf:type dcdom:SpecialCharsFile) -&gt; (?idv2 dcdom:hasLanguage ?prop) print(Setting language of ?idv2 { ?ids2 } to ?prop because the language of ?idv { ?ids } is ?prop) ]</ac:hasRule>
+            <ac:hasRule rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >[ PatternLanguage2: (?c rdf:type pcdom:removePatternClass) (?c pc:hasInput ?idv) (?idv pc:hasArgumentID 'Input1WordListFile') (?idv pc:hasBindingID ?ids) (?c pc:hasInput ?idv2) (?idv1 pc:hasArgumentID 'Input2PatternFile') (?idv2 pc:hasBindingID ?ids2) (?idv2 dcdom:hasLanguage ?prop) noValue(?idv dcdom:hasLanguage) -&gt; (?idv dcdom:hasLanguage ?prop) print(Setting language of ?idv { ?ids } to ?prop because the language of ?idv2 { ?ids2 } is ?prop) ]</ac:hasRule>
+            <ac:hasRule rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >[ ForwardRule3Size: (?c rdf:type pcdom:removePatternClass) (?c pc:hasInput ?idv) (?idv pc:hasArgumentID 'Input1WordListFile') (?idv pc:hasBindingID ?ids) (?c pc:hasOutput ?odv1) (?odv1 pc:hasArgumentID 'Output1WordListFile') (?odv1 pc:hasBindingID ?ods1) (?idv dcdom:hasSize ?prop) noValue(?odv1 dcdom:hasSize) -&gt; (?odv1 dcdom:hasSize ?prop) print(Setting size of ?odv1 { ?ods1 } to ?prop because the size of ?idv { ?ids } is ?prop) ]</ac:hasRule>
+            <rdf:type rdf:resource="#removePatternClass"/>
+            <ac:hasRule rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >[ BackwardRule3: (?c rdf:type pcdom:removePatternClass) (?c pc:hasInput ?idv) (?idv pc:hasArgumentID 'Input1WordListFile') (?idv pc:hasBindingID ?ids) (?c pc:hasOutput ?odv1) (?odv1 pc:hasArgumentID 'Output1WordListFile') (?odv1 pc:hasBindingID ?ods1) (?odv1 dcdom:hasLanguage ?prop) noValue(?idv dcdom:hasLanguage) -&gt; (?idv dcdom:hasLanguage ?prop) print(Setting language of ?idv { ?ids } to ?prop because the language of ?odv1 { ?ods1 } is ?prop) ]</ac:hasRule>
+            <ac:hasInput>
+                  <ac:DataArgument rdf:ID="removePatternInput2">
+                        <rdf:type rdf:resource="/dc/wordbags/ontology.owl#PatternFile"/>
+                        <ac:hasDimensionality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+                        >0</ac:hasDimensionality>
+                        <ac:hasArgumentID>Input2PatternFile</ac:hasArgumentID>
+                        <ac:hasArgumentName>-i2</ac:hasArgumentName>
+                        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+                  </ac:DataArgument>
+            </ac:hasInput>
+            <ac:isConcrete rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+            >true</ac:isConcrete>
+      </owl:Thing>
+      <libraryowl:countDuplicatesClass rdf:ID="countDuplicates">
+            <ac:hasRule rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >[ ParamRule1: (?c rdf:type pcdom:countDuplicatesClass) (?c pc:hasInput ?idv) (?idv pc:hasArgumentID 'Input1WordListFile') (?idv dcdom:hasSize ?size) (?c pc:hasInput ?param) (?param pc:hasArgumentID 'Param1threshold') quotient(?size '100000'^^http://www.w3.org/2001/XMLSchema#int ?size100KB) quotient(?size '1000'^^http://www.w3.org/2001/XMLSchema#int ?sizeKB) (?idv pc:hasBindingID ?ids) -&gt; (?param pc:hasValue ?size100KB) print(?idv { ?ids } has size ?sizeKB KB. Suggested value for parameter ?param is ?size100KB using rule : ?sizeKB /100 rounded.) ]</ac:hasRule>
+            <ac:hasRule rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >[ BackwardRule4: (?c rdf:type pcdom:countDuplicatesClass) (?c pc:hasInput ?idv) (?idv pc:hasArgumentID 'Input1WordListFile') (?idv pc:hasBindingID ?ids) (?c pc:hasOutput ?odv1) (?odv1 pc:hasArgumentID 'Output1WordCountFile') (?odv1 pc:hasBindingID ?ods1) (?odv1 dcdom:hasLanguage ?prop) noValue(?idv dcdom:hasLanguage) -&gt; (?idv dcdom:hasLanguage ?prop) print(Setting language of ?idv { ?ids } to ?prop because the language of ?odv1 { ?ods1 } is ?prop) ]</ac:hasRule>
+            <ac:hasRule rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >[ ForwardRule4: (?c rdf:type pcdom:countDuplicatesClass) (?c pc:hasInput ?idv) (?idv pc:hasArgumentID 'Input1WordListFile') (?idv pc:hasBindingID ?ids) (?c pc:hasOutput ?odv1) (?odv1 pc:hasArgumentID 'Output1WordCountFile') (?odv1 pc:hasBindingID ?ods1) (?idv dcdom:hasLanguage ?prop) noValue(?odv1 dcdom:hasLanguage) -&gt; (?odv1 dcdom:hasLanguage ?prop) print(Setting language of ?odv1 { ?ods1 } to ?prop because the language of ?idv { ?ids } is ?prop) ]</ac:hasRule>
+            <ac:isConcrete rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+            >true</ac:isConcrete>
+            <ac:hasInput>
+                  <ac:DataArgument rdf:ID="countDuplicatesInput1">
+                        <rdf:type rdf:resource="/dc/wordbags/ontology.owl#WordListFile"/>
+                        <ac:hasDimensionality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+                        >0</ac:hasDimensionality>
+                        <ac:hasArgumentID>Input1WordListFile</ac:hasArgumentID>
+                        <ac:hasArgumentName>-i1</ac:hasArgumentName>
+                        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+                  </ac:DataArgument>
+            </ac:hasInput>
+            <ac:hasInput>
+                  <ac:ParameterArgument rdf:ID="countDuplicatesParam1">
+                        <ac:hasValue rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+                        >3</ac:hasValue>
+                        <ac:hasArgumentID>Param1threshold</ac:hasArgumentID>
+                        <ac:hasArgumentName>-i2</ac:hasArgumentName>
+                  </ac:ParameterArgument>
+            </ac:hasInput>
+            <ac:hasOutput>
+                  <ac:DataArgument rdf:ID="countDuplicatesOutput1">
+                        <rdf:type rdf:resource="/dc/wordbags/ontology.owl#WordCountFile"/>
+                        <ac:hasDimensionality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+                        >0</ac:hasDimensionality>
+                        <ac:hasArgumentID>Output1WordCountFile</ac:hasArgumentID>
+                        <ac:hasArgumentName>-o1</ac:hasArgumentName>
+                        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+                  </ac:DataArgument>
+            </ac:hasOutput>
+            <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+      </libraryowl:countDuplicatesClass>
+</rdf:RDF>
