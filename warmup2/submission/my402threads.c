@@ -17,6 +17,7 @@
 	
   * Global variables, reside in data segment. Thus visible to every thread
 **/
+
 void parseLine(char *buf);
 
 My402List listQ1, listQ2;
@@ -52,30 +53,37 @@ main(int argc, char *argv[]){
 		exit(EXIT_FAILURE);	
 	}
 	//I do not need a lock here, threads are not yet created.
-	My402ListInit(&listQ1);
-	My402ListInit(&listQ2);
+	My402FilterData filterData;
+	My402FilterData *pFilterData = &filterData;
+	memset(pFilterData, '\0', sizeof(filterData));
+	My402List listQ1;
+	pFilterData->pListQ1 = &listQ1;
+	My402ListInit(pFilterData->pListQ1);
+	My402List listQ2;
+	pFilterData->pListQ2 = &listQ2;
+	My402ListInit(pFilterData->pListQ2);
 
-	printf("main: About to create threads...\n");
 	sigset_t set = blockSIGINTforme();	
+	printf("main: About to create threads...\n");
 	/**
 	 * TODO: Keep everything (data strctures, resouces) ready before the threads are created
 	**/
 	//create arrivals thread
-	isCreated = pthread_create(&arrival, NULL, (void *) arrivalManager, (void *) &listQ1);
+	isCreated = pthread_create(&arrival, NULL, (void *) arrivalManager, (void *) &set);
 	if(isCreated != 0){
 		//handle create failure
 		handle_errors(isCreated, "pthread_create");
 	}
 	printf("main: created arrival thread %u\n", (unsigned) arrival);
 	//create tokens thread
-	isCreated = pthread_create(&token, NULL, (void *) tokenManager, (void *) &nextToken);
+	isCreated = pthread_create(&token, NULL, (void *) tokenManager, (void *) &set);
 	if(isCreated != 0){
 		//handle create failure
 		handle_errors(isCreated, "pthread_create");
 	}
 	printf("main: created token thread %u\n", (unsigned) token);
 	//create service thread
-	isCreated = pthread_create(&service, NULL, (void *) serviceManager, (void *) &listQ2);
+	isCreated = pthread_create(&service, NULL, (void *) serviceManager, (void *) &set);
 	if(isCreated != 0){
 		//handle create failure
 		handle_errors(isCreated, "pthread_create");
@@ -102,10 +110,9 @@ main(int argc, char *argv[]){
 void *
 arrivalManager(void *arg){
 
-	//My402List *pListQ1 = (My402List *)arg;
 	printf("arrival: This is arrival thread %u\n", (unsigned) pthread_self());
 	sigset_t pSet = (sigset_t *)arg;
-	int sig;
+	int sig,rWait =1;
 	//keep reading while there are more packets
 	char buf[1024] = {'\0'};
 	char *str = malloc(1024*sizeof(char));
@@ -129,7 +136,11 @@ arrivalManager(void *arg){
 		/**
 		  * if Ctrl+C received, handle it
 		**/
-		sigwait(pSet, sig);
+		rWait = sigwait(pSet, sig);
+		if(rWait != 0){
+			handle_errors(rWait, "sigwait");
+		}
+		printf("arrival: received a signal %d\n", sig);		
 		//sleep for appropriate time
 		//wakes up, create a packet object, lock mutex
 		//enqueue the packet to Q1
@@ -196,7 +207,6 @@ tokenManager(void *arg){
 void *
 serviceManager(void *arg){
 	
-	//My402List *pListQ2 = (My402List *)arg;
 	printf("This is service thread %u\n", (unsigned int) pthread_self());
 	
 	blockSIGINTforme();	
