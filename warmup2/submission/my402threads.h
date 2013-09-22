@@ -1,6 +1,8 @@
 #include<sys/time.h>
 #include "my402list.h"
 #include "cs402.h"
+#include "my402util.h"
+#include "my402constants.h"
 
 typedef struct tagFilterData {
 

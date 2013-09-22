@@ -1,1 +1,1 @@
-#define B 
+#define B 10 

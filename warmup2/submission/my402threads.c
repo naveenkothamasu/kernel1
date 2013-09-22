@@ -23,6 +23,8 @@ void parseLine(char *buf, My402Packet *);
 FILE *fp;
 My402FilterData *pFilterData;
 
+pthread_mutex_t mutex_on_filterData;// = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t queue_not_empty;
 
 sigset_t 
 blockSIGINTforme()
@@ -41,11 +43,13 @@ blockSIGINTforme()
 	
 	return old_set;
 }
+
+
 int
 main(int argc, char *argv[]){
 
 
-	int isCreated = 1, nextToken = 0;
+	int isCreated = 1;//, nextToken = 0;
 	pthread_t arrival, token, service;
 
 	fp = fopen("tfile","r");
@@ -97,8 +101,9 @@ main(int argc, char *argv[]){
 	printf("main: Just finished creatng threads, I am going to wait now\n");
 	//wait for the other threads to terminate
 	pthread_join(arrival, NULL);
-	printList(pFilterData->pListQ2);
 	pthread_join(token, NULL);
+	printList(pFilterData->pListQ1);
+	printList(pFilterData->pListQ2);
 	pthread_join(service, NULL);
 	
 	printf("main:I waited for everyone to terminate and I am quitting now\n");
@@ -110,6 +115,7 @@ main(int argc, char *argv[]){
 	return 0;
 }
 
+//TODO: make the code async-safe, if you are dealing with an already mutex'ed object
 void sig_handler(int sig){
 	
 	printf("arrival: I just receoved signl: %d\n", sig);
@@ -137,9 +143,11 @@ arrivalManager(void *arg){
 	printf("arrival: This is arrival thread %u\n", (unsigned) pthread_self());
 	struct timeval timeStamp;
 	memset(&timeStamp, '\0', sizeof(struct timeval));
-	
+
+	My402ListElem *pFirstListElem = NULL;	
 	sigset_t *pSet = (sigset_t *)arg;
-	int sig,rWait =1, isWakeService = FALSE;
+	sigset_t set;
+	int rSigAction =1, isWakeService = FALSE;
 	My402Packet *pCurrentPacket = NULL;	
 	//keep reading while there are more packets
 	char buf[1024] = {'\0'};
@@ -151,7 +159,14 @@ arrivalManager(void *arg){
 	/**
 	  * if Ctrl+C received, handle it
 	**/
-	sigset(SIGINT, sig_handler); //NOTE:TWO ^C case: sigset adds this sig to the mask of the caller
+	//TODO: examine the example in the slides
+	struct sigaction act;
+	memset(&act, '\0', sizeof(act));
+	act.sa_handler = sig_handler;
+	rSigAction = sigaction(SIGINT, &act, NULL); //NOTE:TWO ^C case: sigset adds this sig to the mask of the caller
+	if(rSigAction != 0){
+		handle_errors(rSigAction, "sigaction");	
+	}
 	//TODO: validate tfile
 	while( fgets(buf, sizeof(buf), fp)  != NULL){
 		//FIXME: improve the logic
@@ -172,36 +187,53 @@ arrivalManager(void *arg){
 		
 		
 	
-		//for(;;){
+		//for(;;){ //TODO: enable, when deterministic model is implemented
 
 			//sleep for appropriate time
 			//wakes up, create a packet object, lock mutex
 			//enqueue the packet to Q1	
 			gettimeofday(&timeStamp, NULL);
-			tvcpy(pCurrentPacket->q1_begin_time,timeStamp); 
-			My402ListAppend(pFilterData->pListQ1, pCurrentPacket);
-			//TODO: error checking
-			pCurrentPacket = (My402Packet *) My402ListFirst(pFilterData->pListQ1)->obj;
-			if(pCurrentPacket->tokens <= pFilterData->tokenCount){
-				//currentPacket is eligible for transmission
-				gettimeofday(&timeStamp, NULL);
-				tvcpy(pCurrentPacket->q1_end_time,timeStamp);
-				if(My402ListEmpty(pFilterData->pListQ2) == TRUE){
-					//need to signal service thread, but insert this and then wake him
-					isWakeService = TRUE;
-				}
-				gettimeofday(&timeStamp, NULL);
-				tvcpy(pCurrentPacket->q2_begin_time,timeStamp);
-				My402ListAppend(pFilterData->pListQ2, pCurrentPacket);
+			tvcpy(pCurrentPacket->q1_begin_time,timeStamp);
+			//about to get lock, so mask ^c signal
+			//=======mask ^c begins======	
+			sigemptyset(&set);
+			sigaddset(&set, SIGINT);
+			sigprocmask(SIG_BLOCK, &set, NULL);
+			pthread_mutex_lock(&mutex_on_filterData); 
+				My402ListAppend(pFilterData->pListQ1, pCurrentPacket);
+				//TODO: error checking
+				pFirstListElem = My402ListFirst(pFilterData->pListQ1);
+				pCurrentPacket = (My402Packet *) pFirstListElem->obj;
+				//printList(pFilterData->pListQ1);
+				//unlink from listQ1
+				My402ListUnlink(pFilterData->pListQ1, pFirstListElem);
+				if(pCurrentPacket->tokens <=  pFilterData->tokenCount ){
+					//currentPacket is eligible for transmission
+					gettimeofday(&timeStamp, NULL);
+					tvcpy(pCurrentPacket->q1_end_time,timeStamp);
+					if(My402ListEmpty(pFilterData->pListQ2) == TRUE){
+						//need to signal service thread, but insert this and then wake him
+						isWakeService = TRUE;
+					}
+					gettimeofday(&timeStamp, NULL);
+					tvcpy(pCurrentPacket->q2_begin_time,timeStamp);
+					My402ListAppend(pFilterData->pListQ2, pCurrentPacket);
 				//Now, wake him up, if he is sleeping!
 			//moves the first packet from Q1 to Q2, if there are enough tokens [if token requirement is too large, drop it] 
 											 //[arrival and serivce compete for Q2]
 			//if Q2 was empty before, need to signal or broad cast a queue-not-empty condition [so that service thread can wake up and serve now for te packet which the arrival thread is inserting into Q2]
 			//unlocks the mutex
 			//goes back to sleep for the "right" amount
-			}
+				}
+			pthread_mutex_unlock(&mutex_on_filterData);
+			sigprocmask(SIG_UNBLOCK, &set, NULL);
+			//=======mask ^c ends======	
+			if(isWakeService == TRUE ){
+				pthread_cond_signal(&queue_not_empty);
+			}	
 			
-		//}
+			
+		//} //TODO: enable, when deterministic model is implemented
 	}
 	//FIXME: do you need to return?
 	return (void *)0;
@@ -246,20 +278,64 @@ void *
 tokenManager(void *arg){
 
 	//int *pNextToken = (int *)arg;
+	int s, isWakeService = FALSE;
+	struct timeval timeStamp;
+	memset(&timeStamp, '\0', sizeof(struct timeval));
+	My402ListElem *pFirstListElem = NULL;
+	My402Packet *pCurrentPacket = NULL;
 	printf("This is token thread %u\n", (unsigned int) pthread_self());
 	
 	blockSIGINTforme();	
-	/*	
 	for(;;){
 		
-		//sleep for an interval trying to match the given inter arrival time for the token	
-		//wakes up, locks the mutex, try to increment tocken count [if bucket is full, drop it]
-		//check if it can move first packet from Q1 to Q2 [Q1 is a shared resource]
+		s = pthread_mutex_lock(&mutex_on_filterData);
+		if(s != 0){
+			handle_errors(s, "pthread_mutex_lock");	
+		}
+			if(pFilterData->isStopNow == TRUE){
+				pthread_exit(NULL); //TODO: clean up?
+			}
+			
+			//sleep for an interval trying to match the given inter arrival time for the token	
+			//wakes up, locks the mutex, try to increment tocken count [if bucket is full, drop it]
+			if(isTokenBucketFull( pFilterData->tokenCount /*TODO: take B as input*/) == FALSE){
+					pFilterData->tokenCount = pFilterData->tokenCount + 1;
+			}
+			pFirstListElem = My402ListFirst(pFilterData->pListQ1);
+			if(pFirstListElem != NULL){
+				pCurrentPacket = (My402Packet *)pFirstListElem->obj;	
+			}
+			if(pCurrentPacket != NULL){
+				//check if it can move first packet from Q1 to Q2 [Q1 is a shared resource]
+				if(pCurrentPacket->tokens <= pFilterData->tokenCount){
+					My402ListUnlink(pFilterData->pListQ1, pFirstListElem);	
+					//currentPacket is eligible for transmission
+					gettimeofday(&timeStamp, NULL);
+					tvcpy(pCurrentPacket->q1_end_time,timeStamp);
+					if(My402ListEmpty(pFilterData->pListQ2) == TRUE){
+						//need to signal service thread, but insert this and then wake him
+						isWakeService = TRUE;
+					}
+					gettimeofday(&timeStamp, NULL);
+					tvcpy(pCurrentPacket->q2_begin_time,timeStamp);
+					My402ListAppend(pFilterData->pListQ2, pCurrentPacket);
+					
+				}
+			}
 		//if a packet is added to Q2 and Q2 was empty before, signal or broadcast queue-not-empty condition
+		s = pthread_mutex_unlock(&mutex_on_filterData);
 		//unlocks the mutex
+		if(s != 0){
+			handle_errors(s, "pthread_mutex_unlock");	
+		}
+		if(isWakeService == TRUE){
+			s = pthread_cond_signal(&queue_not_empty);
+			if(s != 0){
+				handle_errors(s, "pthread_cond_signal");	
+			}
+		}
 		//goes back to sleep for the "right" amount
 	}
-	*/
 	return (void *)0;
 }
 
