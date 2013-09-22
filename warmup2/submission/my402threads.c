@@ -18,27 +18,28 @@
   * Global variables, reside in data segment. Thus visible to every thread
 **/
 
-void parseLine(char *buf);
+void parseLine(char *buf, My402Packet *);
 
-My402List listQ1, listQ2;
 FILE *fp;
+My402FilterData *pFilterData;
 
 
 sigset_t 
 blockSIGINTforme()
 {
 	int rMask = 1;
-	sig_set_t set;
+	sigset_t set;
+	sigset_t old_set;
 
 	sigemptyset(&set);
-	sigaddset(SIGINT, &set);
+	sigaddset(&set, SIGINT);
 	//I am not interested in SIGINT
-	rMask = pthread_sigmask(SIG_BLOCK, set, NULL /*not interested in old set*/);
+	rMask = pthread_sigmask(SIG_BLOCK, &set, &old_set);
 	if(rMask != 0){
-		handle_errors(rMast, "pthread_sigmask");
+		handle_errors(rMask, "pthread_sigmask");
 	}
 	
-	return set;
+	return old_set;
 }
 int
 main(int argc, char *argv[]){
@@ -53,37 +54,39 @@ main(int argc, char *argv[]){
 		exit(EXIT_FAILURE);	
 	}
 	//I do not need a lock here, threads are not yet created.
-	My402FilterData filterData;
-	My402FilterData *pFilterData = &filterData;
-	memset(pFilterData, '\0', sizeof(filterData));
-	My402List listQ1;
-	pFilterData->pListQ1 = &listQ1;
+	/**
+	 * Allocate on heap and ensure to free at the right place. Avoids scope problems if allocated on individual stacks
+	**/
+	pFilterData = malloc(sizeof(My402FilterData));
+	memset(pFilterData, '\0', sizeof(pFilterData));
+
+	pFilterData->pListQ1 = malloc(sizeof(My402List));
 	My402ListInit(pFilterData->pListQ1);
-	My402List listQ2;
-	pFilterData->pListQ2 = &listQ2;
+	
+	pFilterData->pListQ2 = malloc(sizeof(My402List));
 	My402ListInit(pFilterData->pListQ2);
 
-	sigset_t set = blockSIGINTforme();	
+	sigset_t old_set = blockSIGINTforme();
 	printf("main: About to create threads...\n");
 	/**
 	 * TODO: Keep everything (data strctures, resouces) ready before the threads are created
 	**/
 	//create arrivals thread
-	isCreated = pthread_create(&arrival, NULL, (void *) arrivalManager, (void *) &set);
+	isCreated = pthread_create(&arrival, NULL, (void *) arrivalManager, (void *) &old_set);
 	if(isCreated != 0){
 		//handle create failure
 		handle_errors(isCreated, "pthread_create");
 	}
 	printf("main: created arrival thread %u\n", (unsigned) arrival);
 	//create tokens thread
-	isCreated = pthread_create(&token, NULL, (void *) tokenManager, (void *) &set);
+	isCreated = pthread_create(&token, NULL, (void *) tokenManager, (void *) &old_set/*TODO*/);
 	if(isCreated != 0){
 		//handle create failure
 		handle_errors(isCreated, "pthread_create");
 	}
 	printf("main: created token thread %u\n", (unsigned) token);
 	//create service thread
-	isCreated = pthread_create(&service, NULL, (void *) serviceManager, (void *) &set);
+	isCreated = pthread_create(&service, NULL, (void *) serviceManager, (void *) &old_set);
 	if(isCreated != 0){
 		//handle create failure
 		handle_errors(isCreated, "pthread_create");
@@ -94,6 +97,7 @@ main(int argc, char *argv[]){
 	printf("main: Just finished creatng threads, I am going to wait now\n");
 	//wait for the other threads to terminate
 	pthread_join(arrival, NULL);
+	printList(pFilterData->pListQ2);
 	pthread_join(token, NULL);
 	pthread_join(service, NULL);
 	
@@ -106,56 +110,104 @@ main(int argc, char *argv[]){
 	return 0;
 }
 
+void sig_handler(int sig){
+	
+	printf("arrival: I just receoved signl: %d\n", sig);
+	//FIXME: get lock here!!
+	pFilterData->isStopNow = TRUE;
+	//TODO: no need to clean up(Ref spce), but stop further processing. 
+	pthread_exit(NULL);
+	/*		
+	if(rWait != 0){
+				handle_errors(rWait, "sigwait");
+			}else{
+				printf("arrival: received a signal %d\n", sig);
+			}		
+	*/
+}
+void tvcpy(struct timeval dest, struct timeval src){
+
+	dest.tv_sec = src.tv_sec;
+	dest.tv_usec = src.tv_usec;
+}
 
 void *
 arrivalManager(void *arg){
 
 	printf("arrival: This is arrival thread %u\n", (unsigned) pthread_self());
-	sigset_t pSet = (sigset_t *)arg;
-	int sig,rWait =1;
+	struct timeval timeStamp;
+	memset(&timeStamp, '\0', sizeof(struct timeval));
+	
+	sigset_t *pSet = (sigset_t *)arg;
+	int sig,rWait =1, isWakeService = FALSE;
+	My402Packet *pCurrentPacket = NULL;	
 	//keep reading while there are more packets
 	char buf[1024] = {'\0'};
 	char *str = malloc(1024*sizeof(char));
 	memset(str, '\0', 1024);
 	int isFirstLine = TRUE, num_packets = 0;	
+
+	pthread_sigmask(SIG_SETMASK, pSet ,NULL);	
+	/**
+	  * if Ctrl+C received, handle it
+	**/
+	sigset(SIGINT, sig_handler); //NOTE:TWO ^C case: sigset adds this sig to the mask of the caller
 	//TODO: validate tfile
-	while( ( str=fgets(buf, sizeof(buf), fp) ) != NULL){
+	while( fgets(buf, sizeof(buf), fp)  != NULL){
 		//FIXME: improve the logic
 		if(isFirstLine == TRUE){
 			
 			num_packets = atoi(buf);
+			printf("arrival: the number of packets %d\n", num_packets);
 			isFirstLine = FALSE;
 			continue;
-		}	
-		parseLine(str);
-	}	
-	printf("arrival: the number of packets %d\n", num_packets);
-	
-	for(;;){
-
-		/**
-		  * if Ctrl+C received, handle it
-		**/
-		rWait = sigwait(pSet, sig);
-		if(rWait != 0){
-			handle_errors(rWait, "sigwait");
 		}
-		printf("arrival: received a signal %d\n", sig);		
-		//sleep for appropriate time
-		//wakes up, create a packet object, lock mutex
-		//enqueue the packet to Q1
-		//moves the first packet from Q1 to Q2, if there are enough tokens [if token requirement is too large, drop it] 
-										 //[arrival and serivce compete for Q2]
-		//if Q2 was empty before, need to signal or broad cast a queue-not-empty condition [so that service thread can wake up and serve now for te packet which the arrival thread is inserting into Q2]
-		//unlocks the mutex
-		//goes back to sleep for the "right" amount
+		//TODO: validate the line
+		pCurrentPacket = (My402Packet *) malloc(sizeof(My402Packet)); 	
+		if(pCurrentPacket == NULL){
+			//handle_errors(pCurrentPacket, "malloc()");//NOTE: malloc returns NULL if there is an error, so I guess errno is not set	
+			fprintf(stderr, "malloc() failed, unable to allocate memory\n");
+		}
+		parseLine(buf, pCurrentPacket);
+		
+		
+	
+		//for(;;){
+
+			//sleep for appropriate time
+			//wakes up, create a packet object, lock mutex
+			//enqueue the packet to Q1	
+			gettimeofday(&timeStamp, NULL);
+			tvcpy(pCurrentPacket->q1_begin_time,timeStamp); 
+			My402ListAppend(pFilterData->pListQ1, pCurrentPacket);
+			//TODO: error checking
+			pCurrentPacket = (My402Packet *) My402ListFirst(pFilterData->pListQ1)->obj;
+			if(pCurrentPacket->tokens <= pFilterData->tokenCount){
+				//currentPacket is eligible for transmission
+				gettimeofday(&timeStamp, NULL);
+				tvcpy(pCurrentPacket->q1_end_time,timeStamp);
+				if(My402ListEmpty(pFilterData->pListQ2) == TRUE){
+					//need to signal service thread, but insert this and then wake him
+					isWakeService = TRUE;
+				}
+				gettimeofday(&timeStamp, NULL);
+				tvcpy(pCurrentPacket->q2_begin_time,timeStamp);
+				My402ListAppend(pFilterData->pListQ2, pCurrentPacket);
+				//Now, wake him up, if he is sleeping!
+			//moves the first packet from Q1 to Q2, if there are enough tokens [if token requirement is too large, drop it] 
+											 //[arrival and serivce compete for Q2]
+			//if Q2 was empty before, need to signal or broad cast a queue-not-empty condition [so that service thread can wake up and serve now for te packet which the arrival thread is inserting into Q2]
+			//unlocks the mutex
+			//goes back to sleep for the "right" amount
+			}
 			
+		//}
 	}
 	//FIXME: do you need to return?
 	return (void *)0;
 }
 
-void parseLine(char *buf){
+void parseLine(char *buf, My402Packet *pCurrentPacket){
 
 	char *start_ptr = buf;
 	char *tab_ptr = NULL;
@@ -182,6 +234,12 @@ void parseLine(char *buf){
 	printf("arrival: inter arrival time: %s\n", input[0]);
 	printf("arrival: token required: %s\n", input[1]);
 	printf("arrival: service time: %s\n", input[2]);
+
+	//TODO:After all the validations,
+	pCurrentPacket->inter_arrival_time = atoi(input[0]);
+	pCurrentPacket->tokens = atoi(input[1]);
+	pCurrentPacket->service_time = atoi(input[2]);
+
 }
 
 void *
@@ -191,7 +249,7 @@ tokenManager(void *arg){
 	printf("This is token thread %u\n", (unsigned int) pthread_self());
 	
 	blockSIGINTforme();	
-	
+	/*	
 	for(;;){
 		
 		//sleep for an interval trying to match the given inter arrival time for the token	
@@ -201,6 +259,7 @@ tokenManager(void *arg){
 		//unlocks the mutex
 		//goes back to sleep for the "right" amount
 	}
+	*/
 	return (void *)0;
 }
 
