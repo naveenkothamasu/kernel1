@@ -11,6 +11,7 @@ typedef struct tagFilterData {
 	int tokenCount;
 
 	int isStopNow;
+	int isMorePackets;
 	
 } My402FilterData;
 
