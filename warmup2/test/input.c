@@ -1,15 +1,27 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include<math.h>
 
 int intVal(char *str);
+float strToFloat(char *str);
 int
 main(int argc, char **argv){
 
+	
+	strToFloat("123230.35");
+	
 	/**
 	 warmup2 [-lambda lambda] [-mu mu] \
         [-r r] [-B B] [-P P] [-n num] \
         [-t tsfile]
 	**/
+	/*
+	float lambda = 0.5, mu = 0.35, r = 1.5;
+	int B = 10, P = 3, n = 20;
+	char *t = (char *)malloc(20*sizeof(char));
+	if(t == NULL){
+		fprintf(stderr, "malloc() failed - unable to allocate memory\n");	
+	}
 	int i=0;
 	int k=0;
 	for(; i<argc; i++){
@@ -18,31 +30,32 @@ main(int argc, char **argv){
 		switch(k){
 		
 		case 1:
-			printf("lambda = %s\n", argv[i+1], i);
+			lambda = strToFloat(argv[i+1]);
 			i++;
 			break;
 		case 2:
-			printf("mu = %s\n", argv[i+1]);
+			
+			mu = strToFloat(argv[i+1]);
 			i++;
 			break;
 		case 3:
-			printf("r = %s\n", argv[i+1]);
+			r = strToFloat(argv[i+1]);
 			i++;
 			break;
 		case 4:
-			printf("B = %s\n", argv[i+1]);
+			B = atoi(argv[i+1]);
 			i++;
 			break;
 		case 5:
-			printf("P = %s\n", argv[i+1]);
+			P = atoi(argv[i+1]);
 			i++;
 			break;
 		case 6:
-			printf("n = %s\n", argv[i+1]);
+			n = atoi(argv[i+1]);
 			i++;
 			break;
 		case 7:
-			printf("t = %s\n", argv[i+1]);
+			t = argv[i+1];
 			i++;
 			break;
 		default:
@@ -51,6 +64,14 @@ main(int argc, char **argv){
 		
 		}	
 	}
+			printf("lambda = %f\n", lambda);
+			printf("mu = %f\n", mu);
+			printf("r = %f\n", r);
+			printf("B = %d\n", B);
+			printf("P = %d\n", P);
+			printf("n = %d\n", n);
+			printf("t = %s\n", t);
+	*/
 }
 
 int intVal(char *str){
@@ -72,4 +93,39 @@ int intVal(char *str){
 	}
 	
 	return -1;
+}
+
+float strToFloat(char *str){
+
+	int i=0;
+	int digit = 0;
+	int n = 0;
+	int intPart = 0;
+	int dotPos = 0;
+	double num =0;
+	while(str[i] != '.'){
+		i++;	
+	}
+	//TODO:exactly one dot present
+	dotPos = i;
+	i =i-1;
+	while(i >= 0){
+		digit = str[i]-'0'; //TODO: str[i] is only a digit char and nothing else
+		intPart = intPart + digit* pow(10,n);	
+		i--;	
+		n++;
+	}
+	//printf("intPart=%d\n",intPart);
+	i=dotPos+1;
+	num = (float) intPart;
+	n=1;	
+	while(str[i] != '\0'){
+
+		digit = str[i]-'0';
+		//printf("current float %f\n", digit/pow(10,n));
+		num = num + ((double)digit / pow(10,n));
+		i++;	
+		n++;
+	}
+	printf("num=%g\n",num);	
 }

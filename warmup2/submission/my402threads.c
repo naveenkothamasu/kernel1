@@ -25,8 +25,9 @@ FILE *fp;
 My402FilterData *pFilterData;
 pthread_t service = 0; //FIXME: what if user presses ^C before the service thread is created?
 
-pthread_mutex_t mutex_on_filterData;// = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t queue_not_empty;
+pthread_mutex_t mutex_on_filterData = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_on_stdout;
+pthread_cond_t queue_not_empty = PTHREAD_COND_INITIALIZER;
 
 sigset_t 
 blockSIGINTforme()
@@ -75,24 +76,25 @@ main(int argc, char *argv[]){
 	My402ListInit(pFilterData->pListQ2);
 
 	sigset_t old_set = blockSIGINTforme();
-	printf("main: About to create threads...\n");
+	//printf("main: About to create threads...\n");
 	/**
 	 * TODO: Keep everything (data strctures, resouces) ready before the threads are created
 	**/
 	//create arrivals thread
+	printf("00000000.000ms: emulation begins\n");
 	isCreated = pthread_create(&arrival, NULL, (void *) arrivalManager, (void *) &old_set);
 	if(isCreated != 0){
 		//handle create failure
 		handle_errors(isCreated, "pthread_create");
 	}
-	printf("main: created arrival thread %u\n", (unsigned) arrival);
+	//printf("main: created arrival thread %u\n", (unsigned) arrival);
 	//create tokens thread
 	isCreated = pthread_create(&token, NULL, (void *) tokenManager, (void *) &old_set/*TODO*/);
 	if(isCreated != 0){
 		//handle create failure
 		handle_errors(isCreated, "pthread_create");
 	}
-	printf("main: created token thread %u\n", (unsigned) token);
+	//printf("main: created token thread %u\n", (unsigned) token);
 	//create service thread
 	isCreated = pthread_create(&service, NULL, (void *) serviceManager, (void *) &old_set);
 	if(isCreated != 0){
@@ -100,17 +102,17 @@ main(int argc, char *argv[]){
 		handle_errors(isCreated, "pthread_create");
 	}
 
-	printf("main: created service thread %u\n", (unsigned) service);
+	//printf("main: created service thread %u\n", (unsigned) service);
 
-	printf("main: Just finished creatng threads, I am going to wait now\n");
+	//printf("main: Just finished creatng threads, I am going to wait now\n");
 	//wait for the other threads to terminate
 	pthread_join(arrival, NULL);
 	pthread_join(token, NULL);
 	pthread_join(service, NULL);
-	printList(pFilterData->pListQ1);
-	printList(pFilterData->pListQ2);
+	//printList(pFilterData->pListQ1);
+	//printList(pFilterData->pListQ2);
 	
-	printf("main:I waited for everyone to terminate and I am quitting now\n");
+	//printf("main:I waited for everyone to terminate and I am quitting now\n");
 	
 	//TODO:Move to clean up handler
 	if(fp != NULL){
@@ -123,7 +125,7 @@ main(int argc, char *argv[]){
 void sig_handler(int sig){
 	
 	int s;
-	printf("arrival: I just receoved signl: %d\n", sig);
+	//printf("arrival: I just receoved signl: %d\n", sig);
 	//FIXME: get lock here!!
 	s = pthread_mutex_lock(&mutex_on_filterData);
 	if(s != 0){
@@ -139,7 +141,7 @@ void sig_handler(int sig){
 	pthread_cancel(service);
 	//TODO: no need to clean up(Ref spec), but stop further processing. 
 	//TODO: Do I need to wait for the service to get terminated
-	printf("arrival: I am terminating myself\n");
+	//printf("arrival: I am terminating myself\n");
 	pthread_exit(NULL);
 	/*		
 	if(rWait != 0){
@@ -158,8 +160,8 @@ void tvcpy(struct timeval dest, struct timeval src){
 void *
 arrivalManager(void *arg){
 
-	int s;
-	printf("arrival: This is arrival thread %u\n", (unsigned) pthread_self());
+	int s, packet_num = 1;//, num_packets = 0;
+	//printf("arrival: This is arrival thread %u\n", (unsigned) pthread_self());
 	struct timeval timeStamp;
 	memset(&timeStamp, '\0', sizeof(struct timeval));
 
@@ -172,7 +174,7 @@ arrivalManager(void *arg){
 	char buf[1024] = {'\0'};
 	char *str = malloc(1024*sizeof(char));
 	memset(str, '\0', 1024);
-	int isFirstLine = TRUE, num_packets = 0;	
+	int isFirstLine = TRUE;	
 
 	pthread_sigmask(SIG_SETMASK, pSet ,NULL);	
 	/**
@@ -191,8 +193,8 @@ arrivalManager(void *arg){
 		//FIXME: improve the logic
 		if(isFirstLine == TRUE){
 			
-			num_packets = atoi(buf);
-			printf("arrival: the number of packets %d\n", num_packets);
+			//num_packets = atoi(buf);
+			//printf("arrival: the number of packets %d\n", num_packets);
 			isFirstLine = FALSE;
 			continue;
 		}
@@ -203,12 +205,29 @@ arrivalManager(void *arg){
 			fprintf(stderr, "malloc() failed, unable to allocate memory\n");
 		}
 		parseLine(buf, pCurrentPacket);
-		
+
 		
 	
 		//for(;;){ //TODO: enable, when deterministic model is implemented
-
+			pCurrentPacket->packet_num = packet_num++ ;
+    			//00000503.112ms: p1 arrives, needs 3 tokens, inter-arrival time = 503.112ms
+			gettimeofday(&timeStamp, NULL);
+			pthread_mutex_lock(&mutex_on_stdout);
+				printf("%08d.%dms: p%lld arrives, needs %d tokens, inter-arrival time = %lldms\n", (int) timeStamp.tv_sec/1000,(int)timeStamp.tv_sec%1000, pCurrentPacket->packet_num, pCurrentPacket->tokens, pCurrentPacket->inter_arrival_time);
+			pthread_mutex_unlock(&mutex_on_stdout);
+			//===== validate the packet -- begins====
+			if(pCurrentPacket->tokens > B){
+		
+				//drop the packet and go to the next packet
+				free(pCurrentPacket);
+				continue;
+			}
+			//===== validate the packet -- ends====
+			
 			//sleep for appropriate time
+			timeStamp.tv_sec = (long) pCurrentPacket->inter_arrival_time / 1000;
+			timeStamp.tv_usec =(long) (pCurrentPacket->inter_arrival_time % 1000)*1000;
+			select(0, NULL, NULL, NULL, &timeStamp);
 			//wakes up, create a packet object, lock mutex
 			//enqueue the packet to Q1	
 			gettimeofday(&timeStamp, NULL);
@@ -220,6 +239,11 @@ arrivalManager(void *arg){
 			sigprocmask(SIG_BLOCK, &set, NULL);
 			pthread_mutex_lock(&mutex_on_filterData); 
 				My402ListAppend(pFilterData->pListQ1, pCurrentPacket);
+				//00000503.376ms: p1 enters Q1
+				
+			pthread_mutex_lock(&mutex_on_stdout);
+				printf("%08d.%dms: p%lld enters Q1\n",(int) pCurrentPacket->q1_begin_time.tv_sec/1000,(int) pCurrentPacket->q1_begin_time.tv_sec%1000, pCurrentPacket->packet_num);
+			pthread_mutex_unlock(&mutex_on_stdout);
 				//TODO: error checking
 				pFirstListElem = My402ListFirst(pFilterData->pListQ1);
 				pCurrentPacket = (My402Packet *) pFirstListElem->obj;
@@ -231,6 +255,11 @@ arrivalManager(void *arg){
 					My402ListUnlink(pFilterData->pListQ1, pFirstListElem);
 					gettimeofday(&timeStamp, NULL);
 					tvcpy(pCurrentPacket->q1_end_time,timeStamp);
+    					//00000751.186ms: p1 leaves Q1, time in Q1 = 247.810ms, token bucket now has 0 token
+					
+					pthread_mutex_lock(&mutex_on_stdout);
+						printf("%08d.%dms: p%lld leaves Q1, time in Q1 = 247.810ms, token bucket now has %d tokens\n",(int) pCurrentPacket->q1_end_time.tv_sec/1000,(int) pCurrentPacket->q1_end_time.tv_sec%1000, pCurrentPacket->packet_num, pFilterData->tokenCount );
+					pthread_mutex_unlock(&mutex_on_stdout);
 					if(My402ListEmpty(pFilterData->pListQ2) == TRUE){
 						//need to signal service thread, but insert this and then wake him
 						isWakeService = TRUE;
@@ -238,9 +267,14 @@ arrivalManager(void *arg){
 					gettimeofday(&timeStamp, NULL);
 					tvcpy(pCurrentPacket->q2_begin_time,timeStamp);
 					My402ListAppend(pFilterData->pListQ2, pCurrentPacket);
-					printf("arrival:starts printing..\n");
-					printList(pFilterData->pListQ2);
-					printf("arrival:ends printing..\n");
+					//00000752.716ms: p1 enters Q2
+					
+					pthread_mutex_lock(&mutex_on_stdout);
+						printf("%08d.%dms: p%lld enters Q2\n", (int) pCurrentPacket->q2_begin_time.tv_sec/1000,(int) pCurrentPacket->q2_begin_time.tv_sec%1000, pCurrentPacket->packet_num);
+					pthread_mutex_unlock(&mutex_on_stdout);
+					//printf("arrival:starts printing..\n");
+					//printList(pFilterData->pListQ2);
+					//printf("arrival:ends printing..\n");
 				//Now, wake him up, if he is sleeping!
 			//moves the first packet from Q1 to Q2, if there are enough tokens [if token requirement is too large, drop it] 
 											 //[arrival and serivce compete for Q2]
@@ -266,10 +300,14 @@ arrivalManager(void *arg){
 		handle_errors(s, "pthread_mutex_lock");	
 	}
 		pFilterData->isMorePackets = FALSE;
-		printf("arrival: I am done with reading, so pFlilterData->isMorePackets=%d\n", pFilterData->isMorePackets);
+		//printf("arrival: I am done with reading, so pFlilterData->isMorePackets=%d\n", pFilterData->isMorePackets);
 		if(My402ListEmpty(pFilterData->pListQ2) == TRUE){
 			printf("arrival: Asking service to shutdown as there are no packets to read or process\n");
-			pthread_cancel(service);	
+			s = pthread_cancel(service);	
+			
+			if(s != 0){
+				handle_errors(s, "pthread_mutex_unlock");	
+			}
 		}
 	s = pthread_mutex_unlock(&mutex_on_filterData);
 	if(s != 0){
@@ -302,9 +340,9 @@ void parseLine(char *buf, My402Packet *pCurrentPacket){
 	}
 	strncpy(input[tabNumber], start_ptr, 50);                
 	
-	printf("arrival: inter arrival time: %s\n", input[0]);
-	printf("arrival: token required: %s\n", input[1]);
-	printf("arrival: service time: %s\n", input[2]);
+	//printf("arrival: inter arrival time: %s\n", input[0]);
+	//printf("arrival: token required: %s\n", input[1]);
+	//printf("arrival: service time: %s\n", input[2]);
 
 	//TODO:After all the validations,
 	pCurrentPacket->inter_arrival_time = atoi(input[0]);
@@ -322,7 +360,7 @@ tokenManager(void *arg){
 	memset(&timeStamp, '\0', sizeof(struct timeval));
 	My402ListElem *pFirstListElem = NULL;
 	My402Packet *pCurrentPacket = NULL;
-	printf("This is token thread %u\n", (unsigned int) pthread_self());
+	//printf("This is token thread %u\n", (unsigned int) pthread_self());
 	
 	blockSIGINTforme();	
 	for(;;){
@@ -339,11 +377,11 @@ tokenManager(void *arg){
 			        )
 			  ){
 				
-				printf("token: I was informed to stop now\n");
-				printf("token: I got %d left in my bucket\n", pFilterData->tokenCount);
+				//printf("token: I was informed to stop now\n");
+				//printf("token: I got %d left in my bucket\n", pFilterData->tokenCount);
 				pthread_mutex_unlock(&mutex_on_filterData); //FIXME: Does releasing lock here make sense?
 				
-				printf("token: I am terminating myself\n");
+				//printf("token: I am terminating myself\n");
 				pthread_exit(NULL); //TODO: clean up?
 			   }
 			
@@ -351,7 +389,19 @@ tokenManager(void *arg){
 			//wakes up, locks the mutex, try to increment tocken count [if bucket is full, drop it]
 			if(isTokenBucketFull( pFilterData->tokenCount /*TODO: take B as input*/) == FALSE){
 					pFilterData->tokenCount = pFilterData->tokenCount + 1;
-					printf("token: I just added one token, now token count=%d\n", pFilterData->tokenCount);
+					gettimeofday(&timeStamp, NULL);
+				    	//00000251.726ms: token t1 arrives, token bucket now has 1 token
+					if(pFilterData->tokenCount == 1){
+						
+						pthread_mutex_lock(&mutex_on_stdout);
+							printf("%08d.%dms: token t%d arrives, token bucket now has %d token\n",  (int)timeStamp.tv_sec/1000,(int)timeStamp.tv_sec%1000, pFilterData->tokenCount, pFilterData->tokenCount);
+						pthread_mutex_unlock(&mutex_on_stdout);
+					}else{
+						
+						pthread_mutex_lock(&mutex_on_stdout);
+							printf("%08d.%dms: token t%d arrives, token bucket now has %d token\n", (int) timeStamp.tv_sec/1000,(int) timeStamp.tv_sec%1000, pFilterData->tokenCount, pFilterData->tokenCount);
+						pthread_mutex_unlock(&mutex_on_stdout);
+					}
 			}
 			pFirstListElem = My402ListFirst(pFilterData->pListQ1);
 			if(pFirstListElem != NULL){
@@ -373,9 +423,9 @@ tokenManager(void *arg){
 					gettimeofday(&timeStamp, NULL);
 					tvcpy(pCurrentPacket->q2_begin_time,timeStamp);
 					My402ListAppend(pFilterData->pListQ2, pCurrentPacket);
-					printf("token:starts printing..\n");
-					printList(pFilterData->pListQ2);
-					printf("token:ends printing..\n");
+					//printf("token:starts printing..\n");
+					//printList(pFilterData->pListQ2);
+					//printf("token:ends printing..\n");
 					
 				}
 			}
@@ -395,11 +445,15 @@ tokenManager(void *arg){
 	}
 	return (void *)0;
 }
-
+void clean_up(){
+	printf("inside clean_up\n");
+	pthread_mutex_unlock(&mutex_on_filterData);
+	
+}
 void *
 serviceManager(void *arg){
 	
-	printf("This is service thread %u\n", (unsigned int) pthread_self());
+	//printf("This is service thread %u\n", (unsigned int) pthread_self());
 	struct timeval timeStamp;
 	memset(&timeStamp, '\0', sizeof(struct timeval));
 
@@ -408,30 +462,30 @@ serviceManager(void *arg){
 	blockSIGINTforme();	
 	//lock the mutex, if Q2 is empty, wait for the queue-not-empty condition to be signaled
 	//when unblocked, mutex is locked
+	pthread_cleanup_push( (void *) clean_up , (void *)NULL);	
 	for(;;){
 		//check if I need to stop before obtainging the lock?
 		//if a user presses ^C while the service thread is waiting in the mutex queue, 
 		// pthread_mutex_lock is not a cancellation point, in our case - service will eventually get a lock,
 		//so either it will be cancelled in conition wait or while sleep	
 		pthread_mutex_lock(&mutex_on_filterData);
-			printf("service:starts printing..\n");
-			printList(pFilterData->pListQ2);	
-			printf("service:ends printing..\n");
+			//FIXME: what if service went ahead of arrival and terminates, arrival sends a cancel then?	
 			if(pFilterData->isMorePackets == FALSE && My402ListEmpty(pFilterData->pListQ2) == TRUE){
-				printf("service: I was informed to stop now.\n");
+				//printf("service: I was informed to stop now.\n");
 				pthread_mutex_unlock(&mutex_on_filterData);	
-				printf("service: I am terminating myself\n");
+				//printf("service: I am terminating myself\n");
 				pthread_exit(NULL);
 			}
 			
-			printf("service: I am about to check if Q2 is empty\n");
+			
 			while(My402ListEmpty(pFilterData->pListQ2) == TRUE ){
 				pthread_cond_wait(&queue_not_empty, &mutex_on_filterData);
 			}
 			//if Q2 is not empty, dequeues the packet and unlcoks the mutex
 				//lock mutex, check if Q2 is empty etc
 			//defer the cancel at this point
-			printf("service: I got the lock, I am processing the current packet\n");
+			//printf("service: I got the lock, I am processing the current packet\n");
+			gettimeofday(&timeStamp, NULL);
 			pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
 			pFirstElem = My402ListFirst(pFilterData->pListQ2);	
 			if(pFirstElem != NULL){
@@ -439,17 +493,29 @@ serviceManager(void *arg){
 			}
 			if(pCurrentPacket != NULL){
 				//sleeps for an interval matching the service time of the packet; afterwards eject the packet from the system
-				timeStamp.tv_sec = 10;
+				timeStamp.tv_sec = (long) pCurrentPacket->service_time / 1000;
+				timeStamp.tv_usec =(long) (pCurrentPacket->service_time % 1000)*1000;
 				select(0, NULL, NULL, NULL, &timeStamp);	
+		 		//00000752.932ms: p1 begin service at S, time in Q2 = 0.216ms
+				
+				pthread_mutex_lock(&mutex_on_stdout);
+					printf("%08d.%dms: p%lld begin service at S, time in Q2 = 0.216ms\n",(int) timeStamp.tv_sec/1000,(int) timeStamp.tv_sec%1000, pCurrentPacket->packet_num);
+				pthread_mutex_unlock(&mutex_on_stdout);
 				gettimeofday(&timeStamp, NULL);
 				tvcpy(pCurrentPacket->q2_end_time,timeStamp);
-				My402ListUnlink(pFilterData->pListQ2, pFirstElem);	
-				printf("service: I just processed packet:%d\n", pCurrentPacket->tokens);
+				My402ListUnlink(pFilterData->pListQ2, pFirstElem);
+    				//00003612.843ms: p1 departs from S, service time = 2859.911ms, time in system = 3109.731ms
+				
+				pthread_mutex_lock(&mutex_on_stdout);
+					printf("%08d.%dms: p%lld departs from S, service time = 2859.911ms, time in system = 3109.73ms\n", (int) pCurrentPacket->q2_end_time.tv_sec/1000,(int) pCurrentPacket->q2_end_time.tv_sec%1000,  pCurrentPacket->packet_num);
+				pthread_mutex_unlock(&mutex_on_stdout);
+				//printf("service: I just processed packet:%d\n", pCurrentPacket->tokens);
 			}
 		pthread_mutex_unlock(&mutex_on_filterData);
 		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 		//if Q2 is empty, go wait for the queue-not-empty condition to be signaled
 	}	
+	pthread_cleanup_pop(1);
 	//FIXME: do you need to return?
 	return (void *)0;
 }

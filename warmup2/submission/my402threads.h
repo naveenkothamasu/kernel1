@@ -17,6 +17,7 @@ typedef struct tagFilterData {
 
 typedef struct tagMyPacket {
 	
+	long long int packet_num; //needed?
 	long long inter_arrival_time;
 	int tokens;
 	long long service_time;

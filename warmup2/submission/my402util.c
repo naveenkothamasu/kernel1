@@ -24,3 +24,23 @@ void printList(My402List *pList){
 	printf("\n====================\n");
 
 }
+
+struct timeval sub_timeval(struct timeval op1, struct timeval op2){
+	
+	struct timeval temp;
+	memset(&temp, '\0', sizeof(struct timeval));
+	temp.tv_sec = op1.tv_sec - op2.tv_sec;
+	temp.tv_usec = op1.tv_usec - op2.tv_usec;
+	
+	return temp;
+}
+struct timeval add_timeval(struct timeval op1, struct timeval op2){
+	
+	struct timeval temp;
+	memset(&temp, '\0', sizeof(struct timeval));
+	temp.tv_sec = op1.tv_sec + op2.tv_sec;
+	temp.tv_usec = op1.tv_usec + op2.tv_usec;
+	
+	return temp;
+}
+
