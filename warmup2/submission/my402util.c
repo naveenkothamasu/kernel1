@@ -4,7 +4,7 @@
 #include "my402threads.h"
 #include "my402util.h"
 
-int isTokenBucketFull(int tokensAsOfNow){
+int isTokenBucketFull(int tokensAsOfNow, int B){
 	
 	return B==tokensAsOfNow ? TRUE : FALSE;
 }

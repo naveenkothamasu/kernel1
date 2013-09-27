@@ -1,0 +1,28 @@
+
+float strToFloat(char *str){
+ 95 
+ 96         int i=0;
+ 97         int digit = 0;
+ 98         int n = 0;
+ 99         int intPart = 0;
+100         int dotPos = 0;
+101         double num =0;
+102         while(str[i] != '.'){
+103                 i++;    
+104         }
+105         //TODO:exactly one dot present
+106         dotPos = i;
+107         i =i-1;
+108         while(i >= 0){
+109                 digit = str[i]-'0'; //TODO: str[i] is only a digit char and nothing else
+110                 intPart = intPart + digit* pow(10,n);   
+111                 i--;    
+112                 n++;
+113         }
+114         //printf("intPart=%d\n",intPart);
+115         i=dotPos+1;
+116         num = (float) intPart;
+117         n=1;    
+118         while(str[i] != '\0'){
+36 more lines; before #5  45 seconds ago                                                                                            93,1          89%
+

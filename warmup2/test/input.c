@@ -1,22 +1,17 @@
 #include<stdio.h>
 #include<stdlib.h>
-#include<math.h>
 
 int intVal(char *str);
-float strToFloat(char *str);
 int
 main(int argc, char **argv){
 
-	
-	strToFloat("123230.35");
-	
-	/**
+	/*	
 	 warmup2 [-lambda lambda] [-mu mu] \
         [-r r] [-B B] [-P P] [-n num] \
         [-t tsfile]
 	**/
-	/*
-	float lambda = 0.5, mu = 0.35, r = 1.5;
+	
+	double lambda = 0.5, mu = 0.35, r = 1.5;
 	int B = 10, P = 3, n = 20;
 	char *t = (char *)malloc(20*sizeof(char));
 	if(t == NULL){
@@ -30,16 +25,16 @@ main(int argc, char **argv){
 		switch(k){
 		
 		case 1:
-			lambda = strToFloat(argv[i+1]);
+			lambda = strtod(argv[i+1], NULL);
 			i++;
 			break;
 		case 2:
 			
-			mu = strToFloat(argv[i+1]);
+			mu = strtod(argv[i+1], NULL);
 			i++;
 			break;
 		case 3:
-			r = strToFloat(argv[i+1]);
+			r = strtod(argv[i+1], NULL);
 			i++;
 			break;
 		case 4:
@@ -64,14 +59,13 @@ main(int argc, char **argv){
 		
 		}	
 	}
-			printf("lambda = %f\n", lambda);
-			printf("mu = %f\n", mu);
-			printf("r = %f\n", r);
+			printf("lambda = %g\n", lambda);
+			printf("mu = %g\n", mu);
+			printf("r = %g\n", r);
 			printf("B = %d\n", B);
 			printf("P = %d\n", P);
 			printf("n = %d\n", n);
 			printf("t = %s\n", t);
-	*/
 }
 
 int intVal(char *str){
@@ -95,37 +89,3 @@ int intVal(char *str){
 	return -1;
 }
 
-float strToFloat(char *str){
-
-	int i=0;
-	int digit = 0;
-	int n = 0;
-	int intPart = 0;
-	int dotPos = 0;
-	double num =0;
-	while(str[i] != '.'){
-		i++;	
-	}
-	//TODO:exactly one dot present
-	dotPos = i;
-	i =i-1;
-	while(i >= 0){
-		digit = str[i]-'0'; //TODO: str[i] is only a digit char and nothing else
-		intPart = intPart + digit* pow(10,n);	
-		i--;	
-		n++;
-	}
-	//printf("intPart=%d\n",intPart);
-	i=dotPos+1;
-	num = (float) intPart;
-	n=1;	
-	while(str[i] != '\0'){
-
-		digit = str[i]-'0';
-		//printf("current float %f\n", digit/pow(10,n));
-		num = num + ((double)digit / pow(10,n));
-		i++;	
-		n++;
-	}
-	printf("num=%g\n",num);	
-}
