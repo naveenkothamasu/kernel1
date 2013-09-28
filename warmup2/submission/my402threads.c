@@ -7,7 +7,7 @@
 #include<sys/select.h>
 
 
-#include "my402threads.h"
+#include "my402util.h"
 
 #define handle_errors(err, exception) \
 	do{errno = err; perror(exception); exit(EXIT_FAILURE); }while(0)
@@ -161,7 +161,7 @@ void timevalcpy(struct timeval dest, struct timeval src){
 	dest.tv_sec = src.tv_sec;
 	dest.tv_usec = src.tv_usec;
 }
-void printtimecpy(struct printtime dest, struct printtime src){
+void printtimecpy(printtime dest, printtime src){
 
 	dest.intPart = src.intPart;
 	dest.decPart = src.decPart;
@@ -173,14 +173,20 @@ arrivalManager(void *arg){
 	//printf("arrival: This is arrival thread %u\n", (unsigned) pthread_self());
 	struct timeval timeStamp;
 	memset(&timeStamp, '\0', sizeof(struct timeval));
-	struct printtime pTimeStamp;
-	memset(&pTimeStamp, '\0', sizeof(struct printtime));
+	printtime pTimeStamp;
+	memset(&pTimeStamp, '\0', sizeof(printtime));
+	struct timeval sleep_time;
+	memset(&sleep_time, '\0', sizeof(struct timeval));	
+	struct timeval inter_arrival_time;
+	memset(&inter_arrival_time, '\0', sizeof(struct timeval));	
+	struct timeval current_time;
+	memset(&current_time, '\0', sizeof(struct timeval));
+	struct timeval prev_arrival_time;
+	memset(&prev_arrival_time, '\0', sizeof(struct timeval));
+	printtime pArrivalStamp;
+	memset(&pArrivalStamp, '\0', sizeof(printtime));
 
 	My402ListElem *pFirstListElem = NULL;	
-	/*
-	sigset_t *pSet = (sigset_t *)arg;
-	sigset_t set;
-	*/
 	int isWakeService = FALSE;
 	struct timeval tv;
 	memset(&tv, '\0', sizeof(struct timeval));
@@ -190,50 +196,29 @@ arrivalManager(void *arg){
 	char *str = malloc(1024*sizeof(char));
 	memset(str, '\0', 1024);
 	int isFirstLine = TRUE;	
+	struct timeval zero_stamp;
+	memset(&zero_stamp, '\0', sizeof(struct timeval));
 
-	//pthread_sigmask(SIG_SETMASK, pSet ,NULL);	
 	/**
 	  * if Ctrl+C received, handle it
 	**/
 	//TODO: examine the example in the slides
-	/*
-	struct sigaction act;
-	memset(&act, '\0', sizeof(act));
-	act.sa_handler = sig_handler;
-	rSigAction = sigaction(SIGINT, &act, NULL); //NOTE:TWO ^C case: sigset adds this sig to the mask of the caller
-	if(rSigAction != 0){
-		handle_errors(rSigAction, "sigaction");	
-	}
-	*/
 	//TODO: validate tfile
 	while( fgets(buf, sizeof(buf), fp)  != NULL){
 		//FIXME: improve the logic
 		if(isFirstLine == TRUE){
 			
 			//num_packets = atoi(buf);
-			//printf("arrival: the number of packets %d\n", num_packets);
 			isFirstLine = FALSE;
 			continue;
 		}
 		//TODO: validate the line
 		pCurrentPacket = (My402Packet *) malloc(sizeof(My402Packet)); 	
 		if(pCurrentPacket == NULL){
-			//handle_errors(pCurrentPacket, "malloc()");//NOTE: malloc returns NULL if there is an error, so I guess errno is not set	
 			fprintf(stderr, "malloc() failed, unable to allocate memory\n");
 		}
 		parseLine(buf, pCurrentPacket);
 
-		
-	
-		//for(;;){ //TODO: enable, when deterministic model is implemented
-			pCurrentPacket->packet_num = packet_num++ ;
-    			//00000503.112ms: p1 arrives, needs 3 tokens, inter-arrival time = 503.112ms
-			gettimeofday(&tv, NULL);
-			//timevalcpy(timeStamp,sub_timeval(tv, startTimeStamp));
-			printtimecpy(pTimeStamp, sub_printtime(tv, startTimeStamp));
-			pthread_mutex_lock(&mutex_on_stdout);
-				printf("%08d.%dms: p%lld arrives, needs %d tokens, inter-arrival time = %lldms\n", pTimeStamp.intPart, pTimeStamp.decPart, pCurrentPacket->packet_num, pCurrentPacket->tokens, pCurrentPacket->inter_arrival_time);
-			pthread_mutex_unlock(&mutex_on_stdout);
 			//===== validate the packet -- begins====
 			if(pCurrentPacket->tokens > B){
 		
@@ -242,11 +227,35 @@ arrivalManager(void *arg){
 				continue;
 			}
 			//===== validate the packet -- ends====
+
+			double_to_timeval(&inter_arrival_time, (double)pCurrentPacket->inter_arrival_time/(double)1000);	
+			//getcurrenttime(&current_time, startTimeStamp);
+			gettimeofday(&current_time, NULL);
+			sub_timeval(&current_time, current_time, startTimeStamp);
 			
 			//sleep for appropriate time
-			timeStamp.tv_sec = (long) pCurrentPacket->inter_arrival_time / 1000;
-			timeStamp.tv_usec =(long) (pCurrentPacket->inter_arrival_time % 1000)*1000;
-			select(0, NULL, NULL, NULL, &timeStamp);
+			sub_timeval(&inter_arrival_time,inter_arrival_time, current_time);
+			add_timeval(&sleep_time, prev_arrival_time, inter_arrival_time);
+			/*
+			timeStamp.tv_sec = 0;
+			timeStamp.tv_usec = pCurrentPacket->inter_arrival_time * 1000; //TODO: long can hold upto 2^32 -1 [ > 10 sec]
+			*/
+			if(isPositive_timeval(sleep_time) == TRUE){
+				select(0, NULL, NULL, NULL, &timeStamp);
+			}
+			//else get on with the business right away
+		
+	
+		//for(;;){ //TODO: enable, when deterministic model is implemented
+			pCurrentPacket->packet_num = packet_num++ ;
+			//gettimeofday(&tv, NULL);
+			//sub_printtime(&pTimeStamp, tv, startTimeStamp);
+			getcurrenttime(&pTimeStamp, startTimeStamp);
+			pthread_mutex_lock(&mutex_on_stdout);
+			sub_printtime(&pArrivalStamp, inter_arrival_time, zero_stamp);
+				printf("%08d.%03dms: p%lld arrives, needs %d tokens, inter-arrival time = %d.%03dms\n", pTimeStamp.intPart, pTimeStamp.decPart, pCurrentPacket->packet_num, pCurrentPacket->tokens, pArrivalStamp.intPart, pArrivalStamp.decPart);
+			double_to_timeval(&prev_arrival_time, pTimeStamp.actual_num);
+			pthread_mutex_unlock(&mutex_on_stdout);
 			//wakes up, create a packet object, lock mutex
 			//enqueue the packet to Q1	
 			//about to get lock, so mask ^c signal
@@ -255,13 +264,13 @@ arrivalManager(void *arg){
 			//sigaddset(&set, SIGINT);
 			//sigprocmask(SIG_BLOCK, &set, NULL);
 			gettimeofday(&tv, NULL);
-			printtimecpy(pCurrentPacket->q1_begin_time,sub_printtime(tv, startTimeStamp));
+			sub_printtime(&(pCurrentPacket->q1_begin_time),tv, startTimeStamp);
 			pthread_mutex_lock(&mutex_on_filterData); 
 				My402ListAppend(pFilterData->pListQ1, pCurrentPacket);
 				//00000503.376ms: p1 enters Q1
 				
 			pthread_mutex_lock(&mutex_on_stdout);
-				printf("%08d.%dms: p%lld enters Q1\n", pCurrentPacket->q1_begin_time.intPart, pCurrentPacket->q1_begin_time.decPart, pCurrentPacket->packet_num);
+				printf("%08d.%03dms: p%lld enters Q1\n", pCurrentPacket->q1_begin_time.intPart, pCurrentPacket->q1_begin_time.decPart, pCurrentPacket->packet_num);
 			pthread_mutex_unlock(&mutex_on_stdout);
 				//TODO: error checking
 				pFirstListElem = My402ListFirst(pFilterData->pListQ1);
@@ -273,23 +282,23 @@ arrivalManager(void *arg){
 					//unlink from listQ1
 					My402ListUnlink(pFilterData->pListQ1, pFirstListElem);
 					gettimeofday(&tv, NULL);
-					printtimecpy(pCurrentPacket->q1_end_time,sub_printtime(tv,startTimeStamp));
+					sub_printtime(&(pCurrentPacket->q1_end_time),tv,startTimeStamp);
     					//00000751.186ms: p1 leaves Q1, time in Q1 = 247.810ms, token bucket now has 0 token
 					
 					pthread_mutex_lock(&mutex_on_stdout);
-						printf("%08d.%dms: p%lld leaves Q1, time in Q1 = 247.810ms, token bucket now has %d tokens\n",pCurrentPacket->q1_end_time.intPart, pCurrentPacket->q1_end_time.decPart, pCurrentPacket->packet_num, pFilterData->tokenCount );
+						printf("%08d.%03dms: p%lld leaves Q1, time in Q1 = 247.810ms, token bucket now has %d tokens\n",pCurrentPacket->q1_end_time.intPart, pCurrentPacket->q1_end_time.decPart, pCurrentPacket->packet_num, pFilterData->tokenCount );
 					pthread_mutex_unlock(&mutex_on_stdout);
 					if(My402ListEmpty(pFilterData->pListQ2) == TRUE){
 						//need to signal service thread, but insert this and then wake him
 						isWakeService = TRUE;
 					}
 					gettimeofday(&tv, NULL);
-					printtimecpy(pCurrentPacket->q2_begin_time,sub_printtime(tv, startTimeStamp));
+					sub_printtime(&(pCurrentPacket->q2_begin_time),tv, startTimeStamp);
 					My402ListAppend(pFilterData->pListQ2, pCurrentPacket);
 					//00000752.716ms: p1 enters Q2
 					
 					pthread_mutex_lock(&mutex_on_stdout);
-						printf("%08d.%dms: p%lld enters Q2\n", (int) pCurrentPacket->q2_begin_time.intPart, pCurrentPacket->q2_begin_time.decPart, pCurrentPacket->packet_num);
+						printf("%08d.%03dms: p%lld enters Q2\n", (int) pCurrentPacket->q2_begin_time.intPart, pCurrentPacket->q2_begin_time.decPart, pCurrentPacket->packet_num);
 					pthread_mutex_unlock(&mutex_on_stdout);
 					//printf("arrival:starts printing..\n");
 					//printList(pFilterData->pListQ2);
@@ -334,7 +343,7 @@ arrivalManager(void *arg){
 	}
 	return (void *)0;
 }
-
+//The 3 fields are separated by space or tab characters. There must be no leading or trailing space or tab characters in a line
 void parseLine(char *buf, My402Packet *pCurrentPacket){
 
 	char *start_ptr = buf;
@@ -379,8 +388,8 @@ tokenManager(void *arg){
 	memset(&timeStamp, '\0', sizeof(struct timeval));
 	struct timeval tv;
 	memset(&tv, '\0', sizeof(struct timeval));
-	struct printtime pTimeStamp;
-	memset(&pTimeStamp, '\0', sizeof(struct printtime));
+	printtime pTimeStamp;
+	memset(&pTimeStamp, '\0', sizeof(printtime));
 	My402ListElem *pFirstListElem = NULL;
 	My402Packet *pCurrentPacket = NULL;
 	
@@ -392,7 +401,7 @@ tokenManager(void *arg){
 			}
 		pthread_mutex_unlock(&mutex_on_stopNow);	
 		
-		timeStamp.tv_sec = (double)((double)1/r);
+		timeStamp.tv_sec = 0;
 		timeStamp.tv_usec = ((double)1/r)*1000000;
 		select(0, NULL, NULL, NULL, &timeStamp);
 		s = pthread_mutex_lock(&mutex_on_filterData);
@@ -415,22 +424,22 @@ tokenManager(void *arg){
 					pFilterData->tokenCount = pFilterData->tokenCount + 1;
 					gettimeofday(&tv, NULL);
 					//timevalcpy(timeStamp, sub_timeval(tv, startTimeStamp));
-					printtimecpy(pTimeStamp, sub_printtime(tv, startTimeStamp));
+					sub_printtime(&pTimeStamp, tv, startTimeStamp);
 				    	//00000251.726ms: token t1 arrives, token bucket now has 1 token
 					if(pFilterData->tokenCount == 1){
 						
 						pthread_mutex_lock(&mutex_on_stdout);
-							printf("%08d.%dms: token t%lld arrives, token bucket now has %d token\n",  pTimeStamp.intPart, pTimeStamp.decPart, current_token, pFilterData->tokenCount);
+							printf("%08d.%03dms: token t%lld arrives, token bucket now has %d token\n",  pTimeStamp.intPart, pTimeStamp.decPart, current_token, pFilterData->tokenCount);
 						pthread_mutex_unlock(&mutex_on_stdout);
 					}else{
 						
 						pthread_mutex_lock(&mutex_on_stdout);
-							printf("%08d.%dms: token t%lld arrives, token bucket now has %d token\n", pTimeStamp.intPart, pTimeStamp.decPart, current_token, pFilterData->tokenCount);
+							printf("%08d.%03dms: token t%lld arrives, token bucket now has %d token\n", pTimeStamp.intPart, pTimeStamp.decPart, current_token, pFilterData->tokenCount);
 						pthread_mutex_unlock(&mutex_on_stdout);
 					}
 			}else{
 				pthread_mutex_lock(&mutex_on_stdout);
-					printf("%08d.%dms: token t%lld arrives, dropped\n",pTimeStamp.intPart, pTimeStamp.decPart, current_token);	
+					printf("%08d.%03dms: token t%lld arrives, dropped\n",pTimeStamp.intPart, pTimeStamp.decPart, current_token);	
 				pthread_mutex_unlock(&mutex_on_stdout);
 			}
 			pFirstListElem = My402ListFirst(pFilterData->pListQ1);
@@ -445,13 +454,13 @@ tokenManager(void *arg){
 					//unlink from listQ1
 					My402ListUnlink(pFilterData->pListQ1, pFirstListElem);	
 					gettimeofday(&tv, NULL);
-					printtimecpy(pCurrentPacket->q1_end_time, sub_printtime(tv, startTimeStamp));
+					sub_printtime(&(pCurrentPacket->q1_end_time), tv, startTimeStamp);
 					if(My402ListEmpty(pFilterData->pListQ2) == TRUE){
 						//need to signal service thread, but insert this and then wake him
 						isWakeService = TRUE;
 					}
 					gettimeofday(&tv, NULL);
-					printtimecpy(pCurrentPacket->q2_begin_time,sub_printtime(tv,startTimeStamp));
+					sub_printtime(&(pCurrentPacket->q2_begin_time),tv,startTimeStamp);
 					My402ListAppend(pFilterData->pListQ2, pCurrentPacket);
 				}
 			}
@@ -484,8 +493,8 @@ serviceManager(void *arg){
 	memset(&timeStamp, '\0', sizeof(struct timeval));
 	struct timeval tv;
 	memset(&tv, '\0', sizeof(struct timeval));
-	struct printtime pTimeStamp;
-	memset(&pTimeStamp, '\0', sizeof(struct printtime));
+	printtime pTimeStamp;
+	memset(&pTimeStamp, '\0', sizeof(printtime));
 	int localStopNow = FALSE;
 	My402ListElem *pFirstElem = NULL;
 	My402Packet *pCurrentPacket = NULL;
@@ -528,23 +537,23 @@ serviceManager(void *arg){
 			}
 			if(pCurrentPacket != NULL){
 				//sleeps for an interval matching the service time of the packet; afterwards eject the packet from the system
-				timeStamp.tv_sec = (long) pCurrentPacket->service_time / 1000;
-				timeStamp.tv_usec =(long) (pCurrentPacket->service_time % 1000)*1000;
+				timeStamp.tv_sec = 0;
+				timeStamp.tv_usec =pCurrentPacket->service_time*1000;
 				select(0, NULL, NULL, NULL, &timeStamp);	
 		 		//00000752.932ms: p1 begin service at S, time in Q2 = 0.216ms
 				gettimeofday(&tv, NULL);
 				//timevalcpy(timeStamp, sub_timeval(tv, startTimeStamp));
-				printtimecpy(pTimeStamp, sub_printtime(tv, startTimeStamp));
+				sub_printtime(&pTimeStamp, tv, startTimeStamp);
 				pthread_mutex_lock(&mutex_on_stdout);
-					printf("%08d.%dms: p%lld begin service at S, time in Q2 = 0.216ms\n", pTimeStamp.intPart, pTimeStamp.decPart, pCurrentPacket->packet_num);
+					printf("%08d.%03dms: p%lld begin service at S, time in Q2 = 0.216ms\n", pTimeStamp.intPart, pTimeStamp.decPart, pCurrentPacket->packet_num);
 				pthread_mutex_unlock(&mutex_on_stdout);
 				gettimeofday(&tv, NULL);
-				printtimecpy(pCurrentPacket->q2_end_time,sub_printtime(tv,startTimeStamp));
+				sub_printtime(&(pCurrentPacket->q2_end_time),tv,startTimeStamp);
 				My402ListUnlink(pFilterData->pListQ2, pFirstElem);
     				//00003612.843ms: p1 departs from S, service time = 2859.911ms, time in system = 3109.731ms
 				
 				pthread_mutex_lock(&mutex_on_stdout);
-					printf("%08d.%dms: p%lld departs from S, service time = 2859.911ms, time in system = 3109.73ms\n", pCurrentPacket->q2_end_time.intPart , pCurrentPacket->q2_end_time.decPart,  pCurrentPacket->packet_num);
+					printf("%08d.%03dms: p%lld departs from S, service time = 2859.911ms, time in system = 3109.73ms\n", pCurrentPacket->q2_end_time.intPart , pCurrentPacket->q2_end_time.decPart,  pCurrentPacket->packet_num);
 				pthread_mutex_unlock(&mutex_on_stdout);
 				//printf("service: I just processed packet:%d\n", pCurrentPacket->tokens);
 			}

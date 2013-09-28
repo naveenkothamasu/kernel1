@@ -1,7 +1,6 @@
 #include<stdio.h>
 #include<stdlib.h>
 
-#include "my402threads.h"
 #include "my402util.h"
 
 int isTokenBucketFull(int tokensAsOfNow, int B){
@@ -24,38 +23,68 @@ void printList(My402List *pList){
 	printf("\n====================\n");
 
 }
-struct printtime 
-sub_printtime(struct timeval op1, struct timeval op2){
+void 
+sub_printtime(printtime *result, struct timeval op1, struct timeval op2){
 
-	struct printtime temp;
-	memset(&temp, '\0', sizeof(struct printtime));
-	double d1 = op1.tv_sec + op1.tv_usec/1000000;
-	double d2 = op2.tv_sec + op2.tv_usec/1000000;
+	memset(result, '\0', sizeof(printtime));
+	double d1 = (double)op1.tv_sec + (double)op1.tv_usec/(double)1000000;
+	double d2 = (double)op2.tv_sec + (double)op2.tv_usec/(double)1000000;
 	double res = d1-d2;
 	
 	int a = (int) (res*1000000);
 	int b = (int) (res* (double)1000)*1000;
-	temp.intPart = res*1000;
-	temp.decPart = a-b;
-	return temp;
+	result->intPart = res*1000;
+	result->decPart = a-b;
+	result->actual_num = res;
 }
 
-struct timeval sub_timeval(struct timeval op1, struct timeval op2){
+void  sub_timeval(struct timeval *temp, struct timeval op1, struct timeval op2){
 
-	struct timeval temp;
-	temp.tv_sec = op1.tv_sec - op2.tv_sec;
-	temp.tv_usec = op1.tv_usec - op2.tv_usec;
+	temp->tv_sec = op1.tv_sec - op2.tv_sec;
+	temp->tv_usec = op1.tv_usec - op2.tv_usec;
+}
+
+void add_timeval(struct timeval *temp ,struct timeval op1, struct timeval op2){
 	
-	return temp;	
+	temp->tv_sec = op1.tv_sec + op2.tv_sec;
+	temp->tv_usec = op1.tv_usec + op2.tv_usec;
+	
 }
 
-struct timeval add_timeval(struct timeval op1, struct timeval op2){
+void timeval_to_printtime(printtime *result, struct timeval t){
+
+	double tmp = t.tv_sec + ( t.tv_usec / 1000000) ;
+	
+	int a = (int) (tmp*1000000);
+	int b = (int) (tmp* (double)1000)*1000;
+	result->intPart = tmp*1000;
+	result->decPart = a-b;
+	result->actual_num = tmp;
+}
+
+int isPositive_timeval(struct timeval t){
+
+	double tmp = t.tv_sec + ( t.tv_usec / 1000000) ;
+	int isPositive = TRUE;
+
+	if( tmp < 0){
+		isPositive = FALSE;	
+	}
+	return isPositive;
+}
+
+//FIXME: assumtion tmp is sec
+void double_to_timeval(struct timeval *t, double tmp){
+
+	t->tv_sec = 0;
+	t->tv_usec = tmp*1000000;
+}
+
+void getcurrenttime(printtime *p, struct timeval start){
 	
 	struct timeval temp;
 	memset(&temp, '\0', sizeof(struct timeval));
-	temp.tv_sec = op1.tv_sec + op2.tv_sec;
-	temp.tv_usec = op1.tv_usec + op2.tv_usec;
-	
-	return temp;
+	gettimeofday(&temp, NULL);
+	sub_printtime(p, temp, start);
 }
 
