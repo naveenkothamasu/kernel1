@@ -21,6 +21,7 @@ int isDeterministicMode(int, char **);
 
 FILE *fp;
 My402FilterData *pFilterData;
+int deterministic = TRUE;
 pthread_t service = 0; //FIXME: what if user presses ^C before the service thread is created?
 
 pthread_mutex_t mutex_on_filterData = PTHREAD_MUTEX_INITIALIZER;
@@ -63,13 +64,13 @@ main(int argc, char *argv[]){
         if(t == NULL){
         	fprintf(stderr, "malloc() failed - unable to allocate memory\n");
         }
-	//int deterministic = isDeterministicMode(argc, argv);
-	isDeterministicMode(argc, argv);
-
-	fp = fopen("tfile","r");
-	if(fp == NULL){
-		perror("fopen");
-		exit(EXIT_FAILURE);	
+	deterministic = isDeterministicMode(argc, argv);
+	if(deterministic == FALSE){
+		fp = fopen("tfile","r");
+		if(fp == NULL){
+			perror("fopen");
+			exit(EXIT_FAILURE);	
+		}
 	}
 	/**
 	 * Allocate on heap and ensure to free at the right place. Avoids scope problems if allocated on individual stacks
@@ -98,7 +99,6 @@ main(int argc, char *argv[]){
 	if(isCreated != 0){
 		handle_errors(isCreated, "pthread_create");
 	}
-	/*
 	//create tokens thread
 	isCreated = pthread_create(&token, NULL, (void *) tokenManager, (void *) &old_set);
 	if(isCreated != 0){
@@ -109,12 +109,11 @@ main(int argc, char *argv[]){
 	if(isCreated != 0){
 		handle_errors(isCreated, "pthread_create");
 	}
-	*/
 	//sigwait(&set, (void *)sig_handler);
 	
 	pthread_join(arrival, NULL);
-	//pthread_join(token, NULL);
-	//pthread_join(service, NULL);
+	pthread_join(token, NULL);
+	pthread_join(service, NULL);
 	
 	//TODO:Move to clean up handler
 	if(fp != NULL){
@@ -177,10 +176,23 @@ arrivalManager(void *arg){
 	int isFirstLine = TRUE;	
 	struct timeval zero_stamp;
 	memset(&zero_stamp, '\0', sizeof(struct timeval));
-
+	int i=0;
+	double cInter_arrival_time = 0;
+	int cTokens = 0;
 	//TODO: examine the example in the slides
 	//TODO: validate tfile
-	while( fgets(buf, sizeof(buf), fp)  != NULL){
+	for(;;){
+		
+		if(deterministic == TRUE){
+			if(i == n){
+				break;
+			}
+			i++;
+		}else{
+			if(fgets(buf, sizeof(buf), fp)  == NULL){
+				break;
+			}
+		}
 		//FIXME: improve the logic
 		if(isFirstLine == TRUE){
 			
@@ -193,7 +205,9 @@ arrivalManager(void *arg){
 		if(pCurrentPacket == NULL){
 			fprintf(stderr, "malloc() failed, unable to allocate memory\n");
 		}
-		parseLine(buf, pCurrentPacket);
+		if(deterministic == FALSE){
+			parseLine(buf, pCurrentPacket);
+		}
 
 			//===== validate the packet -- begins====
 			if(pCurrentPacket->tokens > B){
@@ -203,8 +217,12 @@ arrivalManager(void *arg){
 				continue;
 			}
 			//===== validate the packet -- ends====
-
-			double_to_timeval(&inter_arrival_time, (double)pCurrentPacket->inter_arrival_time);	
+			if(deterministic == FALSE){
+				cInter_arrival_time = (double)pCurrentPacket->inter_arrival_time;	
+			}else{
+				cInter_arrival_time = lambda;
+			}	
+			double_to_timeval(&inter_arrival_time, cInter_arrival_time) ;	
 			//getcurrenttime(&current_time, startTimeStamp);
 			if(packet_num == 0){
 				gettimeofday(&startTimeStamp, NULL); //FIXME: remove this	
@@ -245,7 +263,12 @@ arrivalManager(void *arg){
 				//TODO: error checking
 				pFirstListElem = My402ListFirst(pFilterData->pListQ1);
 				pCurrentPacket = (My402Packet *) pFirstListElem->obj;
-				if(pCurrentPacket->tokens <=  pFilterData->tokenCount ){
+				if(deterministic == FALSE){
+					cTokens = pCurrentPacket->tokens;
+				}else{
+					cTokens = P;
+				}
+				if( cTokens <=  pFilterData->tokenCount ){
 					//currentPacket is eligible for transmission
 					pFilterData->tokenCount = pFilterData->tokenCount-pCurrentPacket->tokens;
 					//unlink from listQ1
@@ -444,6 +467,7 @@ serviceManager(void *arg){
 	memset(&tv, '\0', sizeof(struct timeval));
 	printtime pTimeStamp;
 	memset(&pTimeStamp, '\0', sizeof(printtime));
+	double cServiceTime;
 	int localStopNow = FALSE;
 	My402ListElem *pFirstElem = NULL;
 	My402Packet *pCurrentPacket = NULL;
@@ -485,7 +509,12 @@ serviceManager(void *arg){
 			if(pCurrentPacket != NULL){
 				//sleeps for an interval matching the service time of the packet; afterwards eject the packet from the system
 				timeStamp.tv_sec = 0;
-				timeStamp.tv_usec =pCurrentPacket->service_time*1000;
+				if(deterministic == FALSE){
+					cServiceTime = pCurrentPacket->service_time;
+				}else{
+					cServiceTime = mu;
+				}
+				timeStamp.tv_usec = cServiceTime *1000;
 				select(0, NULL, NULL, NULL, &timeStamp);	
 				gettimeofday(&tv, NULL);
 				sub_printtime(&pTimeStamp, tv, startTimeStamp);

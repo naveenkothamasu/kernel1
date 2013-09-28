@@ -15,7 +15,6 @@ isDeterministicMode(int argc, char *argv[]){
         [-r r] [-B B] [-P P] [-n num] \
         [-t tsfile]
 	**/
-	
 	int i=0;
 	int k=0;
 	for(; i<argc; i++){
@@ -64,15 +63,18 @@ isDeterministicMode(int argc, char *argv[]){
 		
 		}	
 	}
-			printf("lambda = %g\n", lambda);
-			printf("mu = %g\n", mu);
-			printf("r = %g\n", r);
-			printf("B = %d\n", B);
-			printf("P = %d\n", P);
-			printf("n = %d\n", n);
-			printf("t = %s\n", t);
-
-		return TRUE;
+		printf("lambda = %g\n", lambda);
+		printf("mu = %g\n", mu);
+		printf("r = %g\n", r);
+		printf("B = %d\n", B);
+		printf("P = %d\n", P);
+		printf("n = %d\n", n);
+		printf("t = %s\n", t);
+		if(t != NULL){
+			return TRUE;
+		}else{
+			return FALSE;
+		}
 }
 
 int intVal(char *str){
