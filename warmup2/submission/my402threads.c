@@ -98,8 +98,9 @@ main(int argc, char *argv[]){
 	if(isCreated != 0){
 		handle_errors(isCreated, "pthread_create");
 	}
+	/*
 	//create tokens thread
-	isCreated = pthread_create(&token, NULL, (void *) tokenManager, (void *) &old_set/*TODO*/);
+	isCreated = pthread_create(&token, NULL, (void *) tokenManager, (void *) &old_set);
 	if(isCreated != 0){
 		handle_errors(isCreated, "pthread_create");
 	}
@@ -108,11 +109,12 @@ main(int argc, char *argv[]){
 	if(isCreated != 0){
 		handle_errors(isCreated, "pthread_create");
 	}
+	*/
 	//sigwait(&set, (void *)sig_handler);
 	
 	pthread_join(arrival, NULL);
-	pthread_join(token, NULL);
-	pthread_join(service, NULL);
+	//pthread_join(token, NULL);
+	//pthread_join(service, NULL);
 	
 	//TODO:Move to clean up handler
 	if(fp != NULL){
@@ -204,12 +206,16 @@ arrivalManager(void *arg){
 
 			double_to_timeval(&inter_arrival_time, (double)pCurrentPacket->inter_arrival_time);	
 			//getcurrenttime(&current_time, startTimeStamp);
+			if(packet_num == 0){
+				gettimeofday(&startTimeStamp, NULL); //FIXME: remove this	
+			}
 			gettimeofday(&current_time, NULL);
+			//sub_timeval(&current_time, current_time, startTimeStamp);
 			sub_timeval(&current_time, current_time, startTimeStamp);
 			
 			//sleep for appropriate time
-			sub_timeval(&inter_arrival_time,inter_arrival_time, current_time);
-			add_timeval(&sleep_time, prev_arrival_time, inter_arrival_time);
+			sub_timeval(&timeStamp,inter_arrival_time, current_time);
+			add_timeval(&sleep_time, prev_arrival_time, timeStamp);
 			if(isPositive_timeval(sleep_time) == TRUE){
 				select(0, NULL, NULL, NULL, &sleep_time);
 			}
@@ -223,7 +229,7 @@ arrivalManager(void *arg){
 			//FIXME: waiting for 2 mutex locks?
 			pthread_mutex_lock(&mutex_on_stdout);
 				printf("%08d.%03dms: p%lld arrives, needs %d tokens, inter-arrival time = %d.%03dms\n", pTimeStamp.intPart, pTimeStamp.decPart, pCurrentPacket->packet_num, pCurrentPacket->tokens, pArrivalStamp.intPart, pArrivalStamp.decPart);
-			double_to_timeval(&prev_arrival_time, pTimeStamp.actual_num* (double)1000);
+			func(&prev_arrival_time, pTimeStamp.actual_num);
 			pthread_mutex_unlock(&mutex_on_stdout);
 			//wakes up, create a packet object, lock mutex
 			//enqueue the packet to Q1	

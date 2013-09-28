@@ -18,7 +18,7 @@ typedef struct tagPrintTime{
 	
 	int intPart;
 	int decPart;
-	double actual_num;
+	long long  actual_num;
 
 } printtime;
 
