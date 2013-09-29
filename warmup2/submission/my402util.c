@@ -26,23 +26,22 @@ void printList(My402List *pList){
 void 
 sub_printtime(printtime *result, struct timeval op1, struct timeval op2){
 
-	memset(result, '\0', sizeof(printtime));
-	double d1 = (double)op1.tv_sec* 1000000 + (double)op1.tv_usec;
-	double d2 = (double)op2.tv_sec* 1000000 + (double)op2.tv_usec;
-	long res = d1-d2;
-	
-	int a = (int) (res*1000000);
-	int b = (int) (res* (double)1000)*1000;
-	result->intPart = res/1000;
-	result->decPart = res%1000;
+	long long d1 = op1.tv_sec* 1000000 + op1.tv_usec;
+	long long d2 = op2.tv_sec* 1000000 + op2.tv_usec;
+	long long res = d1-d2;
+
+	double micro_sec = (double)res/(double)1000;
+	result->intPart = (int)micro_sec;
+	result->decPart = (res-(result->intPart*1000)) % 1000;
 	result->actual_num = res;
 }
 
 void  sub_timeval(struct timeval *temp, struct timeval op1, struct timeval op2){
 
-	double d1 = (double)op1.tv_sec * 1000000 + (double)op1.tv_usec;
-	double d2 = (double)op2.tv_sec * 1000000 + (double)op2.tv_usec;
-	double res = d1-d2;
+	
+	long long d1 = op1.tv_sec* 1000000 + op1.tv_usec;
+	long long d2 = op2.tv_sec* 1000000 + op2.tv_usec;
+	long long res = d1-d2;
 	
 	temp->tv_sec = 0;
 	temp->tv_usec = res;
@@ -50,23 +49,23 @@ void  sub_timeval(struct timeval *temp, struct timeval op1, struct timeval op2){
 
 void add_timeval(struct timeval *temp ,struct timeval op1, struct timeval op2){
 	
-	double d1 = (double)op1.tv_sec * 1000000 + (double)op1.tv_usec;
-	double d2 = (double)op2.tv_sec * 1000000 + (double)op2.tv_usec;
+	long long d1 = op1.tv_sec * 1000000 + op1.tv_usec;
+	long long d2 = op2.tv_sec * 1000000 + op2.tv_usec;
 	long long res = d1+d2;
-	temp->tv_sec = res/10000000;
-	temp->tv_usec = res%10000000;
+	temp->tv_sec = 0;
+	temp->tv_usec = res;
 	
 }
 
 void timeval_to_printtime(printtime *result, struct timeval t){
 
-	double tmp = t.tv_sec + ( t.tv_usec / 1000000) ;
+	double tmp = (double) t.tv_sec + ((double) t.tv_usec / (double) 1000000) ;
 	
 	int a = (int) (tmp*1000000);
 	int b = (int) (tmp* (double)1000)*1000;
 	result->intPart = tmp*1000;
 	result->decPart = a-b;
-	result->actual_num = t.tv_usec;
+	result->actual_num = tmp;
 }
 
 int isPositive_timeval(struct timeval t){
@@ -80,24 +79,4 @@ int isPositive_timeval(struct timeval t){
 	return isPositive;
 }
 
-//FIXME: assumtion tmp is sec
-void double_to_timeval(struct timeval *t, double tmp){
-
-	t->tv_sec = 0;
-	t->tv_usec = tmp*1000;
-}
-
-void func(struct timeval *t, long long res){
-	
-	t->tv_sec = 0;
-	t->tv_usec = res;
-}
-
-void getcurrenttime(printtime *p, struct timeval start){
-	
-	struct timeval temp;
-	memset(&temp, '\0', sizeof(struct timeval));
-	gettimeofday(&temp, NULL);
-	sub_printtime(p, temp, start);
-}
 

@@ -32,6 +32,11 @@ int stopNow = FALSE;
 
 struct timeval startTimeStamp;
 
+My402Stats *stats;
+My402ArrivalStats *aStats;
+My402TokenStats *tStats;
+My402ServiceStats *sStats;
+
 int
 main(int argc, char *argv[]){
 
@@ -39,11 +44,30 @@ main(int argc, char *argv[]){
 	sigemptyset(&set);
 	sigaddset(&set, SIGINT);
 
-	My402RunStats stats;
-	memset(&stats, '\0', sizeof(My402RunStats));
 	struct sigaction act;
 	memset(&act, '\0', sizeof(struct sigaction));
 	act.sa_sigaction  = (void *) sig_handler;
+	
+	stats = (My402Stats *) malloc(sizeof(My402Stats));
+	if(stats == 0){
+		fprintf(stderr, "malloc() failed, unable to allocate memory\n");	
+		exit(EXIT_FAILURE);
+	}
+	aStats = (My402ArrivalStats *) malloc(sizeof(My402ArrivalStats));
+	if(aStats == 0){
+		fprintf(stderr, "malloc() failed, unable to allocate memory\n");	
+		exit(EXIT_FAILURE);
+	}
+	tStats = (My402TokenStats *) malloc(sizeof(My402TokenStats));
+	if(tStats == 0){
+		fprintf(stderr, "malloc() failed, unable to allocate memory\n");	
+		exit(EXIT_FAILURE);
+	}
+	sStats = (My402ServiceStats *) malloc(sizeof(My402ServiceStats));
+	if(sStats == 0){
+		fprintf(stderr, "malloc() failed, unable to allocate memory\n");	
+		exit(EXIT_FAILURE);
+	}
 
 	int isCreated = 1;
 	pthread_t arrival, token;
@@ -80,6 +104,7 @@ main(int argc, char *argv[]){
 	//create arrivals thread
 	printf("00000000.000ms: emulation begins\n");
 	pthread_sigmask(SIG_BLOCK, &set, NULL); //FIXME: Is this the right place to block? ^C before threads got created?
+
 	isCreated = pthread_create(&arrival, NULL, (void *) arrivalManager, (void *) &old_set);
 	if(isCreated != 0){
 		handle_errors(isCreated, "pthread_create");
@@ -89,11 +114,14 @@ main(int argc, char *argv[]){
 	if(isCreated != 0){
 		handle_errors(isCreated, "pthread_create");
 	}
+
+		
 	//create service thread
 	isCreated = pthread_create(&service, NULL, (void *) serviceManager, (void *) &old_set);
 	if(isCreated != 0){
 		handle_errors(isCreated, "pthread_create");
 	}
+	
 	pthread_sigmask(SIG_UNBLOCK, &set, NULL); //FIXME: Is this the right place to block? ^C before threads got created?
 	sigaction(SIGINT, &act, NULL);
 	
@@ -101,8 +129,6 @@ main(int argc, char *argv[]){
 	pthread_join(token, NULL);
 	pthread_join(service, NULL);
 	
-	while(1){	
-	}	
 	//TODO:Move to clean up handler
 	if(fp != NULL){
 		fclose(fp);
@@ -152,11 +178,17 @@ arrivalManager(void *arg){
 	memset(&prev_arrival_time, '\0', sizeof(struct timeval));
 	printtime pArrivalStamp;
 	memset(&pArrivalStamp, '\0', sizeof(printtime));
+	printtime time_in_Q1;
+	memset(&time_in_Q1, '\0', sizeof(printtime));
 
 	My402ListElem *pFirstListElem = NULL;	
 	int isWakeService = FALSE;
 	struct timeval tv;
 	memset(&tv, '\0', sizeof(struct timeval));
+	struct timeval tv_q1_begintime;
+	memset(&tv_q1_begintime, '\0', sizeof(struct timeval));
+	struct timeval tv_q1_endtime;
+	memset(&tv_q1_endtime, '\0', sizeof(struct timeval));
 	My402Packet *pCurrentPacket = NULL;	
 	char buf[1024] = {'\0'};
 	char *str = malloc(1024*sizeof(char));
@@ -171,13 +203,23 @@ arrivalManager(void *arg){
 	for(;;){
 
 
-		stats.current_packets = packet_num;
+		aStats->current_packets = packet_num;
 		s = pthread_mutex_lock(&mutex_on_stopNow);
 		if(s != 0){
 			handle_errors(s, "pthread_mute_lock");	
 		}
 			if(stopNow == TRUE){
 				printf("arrival: stopNow global var is set\n");
+				s = pthread_mutex_unlock(&mutex_on_stopNow);
+				if(s != 0){
+					handle_errors(s, "pthread_mute_unlock");	
+				}
+				//before exiting, check if the server is waiting on Q2 empty
+				pthread_mutex_lock(&mutex_on_filterData);
+					if(My402ListEmpty(pFilterData->pListQ2) == TRUE){
+						pthread_cancel(service);
+					}
+				pthread_mutex_unlock(&mutex_on_filterData);
 				pthread_exit(NULL);	
 			} //FIXME: handle FAQ pthread_kill()
 		s = pthread_mutex_unlock(&mutex_on_stopNow);
@@ -214,22 +256,33 @@ arrivalManager(void *arg){
 			//===== validate the packet -- begins====
 			if(pCurrentPacket->tokens > B){
 		
+				pthread_mutex_lock(&mutex_on_startTimeStamp);
+					if(startTimeStamp.tv_sec == 0 && startTimeStamp.tv_usec == 0){
+						gettimeofday(&startTimeStamp, NULL); 	
+					}
+				pthread_mutex_unlock(&mutex_on_startTimeStamp);
 				//drop the packet and go to the next packet
-				free(pCurrentPacket);
-				stats.packets_dropped = stats.packets_dropped + 1;
+				gettimeofday(&timeStamp, NULL);
+				sub_printtime(&pTimeStamp, tv, startTimeStamp);	
+				printf("%08d.%03dms: packet p%d arrives, needs %d tokens, dropped",pTimeStamp.intPart, pTimeStamp.decPart, packet_num, pCurrentPacket->tokens);
+				prev_arrival_time.tv_sec = 0;
+				prev_arrival_time.tv_usec = pTimeStamp.actual_num;
+				aStats->packets_dropped = aStats->packets_dropped + 1;
 				continue;
 			}
 			//===== validate the packet -- ends====
+				inter_arrival_time.tv_sec = 0;
 			if(deterministic == FALSE){
-				cInter_arrival_time = (double)pCurrentPacket->inter_arrival_time;	
-					cTokens = pCurrentPacket->tokens;
+				inter_arrival_time.tv_usec = pCurrentPacket->inter_arrival_time * 1000;	
+				cTokens = pCurrentPacket->tokens;
 			}else{
 				cInter_arrival_time = (double)1/lambda;
+				inter_arrival_time.tv_usec = cInter_arrival_time * 1000000  ;	
 					cTokens = P;
 			}	
-			double_to_timeval(&inter_arrival_time, cInter_arrival_time) ;	
+			aStats->avg_inter_arrival_time = getNewAvgByNewNum(aStats->avg_inter_arrival_time, (double)inter_arrival_time.tv_usec/(double)1000000, packet_num);
 			pthread_mutex_lock(&mutex_on_startTimeStamp);
-				if(packet_num == 1 && startTimeStamp.tv_sec == 0 && startTimeStamp.tv_usec == 0){
+				if(startTimeStamp.tv_sec == 0 && startTimeStamp.tv_usec == 0){
 					gettimeofday(&startTimeStamp, NULL); 	
 				}
 			pthread_mutex_unlock(&mutex_on_startTimeStamp);
@@ -237,22 +290,25 @@ arrivalManager(void *arg){
 			sub_timeval(&current_time, current_time, startTimeStamp);
 			
 			add_timeval(&timeStamp, prev_arrival_time, inter_arrival_time);
-			sub_timeval(&sleep_time, current_time, timeStamp);
+			sub_timeval(&sleep_time, timeStamp, current_time);
 			if(isPositive_timeval(sleep_time) == TRUE){
 				select(0, NULL, NULL, NULL, &sleep_time);
 			}
 			//else get on with the business right away
-			getcurrenttime(&pTimeStamp, startTimeStamp);
-	
+			gettimeofday(&timeStamp, NULL);
+			sub_printtime(&pTimeStamp, timeStamp, startTimeStamp);	
 			pCurrentPacket->packet_num = packet_num++ ;
 			sub_printtime(&(pCurrentPacket->arrivalStamp), inter_arrival_time, zero_stamp);
 			//FIXME: waiting for 2 mutex locks?
 			pthread_mutex_lock(&mutex_on_stdout);
 				printf("%08d.%03dms: p%lld arrives, needs %d tokens, inter-arrival time = %d.%03dms\n", pTimeStamp.intPart, pTimeStamp.decPart, pCurrentPacket->packet_num, cTokens, (pCurrentPacket->arrivalStamp).intPart, (pCurrentPacket->arrivalStamp).decPart);
-			func(&prev_arrival_time, pTimeStamp.actual_num);
+			prev_arrival_time.tv_sec = 0;
+			prev_arrival_time.tv_usec = pTimeStamp.actual_num;
 			pthread_mutex_unlock(&mutex_on_stdout);
+
 			gettimeofday(&tv, NULL);
 			sub_printtime(&(pCurrentPacket->q1_begin_time),tv, startTimeStamp);
+			
 			pthread_mutex_lock(&mutex_on_filterData); 
 				My402ListAppend(pFilterData->pListQ1, pCurrentPacket);
 				
@@ -267,17 +323,29 @@ arrivalManager(void *arg){
 					pFilterData->tokenCount = pFilterData->tokenCount-cTokens;
 					//unlink from listQ1
 					My402ListUnlink(pFilterData->pListQ1, pFirstListElem);
+					
 					gettimeofday(&tv, NULL);
 					sub_printtime(&(pCurrentPacket->q1_end_time),tv,startTimeStamp);
+					
+					tv_q1_endtime.tv_sec = 0;
+					tv_q1_endtime.tv_usec= pCurrentPacket->q1_end_time.actual_num;
+					tv_q1_begintime.tv_sec = 0;
+					tv_q1_begintime.tv_usec= pCurrentPacket->q1_begin_time.actual_num;
+					sub_printtime(&time_in_Q1, tv_q1_endtime, tv_q1_begintime);
 					pthread_mutex_lock(&mutex_on_stdout);
-						printf("%08d.%03dms: p%lld leaves Q1, time in Q1 = 247.810ms, token bucket now has %d tokens\n",pCurrentPacket->q1_end_time.intPart, pCurrentPacket->q1_end_time.decPart, pCurrentPacket->packet_num, pFilterData->tokenCount );
+						printf("%08d.%03dms: p%lld leaves Q1, time in Q1 = %d.%dms, token bucket now has %d tokens\n",pCurrentPacket->q1_end_time.intPart, pCurrentPacket->q1_end_time.decPart, pCurrentPacket->packet_num, pFilterData->tokenCount, time_in_Q1.intPart,time_in_Q1.decPart  );
 					pthread_mutex_unlock(&mutex_on_stdout);
+					//keept it in micro-seconds for accuracy
+					aStats.time_spent_Q1 = aStats.time_spent_Q1 + time_in_Q1.actual_num;
+
 					if(My402ListEmpty(pFilterData->pListQ2) == TRUE){
 						//need to signal service thread, but insert this and then wake him
 						isWakeService = TRUE;
 					}
+
 					gettimeofday(&tv, NULL);
 					sub_printtime(&(pCurrentPacket->q2_begin_time),tv, startTimeStamp);
+
 					My402ListAppend(pFilterData->pListQ2, pCurrentPacket);
 					pthread_mutex_lock(&mutex_on_stdout);
 						printf("%08d.%03dms: p%lld enters Q2\n", (int) pCurrentPacket->q2_begin_time.intPart, pCurrentPacket->q2_begin_time.decPart, pCurrentPacket->packet_num);
@@ -362,13 +430,18 @@ tokenManager(void *arg){
 	memset(&current_time, '\0', sizeof(struct timeval));
 	
 	for(;;current_token++){
-	
+
+		tStats.current_tokens = current_tokens;	
 		s = pthread_mutex_lock(&mutex_on_stopNow);
 		if(s != 0){
 			handle_errors(s, "pthread_mute_lock");	
 		}
 			if(stopNow == TRUE){
 				printf("token: stopNow global var is set\n");
+				s = pthread_mutex_unlock(&mutex_on_stopNow);
+				if(s != 0){
+					handle_errors(s, "pthread_mute_unlock");	
+				}
 				pthread_exit(NULL);	
 			} //FIXME: handle FAQ pthread_kill()
 		s = pthread_mutex_unlock(&mutex_on_stopNow);
@@ -376,18 +449,18 @@ tokenManager(void *arg){
 			handle_errors(s, "pthread_mute_unlock");	
 		}	
 		
-		pthread_mutex_lock(&mutex_on_startTimeStamp);
-			if(current_token == 1 && startTimeStamp.tv_sec ==0 && startTimeStamp.tv_usec == 0){
-				gettimeofday(&startTimeStamp, NULL);	
-			}
-		pthread_mutex_unlock(&mutex_on_startTimeStamp);
 		timeStamp.tv_sec = 0;
 		timeStamp.tv_usec = ((double)1000000/r);
 
+		pthread_mutex_lock(&mutex_on_startTimeStamp);
+			if(startTimeStamp.tv_sec ==0 && startTimeStamp.tv_usec == 0){
+				gettimeofday(&startTimeStamp, NULL);	
+			}
+		pthread_mutex_unlock(&mutex_on_startTimeStamp);
 		gettimeofday(&current_time, NULL);
 		sub_timeval(&current_time, current_time, startTimeStamp);
 		add_timeval(&timeStamp, prev_arrival_time, timeStamp);
-		sub_timeval(&sleep_time, current_time, timeStamp);
+		sub_timeval(&sleep_time, timeStamp, current_time);
 		if(isPositive_timeval(sleep_time)){
 			select(0, NULL, NULL, NULL, &sleep_time);
 		}
@@ -406,16 +479,14 @@ tokenManager(void *arg){
 			
 			//sleep for an interval trying to match the given inter arrival time for the token	
 			//wakes up, locks the mutex, try to increment tocken count [if bucket is full, drop it]
-			stats.current_tokens = current_token; 	
+			tStats->current_tokens = current_token; 	
+			gettimeofday(&tv, NULL);
+			sub_printtime(&pTimeStamp, tv, startTimeStamp);
 			if(isTokenBucketFull( pFilterData->tokenCount, B) == FALSE){
 					pFilterData->tokenCount = pFilterData->tokenCount + 1;
-					gettimeofday(&tv, NULL);
-					sub_printtime(&pTimeStamp, tv, startTimeStamp);
 					if(pFilterData->tokenCount == 1){
-						
 						pthread_mutex_lock(&mutex_on_stdout);
 							printf("%08d.%03dms: token t%lld arrives, token bucket now has %d token\n",  pTimeStamp.intPart, pTimeStamp.decPart, current_token, pFilterData->tokenCount);
-							double_to_timeval(&prev_arrival_time, pTimeStamp.actual_num);
 						pthread_mutex_unlock(&mutex_on_stdout);
 					}else{
 						
@@ -427,8 +498,10 @@ tokenManager(void *arg){
 				pthread_mutex_lock(&mutex_on_stdout);
 					printf("%08d.%03dms: token t%lld arrives, dropped\n",pTimeStamp.intPart, pTimeStamp.decPart, current_token);	
 				pthread_mutex_unlock(&mutex_on_stdout);
-				stats.token_dropped = stats.token_dropped+1; 
+				tStats->tokens_dropped = tStats->tokens_dropped+1; 
 			}
+			prev_arrival_time.tv_sec = 0;
+			prev_arrival_time.tv_usec = pTimeStamp.actual_num;
 			pFirstListElem = My402ListFirst(pFilterData->pListQ1);
 			if(pFirstListElem != NULL){
 				pCurrentPacket = (My402Packet *)pFirstListElem->obj;	
@@ -443,14 +516,32 @@ tokenManager(void *arg){
 					pFilterData->tokenCount = pFilterData->tokenCount-cTokens;
 					//unlink from listQ1
 					My402ListUnlink(pFilterData->pListQ1, pFirstListElem);	
-					gettimeofday(&tv, NULL);
-					sub_printtime(&(pCurrentPacket->q1_end_time), tv, startTimeStamp);
+    
+                                        gettimeofday(&tv, NULL);
+                                        sub_printtime(&(pCurrentPacket->q1_end_time),tv,startTimeStamp);
+    
+                                        tv_q1_endtime.tv_sec = 0;
+                                        tv_q1_endtime.tv_usec= pCurrentPacket->q1_end_time.actual_num;
+                                        tv_q1_begintime.tv_sec = 0;
+                                        tv_q1_begintime.tv_usec= pCurrentPacket->q1_begin_time.actual_num;
+                                        sub_printtime(&time_in_Q1, tv_q1_endtime, tv_q1_begintime);
+                                        pthread_mutex_lock(&mutex_on_stdout);
+                                                printf("%08d.%03dms: p%lld leaves Q1, time in Q1 = %d.%dms, token bucket now has %d tokens\n",pCurrentPacket->q1_end_time.intPart, pCurrentPacket->q1_end_time.decPart, pCurrentPacket->packet_num, pFilterData->tokenCount, time_in_Q1.intPart,time_in_Q1.decPart  );
+                                        pthread_mutex_unlock(&mutex_on_stdout);
+					
+					tStats.time_spent_Q1 = tStats.time_spent_Q1 + time_in_Q1.actual_num;
+
 					if(My402ListEmpty(pFilterData->pListQ2) == TRUE){
 						isWakeService = TRUE;
 					}
 					gettimeofday(&tv, NULL);
 					sub_printtime(&(pCurrentPacket->q2_begin_time),tv,startTimeStamp);
+					
 					My402ListAppend(pFilterData->pListQ2, pCurrentPacket);
+ 					pthread_mutex_lock(&mutex_on_stdout);
+                                                printf("%08d.%03dms: p%lld enters Q2\n", (int) pCurrentPacket->q2_begin_time.intPart, pCurrentPacket->q2_begin_time.decPart, pCurrentPacket->packet_num);
+                                        pthread_mutex_unlock(&mutex_on_stdout);
+
 				}
 			}
 		//if a packet is added to Q2 and Q2 was empty before, signal or broadcast queue-not-empty condition
@@ -471,6 +562,10 @@ tokenManager(void *arg){
 }
 void clean_up(){
 	printf("inside clean_up\n");
+
+	gettimeofday(&tv_emulation_time, NULL);
+	sub_timeval(&(sStats->emulation_time), tv_emulation_time, startTimeStamp);
+
 	pthread_mutex_unlock(&mutex_on_filterData);
 	
 }
@@ -512,6 +607,12 @@ serviceManager(void *arg){
 		}
 			if(stopNow == TRUE){
 				printf("service: stopNow global var is set\n");
+				s = pthread_mutex_unlock(&mutex_on_stopNow);
+				if(s != 0){
+					handle_errors(s, "pthread_mute_unlock");	
+				}
+				gettimeofday(&tv_emulation_time, NULL);
+				sub_timeval(&(sStats->emulation_time), tv_emulation_time, startTimeStamp);
 				pthread_exit(NULL);	
 			} //FIXME: handle FAQ pthread_kill()
 		s = pthread_mutex_unlock(&mutex_on_stopNow);
@@ -548,34 +649,40 @@ serviceManager(void *arg){
 				timeStamp.tv_sec = 0;
 				if(deterministic == FALSE){
 					cServiceTime = pCurrentPacket->service_time;
-				}else{
-					cServiceTime = mu;
-				}
-				if(deterministic == FALSE){
 					timeStamp.tv_usec = cServiceTime *1000;
 				}else{
-					timeStamp.tv_usec = cServiceTime;
+					cServiceTime = (double)1/mu;
+					timeStamp.tv_usec = cServiceTime * 1000000;
 				}
 				select(0, NULL, NULL, NULL, &timeStamp);	
+				tv_q2_begin_time.tv_sec = 0;
+				tv_q2_begin_time.tv_usec = pCurrentPacket->q2_begin_time.actual_num;
 				gettimeofday(&tv, NULL);
 				sub_printtime(&pTimeStamp, tv, startTimeStamp);
-				double_to_timeval(&tv_q2_begin_time, pCurrentPacket->q2_begin_time.actual_num);
+				sub_timeval(&tv, tv, startTimeStamp);
 				sub_printtime(&time_in_Q2, tv, tv_q2_begin_time);
 				pthread_mutex_lock(&mutex_on_stdout);
-					printf("%08d.%03dms: p%lld begin service at S, time in Q2 = %08d.%03dms\n", pTimeStamp.intPart, pTimeStamp.decPart, pCurrentPacket->packet_num, time_in_Q2.intPart, time_in_Q2.decPart);
+					printf("%08d.%03dms: p%lld begin service at S, time in Q2 = %d.%03dms\n", pTimeStamp.intPart, pTimeStamp.decPart, pCurrentPacket->packet_num, time_in_Q2.intPart, time_in_Q2.decPart);
 				pthread_mutex_unlock(&mutex_on_stdout);
 				gettimeofday(&tv, NULL);
 				sub_printtime(&(pCurrentPacket->q2_end_time),tv,startTimeStamp);
-				double_to_timeval(&tv_q2_end_time, pCurrentPacket->q2_end_time.actual_num);
+				tv_q2_end_time.tv_sec = 0;
+				tv_q2_end_time.tv_usec =  pCurrentPacket->q2_end_time.actual_num;
 				My402ListUnlink(pFilterData->pListQ2, pFirstElem);	
 				sub_printtime(&actual_s_time, tv_q2_end_time, tv_q2_begin_time);
-				double_to_timeval(&arrivalStamp, pCurrentPacket->arrivalStamp.actual_num);
+				arrivalStamp.tv_sec = 0;
+				arrivalStamp.tv_usec = pCurrentPacket->arrivalStamp.actual_num;
 				sub_printtime(&system_time, tv_q2_end_time, arrivalStamp);
 				pthread_mutex_lock(&mutex_on_stdout);
-					printf("%08d.%03dms: p%lld departs from S, service time = %08d.%03dms, time in system = %08d.%03dms\n", pCurrentPacket->q2_end_time.intPart , pCurrentPacket->q2_end_time.decPart, pCurrentPacket->packet_num, actual_s_time.intPart, actual_s_time.decPart, system_time.intPart , system_time.decPart);
+					printf("%08d.%03dms: p%lld departs from S, service time = %d.%03dms, time in system = %d.%03dms\n", pCurrentPacket->q2_end_time.intPart , pCurrentPacket->q2_end_time.decPart, pCurrentPacket->packet_num, actual_s_time.intPart, actual_s_time.decPart, system_time.intPart , system_time.decPart);
 				pthread_mutex_unlock(&mutex_on_stdout);
 			}
 		pthread_mutex_unlock(&mutex_on_filterData);
+		sStats.avg_service_time = getNewAvg(sStats.avg_service_time, (double)actual_s_time.actual_num/(double)1000000, sStats.served_packets);
+		sStats.sd = getSD(sStats, system.actual_num);
+		sStats.served_packets = sStats.served_packets + 1;
+		sStats.time_spent_Q2 = sStats.time_spent_Q2 + actual_s_time;
+		sStats.time_spent_system = sStats.time_spent_system + system_time.actual_num;
 		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 		//if Q2 is empty, go wait for the queue-not-empty condition to be signaled
 		if(localStopNow == TRUE){

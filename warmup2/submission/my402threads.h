@@ -7,6 +7,13 @@
 	do{errno = err; perror(exception); exit(EXIT_FAILURE); }while(0)
 
 
+typedef struct tagMyStats {
+	
+	double avg_time_in_q1;
+	double sd_time_spent_system;
+	double avg_time_spent_system;
+ 
+} My402Stats;
 typedef struct tagFilterData {
 
 	My402List *pListQ1;
@@ -15,8 +22,6 @@ typedef struct tagFilterData {
 
 	int isStopNow;
 	int isMorePackets;
-	
-	My402Stats *stats;
 	
 } My402FilterData;
 
@@ -41,14 +46,6 @@ typedef struct tagMyPacket {
 	printtime arrivalStamp;
 } My402Packet;
 
-typedef struct tagMyStats {
-
-	
-	double avg_time_in_q1;
-	double sd_time_spent_system;
-	double avg_time_spent_system;
- 
-} My402Stats;
 
 typedef struct tagArrivalStats {
 
@@ -56,6 +53,7 @@ typedef struct tagArrivalStats {
 	double avg_packets_in_q1;
 	long packets_dropped;
 	long current_packets;
+	long long time_spent_Q1;
 
 } My402ArrivalStats;
 
@@ -63,15 +61,21 @@ typedef struct tagTokenStats {
 
 	long tokens_dropped;
 	long current_tokens;
+	long long time_spent_Q1;
 
 } My402TokenStats;
 
 typedef struct tagServiceStats {
+
+	long long time_spent_Q2;
+	long long system_time;
 	double avg_service_time;
 	double avg_packets_in_q2;
 	double avg_packets_in_s;
 
 	long long packets_served;
+	
+	long long emulation_time;
 } My402ServiceStats;
 
 
