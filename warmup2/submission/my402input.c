@@ -3,6 +3,8 @@
 #include<string.h>
 #include "cs402.h"
 
+#include "my402threads.h"
+
 int intVal(char *str);
 extern double lambda, mu, r;
 extern int B, P, n;
@@ -24,7 +26,11 @@ isDeterministicMode(int argc, char *argv[]){
 		
 		case 1:
 			lambda = strtod(argv[i+1], NULL);
-			if(lambda > 0.1){
+			if(lambda == 0){
+				fprintf(stderr, "invalid input, malformed command\n");	
+				exit(EXIT_FAILURE);
+			}	
+			if(lambda < 0.1){
 				lambda = 0.1;	
 			}
 			i++;
@@ -32,29 +38,56 @@ isDeterministicMode(int argc, char *argv[]){
 		case 2:
 			
 			mu = strtod(argv[i+1], NULL);
-			if(mu > 0.1){
+			if(mu < 0.1){
 				mu = 0.1;	
 			}
+			if(mu == 0){
+				fprintf(stderr, "invalid input, malformed command\n");	
+				exit(EXIT_FAILURE);
+			}	
 			i++;
 			break;
 		case 3:
 			r = strtod(argv[i+1], NULL);
+			if(r < 0.1){
+				r = 0.1;	
+			}
+			if(r == 0){
+				fprintf(stderr, "invalid input, malformed command\n");	
+				exit(EXIT_FAILURE);
+			}	
 			i++;
 			break;
 		case 4:
-			B = atoi(argv[i+1]);
+			B = strtol(argv[i+1], NULL, 10);
+			if(B == 0){
+				fprintf(stderr, "invalid input, malformed command\n");	
+				exit(EXIT_FAILURE);
+			}	
 			i++;
 			break;
 		case 5:
-			P = atoi(argv[i+1]);
+			P = strtol(argv[i+1], NULL, 10);
+			if(P == 0){
+				fprintf(stderr, "invalid input, malformed command\n");	
+				exit(EXIT_FAILURE);
+			}
 			i++;
 			break;
 		case 6:
-			n = atoi(argv[i+1]);
+			n = strtol(argv[i+1], NULL, 10);
+			if(n == 0){
+				fprintf(stderr, "invalid input, malformed command\n");	
+				exit(EXIT_FAILURE);
+			}	
 			i++;
 			break;
 		case 7:
 			t = argv[i+1];
+			if(t == NULL){
+				fprintf(stderr, "invalid input, malformed command\n");	
+				exit(EXIT_FAILURE);
+			}	
 			i++;
 			break;
 		default:
