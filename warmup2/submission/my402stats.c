@@ -18,27 +18,24 @@ void runStats(My402ArrivalStats *aStats, My402TokenStats *tStats, My402ServiceSt
 
 	double emulation_time = sStats->emulation_time.tv_sec * 1000000 + sStats->emulation_time.tv_usec;
 
-        printf("\t\taverage packet inter-arrival time = %g\n", aStats->avg_inter_arrival_time);
-        printf("\t\taverage packet service time = %g\n", sStats->avg_service_time);
-    
- 	printf("\t\taverage number of packets in Q1 = %g\n",aStats->time_spent_q1/ emulation_time);
- 	printf("\t\taverage number of packets in Q2 = %g\n",sStats->time_spent_q2/ emulation_time);
- 	printf("\t\taverage number of packets in S = %g\n",sStats->time_spent_s/ emulation_time);
+        printf("\t\taverage packet inter-arrival time = %g\n", (double)((double)aStats->avg_inter_arrival_time/(double)1000000) );
+        printf("\t\taverage packet service time = %g\n", (double) ((double)sStats->avg_service_time/(double)1000000));
+ 	printf("\t\taverage number of packets in Q1 = %g\n",(double) ( ((double) aStats->time_spent_q1+(double) tStats->time_spent_q1) / emulation_time));
+ 	printf("\t\taverage number of packets in Q2 = %g\n",(double) ( (double) sStats->time_spent_q2/ emulation_time));
+ 	printf("\t\taverage number of packets in S = %g\n",(double) ( (double) sStats->time_spent_s/ emulation_time));
     
  	//printf("\t\taverage time a packet spent in system = %g\n", stats->packet_spent_time);
-	printf("\t\tstandard deviation for time spent in system = %g\n", sStats->sd);
+	printf("\t\tstandard deviation for time spent in system = %g\n", (double) sStats->sd);
 	if( tStats->current_tokens == 0){
 		printf("\t\ttoken drop probability = N/A (no token arrived at this facility)\n" );
 	}else{
-		printf("\t\ttoken drop probability = %g", (double)tStats->tokens_dropped/(double)tStats->current_tokens);
+		printf("\t\ttoken drop probability = %g\n", (double)tStats->tokens_dropped/(double)tStats->current_tokens);
 	}
 	if( aStats->current_packets == 0){
 		printf("\t\tpacket drop probability = N/A (no packet arrived at this facility)\n" );
 	}else{
-		printf("\t\tpacket drop probability = %g",(double)aStats->packets_dropped/(double)aStats->current_packets);	
+		printf("\t\tpacket drop probability = %g\n",(double)aStats->packets_dropped/(double)aStats->current_packets);	
 	}
-	
-	printf("\n");
 
 }
 

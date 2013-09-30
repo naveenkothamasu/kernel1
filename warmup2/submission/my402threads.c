@@ -281,7 +281,8 @@ arrivalManager(void *arg){
 				inter_arrival_time.tv_usec = cInter_arrival_time * 1000000  ;	
 					cTokens = P;
 			}	
-			aStats->avg_inter_arrival_time = getNewAvgByNewNum(aStats->avg_inter_arrival_time, (double)inter_arrival_time.tv_usec/(double)1000000, packet_num);
+			//FIXME: sending time in microseconds
+			aStats->avg_inter_arrival_time = getNewAvgByNewNum(aStats->avg_inter_arrival_time, inter_arrival_time.tv_usec, packet_num);
 			pthread_mutex_lock(&mutex_on_startTimeStamp);
 				if(startTimeStamp.tv_sec == 0 && startTimeStamp.tv_usec == 0){
 					gettimeofday(&startTimeStamp, NULL); 	
@@ -334,7 +335,8 @@ arrivalManager(void *arg){
 					tv_q1_begintime.tv_usec= pCurrentPacket->q1_begin_time.actual_num;
 					sub_printtime(&time_in_Q1, tv_q1_endtime, tv_q1_begintime);
 					pthread_mutex_lock(&mutex_on_stdout);
-						printf("%08d.%03dms: p%lld leaves Q1, time in Q1 = %d.%dms, token bucket now has %d tokens\n",pCurrentPacket->q1_end_time.intPart, pCurrentPacket->q1_end_time.decPart, pCurrentPacket->packet_num, pFilterData->tokenCount, time_in_Q1.intPart,time_in_Q1.decPart  );
+						printf("%08d.%03dms: p%lld leaves Q1, time in Q1 = %d.%dms, token bucket now has %d tokens\n",
+pCurrentPacket->q1_end_time.intPart, pCurrentPacket->q1_end_time.decPart, pCurrentPacket->packet_num,time_in_Q1.intPart,time_in_Q1.decPart, pFilterData->tokenCount);
 					pthread_mutex_unlock(&mutex_on_stdout);
 					//keept it in micro-seconds for accuracy
 					aStats->time_spent_q1 = aStats->time_spent_q1 + time_in_Q1.actual_num;
@@ -533,7 +535,7 @@ tokenManager(void *arg){
                                         tv_q1_begintime.tv_usec= pCurrentPacket->q1_begin_time.actual_num;
                                         sub_printtime(&time_in_Q1, tv_q1_endtime, tv_q1_begintime);
                                         pthread_mutex_lock(&mutex_on_stdout);
-                                                printf("%08d.%03dms: p%lld leaves Q1, time in Q1 = %d.%dms, token bucket now has %d tokens\n",pCurrentPacket->q1_end_time.intPart, pCurrentPacket->q1_end_time.decPart, pCurrentPacket->packet_num, pFilterData->tokenCount, time_in_Q1.intPart,time_in_Q1.decPart  );
+                                                printf("%08d.%03dms: p%lld leaves Q1, time in Q1 = %d.%dms, token bucket now has %d tokens\n",pCurrentPacket->q1_end_time.intPart, pCurrentPacket->q1_end_time.decPart, pCurrentPacket->packet_num, time_in_Q1.intPart,time_in_Q1.decPart , pFilterData->tokenCount );
                                         pthread_mutex_unlock(&mutex_on_stdout);
 					
 					tStats->time_spent_q1 = tStats->time_spent_q1 + time_in_Q1.actual_num;
@@ -686,7 +688,8 @@ serviceManager(void *arg){
 			}
 		pthread_mutex_unlock(&mutex_on_filterData);
 		//TODO: should keep in micro-secs here and conver into secs at the time of printing?
-		sStats->avg_service_time = getNewAvgByNewNum(sStats->avg_service_time, (double)actual_s_time.actual_num/(double)1000000, sStats->packets_served);
+		sStats->avg_service_time = getAvg(sStats->avg_service_time, actual_s_time.actual_num, sStats->packets_served);
+		sStats->emulation_time.tv_usec = pCurrentPacket->q2_end_time.actual_num;
 		sStats->sd = getSD(sStats, system_time.actual_num);
 		sStats->packets_served = sStats->packets_served+ 1;
 		sStats->time_spent_s = sStats->time_spent_s + actual_s_time.actual_num;
