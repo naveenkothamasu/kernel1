@@ -265,7 +265,7 @@ arrivalManager(void *arg){
 				//drop the packet and go to the next packet
 				gettimeofday(&timeStamp, NULL);
 				sub_printtime(&pTimeStamp, tv, startTimeStamp);	
-				printf("%08d.%03dms: packet p%d arrives, needs %d tokens, dropped",pTimeStamp.intPart, pTimeStamp.decPart, packet_num, pCurrentPacket->tokens);
+				printf("%08d.%03dms: packet p%d arrives, needs %d tokens, dropped\n",pTimeStamp.intPart, pTimeStamp.decPart, packet_num, pCurrentPacket->tokens);
 				prev_arrival_time.tv_sec = 0;
 				prev_arrival_time.tv_usec = pTimeStamp.actual_num;
 				aStats->packets_dropped = aStats->packets_dropped + 1;
@@ -393,6 +393,7 @@ void parseLine(char *buf, My402Packet *pCurrentPacket){
 	input[1] = malloc(50*sizeof(**input));
 	input[2] = malloc(50*sizeof(**input));
 
+	validate(buf);	
 	for(; tabNumber<2; tabNumber++){
 		tab_ptr = strchr(start_ptr,'\t');
                 if(tab_ptr != NULL){
@@ -408,6 +409,18 @@ void parseLine(char *buf, My402Packet *pCurrentPacket){
 	pCurrentPacket->inter_arrival_time = atoi(input[0]);
 	pCurrentPacket->tokens = atoi(input[1]);
 	pCurrentPacket->service_time = atoi(input[2]);
+
+}
+
+void validate(char *buf){
+
+
+	//should have exactly n+1 lines
+	//each line should be terminated with \n
+	//Line 1 contains a positive integer (=n)
+//other lines
+	//a positive integer<>a positive integer<>a positive integer
+	//(there must be no leading no traling spaces nor tabs in the lines) 
 
 }
 

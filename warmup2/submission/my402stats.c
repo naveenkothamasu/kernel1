@@ -29,6 +29,8 @@ void runStats(My402ArrivalStats *aStats, My402TokenStats *tStats, My402ServiceSt
 	if( tStats->current_tokens == 0){
 		printf("\t\ttoken drop probability = N/A (no token arrived at this facility)\n" );
 	}else{
+		printf("tokens dropped %ld\n", tStats->tokens_dropped);
+		printf("current tokens %ld\n", tStats->current_tokens);
 		printf("\t\ttoken drop probability = %g\n", (double)tStats->tokens_dropped/(double)tStats->current_tokens);
 	}
 	if( aStats->current_packets == 0){

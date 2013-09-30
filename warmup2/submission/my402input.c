@@ -90,23 +90,29 @@ isDeterministicMode(int argc, char *argv[]){
 			}	
 			i++;
 			break;
+		case 8:
+			break; //OK
 		default:
 			printf("some unidentified arg=%s\n", argv[i]);
+			fprintf(stderr, "invalid input, malformed command\n");	
+			exit(EXIT_FAILURE);
 			break;
 		
 		}	
 	}
-		printf("lambda = %g\n", lambda);
-		printf("mu = %g\n", mu);
-		printf("r = %g\n", r);
-		printf("B = %d\n", B);
-		printf("P = %d\n", P);
-		printf("number to arrive = %d\n", n);
-		printf("tsfile = %s\n", t);
+		if(t == NULL){
+			printf("lambda = %g\n", lambda);
+			printf("mu = %g\n", mu);
+			printf("number to arrive = %d\n", n);
+		}
+			printf("r = %g\n", r);
+			printf("B = %d\n", B);
+			printf("P = %d\n", P);
 		if(t != NULL){
-			return TRUE;
-		}else{
+			printf("tsfile = %s\n", t);
 			return FALSE;
+		}else{
+			return TRUE;
 		}
 }
 
@@ -126,6 +132,8 @@ int intVal(char *str){
 		return 6;
 	}else if(strcmp("-t",str)== 0){
 		return 7;
+	}else if(strcmp("warmup2",str)== 0 || strcmp("./warmup2",str)== 0){
+		return 8;
 	}
 	
 	return -1;
