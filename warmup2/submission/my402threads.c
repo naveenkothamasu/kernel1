@@ -128,7 +128,8 @@ main(int argc, char *argv[]){
 	pthread_join(arrival, NULL);
 	pthread_join(token, NULL);
 	pthread_join(service, NULL);
-	
+
+	runStats(aStats, tStats, sStats);	
 	//TODO:Move to clean up handler
 	if(fp != NULL){
 		fclose(fp);
@@ -336,7 +337,7 @@ arrivalManager(void *arg){
 						printf("%08d.%03dms: p%lld leaves Q1, time in Q1 = %d.%dms, token bucket now has %d tokens\n",pCurrentPacket->q1_end_time.intPart, pCurrentPacket->q1_end_time.decPart, pCurrentPacket->packet_num, pFilterData->tokenCount, time_in_Q1.intPart,time_in_Q1.decPart  );
 					pthread_mutex_unlock(&mutex_on_stdout);
 					//keept it in micro-seconds for accuracy
-					aStats.time_spent_Q1 = aStats.time_spent_Q1 + time_in_Q1.actual_num;
+					aStats->time_spent_q1 = aStats->time_spent_q1 + time_in_Q1.actual_num;
 
 					if(My402ListEmpty(pFilterData->pListQ2) == TRUE){
 						//need to signal service thread, but insert this and then wake him
@@ -428,10 +429,16 @@ tokenManager(void *arg){
 	memset(&sleep_time, '\0', sizeof(struct timeval));
 	struct timeval current_time;
 	memset(&current_time, '\0', sizeof(struct timeval));
-	
+	struct timeval tv_q1_endtime;
+	memset(&tv_q1_endtime, '\0', sizeof(struct timeval));
+	struct timeval tv_q1_begintime;
+	memset(&tv_q1_begintime, '\0', sizeof(struct timeval));
+	printtime time_in_Q1;
+	memset(&time_in_Q1, '\0', sizeof(printtime));
+
 	for(;;current_token++){
 
-		tStats.current_tokens = current_tokens;	
+		tStats->current_tokens = current_token;	
 		s = pthread_mutex_lock(&mutex_on_stopNow);
 		if(s != 0){
 			handle_errors(s, "pthread_mute_lock");	
@@ -529,7 +536,7 @@ tokenManager(void *arg){
                                                 printf("%08d.%03dms: p%lld leaves Q1, time in Q1 = %d.%dms, token bucket now has %d tokens\n",pCurrentPacket->q1_end_time.intPart, pCurrentPacket->q1_end_time.decPart, pCurrentPacket->packet_num, pFilterData->tokenCount, time_in_Q1.intPart,time_in_Q1.decPart  );
                                         pthread_mutex_unlock(&mutex_on_stdout);
 					
-					tStats.time_spent_Q1 = tStats.time_spent_Q1 + time_in_Q1.actual_num;
+					tStats->time_spent_q1 = tStats->time_spent_q1 + time_in_Q1.actual_num;
 
 					if(My402ListEmpty(pFilterData->pListQ2) == TRUE){
 						isWakeService = TRUE;
@@ -563,8 +570,8 @@ tokenManager(void *arg){
 void clean_up(){
 	printf("inside clean_up\n");
 
-	gettimeofday(&tv_emulation_time, NULL);
-	sub_timeval(&(sStats->emulation_time), tv_emulation_time, startTimeStamp);
+	gettimeofday(&(sStats->emulation_time), NULL);
+	sub_timeval(&(sStats->emulation_time), sStats->emulation_time, startTimeStamp);
 
 	pthread_mutex_unlock(&mutex_on_filterData);
 	
@@ -611,8 +618,8 @@ serviceManager(void *arg){
 				if(s != 0){
 					handle_errors(s, "pthread_mute_unlock");	
 				}
-				gettimeofday(&tv_emulation_time, NULL);
-				sub_timeval(&(sStats->emulation_time), tv_emulation_time, startTimeStamp);
+				gettimeofday(&(sStats->emulation_time), NULL);
+				sub_timeval(&(sStats->emulation_time), sStats->emulation_time, startTimeStamp);
 				pthread_exit(NULL);	
 			} //FIXME: handle FAQ pthread_kill()
 		s = pthread_mutex_unlock(&mutex_on_stopNow);
@@ -678,11 +685,13 @@ serviceManager(void *arg){
 				pthread_mutex_unlock(&mutex_on_stdout);
 			}
 		pthread_mutex_unlock(&mutex_on_filterData);
-		sStats.avg_service_time = getNewAvg(sStats.avg_service_time, (double)actual_s_time.actual_num/(double)1000000, sStats.served_packets);
-		sStats.sd = getSD(sStats, system.actual_num);
-		sStats.served_packets = sStats.served_packets + 1;
-		sStats.time_spent_Q2 = sStats.time_spent_Q2 + actual_s_time;
-		sStats.time_spent_system = sStats.time_spent_system + system_time.actual_num;
+		//TODO: should keep in micro-secs here and conver into secs at the time of printing?
+		sStats->avg_service_time = getNewAvgByNewNum(sStats->avg_service_time, (double)actual_s_time.actual_num/(double)1000000, sStats->packets_served);
+		sStats->sd = getSD(sStats, system_time.actual_num);
+		sStats->packets_served = sStats->packets_served+ 1;
+		sStats->time_spent_s = sStats->time_spent_s + actual_s_time.actual_num;
+		sStats->time_spent_q2 = sStats->time_spent_q2 + time_in_Q2.actual_num;
+		sStats->system_time = sStats->system_time + system_time.actual_num;
 		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 		//if Q2 is empty, go wait for the queue-not-empty condition to be signaled
 		if(localStopNow == TRUE){

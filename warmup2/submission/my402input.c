@@ -101,8 +101,8 @@ isDeterministicMode(int argc, char *argv[]){
 		printf("r = %g\n", r);
 		printf("B = %d\n", B);
 		printf("P = %d\n", P);
-		printf("n = %d\n", n);
-		printf("t = %s\n", t);
+		printf("number to arrive = %d\n", n);
+		printf("tsfile = %s\n", t);
 		if(t != NULL){
 			return TRUE;
 		}else{

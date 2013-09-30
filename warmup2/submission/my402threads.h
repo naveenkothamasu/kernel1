@@ -53,7 +53,7 @@ typedef struct tagArrivalStats {
 	double avg_packets_in_q1;
 	long packets_dropped;
 	long current_packets;
-	long long time_spent_Q1;
+	long long time_spent_q1;
 
 } My402ArrivalStats;
 
@@ -61,24 +61,31 @@ typedef struct tagTokenStats {
 
 	long tokens_dropped;
 	long current_tokens;
-	long long time_spent_Q1;
+	long long time_spent_q1;
 
 } My402TokenStats;
 
 typedef struct tagServiceStats {
 
-	long long time_spent_Q2;
+	long long time_spent_q2;
+	long long time_spent_s;
 	long long system_time;
 	double avg_service_time;
 	double avg_packets_in_q2;
 	double avg_packets_in_s;
 
 	long long packets_served;
-	
-	long long emulation_time;
+	struct timeval  emulation_time;
+	double sd;
 } My402ServiceStats;
 
 
 void *arrivalManager(void *);
 void *tokenManager(void *);
 void *serviceManager(void *);
+void runStats(My402ArrivalStats *aStats, My402TokenStats *tStats, My402ServiceStats *sStats);
+double getNewAvgByNewNum(double old_avg, double val, int new_num);
+double getAvg(double old_avg, long long val, int old_num);
+double getSD(My402ServiceStats *, long long val);
+
+
