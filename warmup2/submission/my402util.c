@@ -79,4 +79,23 @@ int isPositive_timeval(struct timeval t){
 	return isPositive;
 }
 
+int isPositiveInt(char *str){
 
+	int i=0;
+	int num =0;
+	int digit = 0;
+	while(str[i] != '\0'){
+		digit = str[i]-'0';
+		if(0 <= digit && digit <= 9){
+			num = num + digit;
+		}else{
+			return FALSE;
+		}
+		i++;
+	}
+	if(num == 0){ //This is not the actual number, but for zero check this will do.
+		return FALSE;
+	}
+	
+	return TRUE;
+}

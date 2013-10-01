@@ -13,4 +13,4 @@ void getcurrenttime(printtime *, struct timeval);
 void double_to_timeval(struct timeval *, double);
 void timeval_to_printtime(printtime *, struct timeval);
 void func(struct timeval *, long long );
-
+int isPositiveInt(char *);

@@ -19,6 +19,9 @@ isDeterministicMode(int argc, char *argv[]){
 	**/
 	int i=0;
 	int k=0;
+	double aLambda = lambda;
+	double aMu = mu;
+	double aR = r;
 	for(; i<argc; i++){
 	
 		k = intVal(argv[i]);
@@ -30,6 +33,7 @@ isDeterministicMode(int argc, char *argv[]){
 				fprintf(stderr, "invalid input, malformed command\n");	
 				exit(EXIT_FAILURE);
 			}	
+			aLambda = lambda;
 			if(lambda < 0.1){
 				lambda = 0.1;	
 			}
@@ -41,6 +45,7 @@ isDeterministicMode(int argc, char *argv[]){
 			if(mu < 0.1){
 				mu = 0.1;	
 			}
+			aMu = mu;
 			if(mu == 0){
 				fprintf(stderr, "invalid input, malformed command\n");	
 				exit(EXIT_FAILURE);
@@ -52,6 +57,7 @@ isDeterministicMode(int argc, char *argv[]){
 			if(r < 0.1){
 				r = 0.1;	
 			}
+			aR = r;
 			if(r == 0){
 				fprintf(stderr, "invalid input, malformed command\n");	
 				exit(EXIT_FAILURE);
@@ -95,25 +101,27 @@ isDeterministicMode(int argc, char *argv[]){
 		default:
 			printf("some unidentified arg=%s\n", argv[i]);
 			fprintf(stderr, "invalid input, malformed command\n");	
-			exit(EXIT_FAILURE);
+			//exit(EXIT_FAILURE);
 			break;
 		
 		}	
 	}
-		if(t == NULL){
-			printf("lambda = %g\n", lambda);
-			printf("mu = %g\n", mu);
-			printf("number to arrive = %d\n", n);
-		}
-			printf("r = %g\n", r);
-			printf("B = %d\n", B);
-			printf("P = %d\n", P);
-		if(t != NULL){
-			printf("tsfile = %s\n", t);
-			return FALSE;
-		}else{
-			return TRUE;
-		}
+	printf("Emulation Parameters:\n");
+	if(*t == '\0'){
+		printf("\tlambda = %g\n", aLambda);
+		printf("\tmu = %g\n", aMu);
+		printf("\tnumber to arrive = %d\n", n);
+	}
+	printf("\tr = %g\n", aR);
+	printf("\tB = %d\n", B);
+	printf("\tP = %d\n", P);
+
+	if(*t != '\0'){
+		printf("\ttsfile = %s\n", t);
+		return FALSE;
+	}else{
+		return TRUE;
+	}
 }
 
 int intVal(char *str){
