@@ -77,6 +77,7 @@ typedef struct tagServiceStats {
 	long long packets_served;
 	struct timeval  emulation_time;
 	double sd;
+	long long old_avg;
 } My402ServiceStats;
 
 
@@ -86,6 +87,6 @@ void *serviceManager(void *);
 void runStats(My402ArrivalStats *aStats, My402TokenStats *tStats, My402ServiceStats *sStats);
 double getNewAvgByNewNum(double old_avg, double val, int new_num);
 double getAvg(double old_avg, long long val, int old_num);
-double getSD(My402ServiceStats *, long long val);
+void getStandardDeviation(My402ServiceStats *, long val);
 
 

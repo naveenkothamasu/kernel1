@@ -7,12 +7,15 @@ int
 main(){
 
         double sd = 0;
-        double ratio = pow(stats.sd,2)+ pow(stats.avg_spent_system, 2); 
-        double sum = ratio * (double) stats.packets_served;
-        double new_avg = getNewAvg(stats.avg_spent_system, stats.cPacket_time,  stats.packets_served);
-        double variance = ((sum+ pow(elem,2))/ stats.packets_served + 1) - pow(new_avg,2);
-        //sd = sqrt(variance);    
-	printf("var=%g\n", variance);
+        double old_avg = (double) stats->system_time / stats->packets_served;
+        double ratio = pow(stats->sd,2)+ pow(old_avg, 2);
+        double old_avg_sqred = ratio * (double) stats->packets_served;
+        double new_avg = getAvg(old_avg, elem, stats->packets_served);
 
+        double firstTerm = (old_avg_sqred + pow(elem,2)) / (double)(stats->packets_served+1);
+        double variance = firstTerm +  pow(new_avg,2);
+        sd = sqrt(variance);
+
+        return sd;
 }
 

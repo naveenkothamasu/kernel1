@@ -793,19 +793,19 @@ serviceManager(void *arg){
 				sub_printtime(&actual_s_time,tv, tv_q2_end_time);
 				arrivalStamp.tv_sec = 0;
 				arrivalStamp.tv_usec = pCurrentPacket->arrivalStamp.actual_num;
-				sub_printtime(&system_time, tv_q2_end_time, arrivalStamp);
+				sub_printtime(&system_time, tv, arrivalStamp);
 				pthread_mutex_lock(&mutex_on_stdout);
 					printf("%08d.%03dms: p%lld departs from S, service time = %d.%03dms, time in system = %d.%03dms\n", pTimeStamp.intPart , pTimeStamp.decPart, pCurrentPacket->packet_num, actual_s_time.intPart, actual_s_time.decPart, system_time.intPart , system_time.decPart);
 				pthread_mutex_unlock(&mutex_on_stdout);
+				sStats->packets_served = sStats->packets_served+ 1;
+				sStats->system_time = sStats->system_time + system_time.actual_num;
+				getStandardDeviation(sStats, system_time.actual_num);
 			}
 		//TODO: should keep in micro-secs here and conver into secs at the time of printing?
 		sStats->avg_service_time = getAvg(sStats->avg_service_time, actual_s_time.actual_num, sStats->packets_served);
 		sStats->emulation_time.tv_usec = pCurrentPacket->q2_end_time.actual_num;
-		sStats->sd = getSD(sStats, system_time.actual_num);
-		sStats->packets_served = sStats->packets_served+ 1;
 		sStats->time_spent_s = sStats->time_spent_s + actual_s_time.actual_num;
 		sStats->time_spent_q2 = sStats->time_spent_q2 + time_in_Q2.actual_num;
-		sStats->system_time = sStats->system_time + system_time.actual_num;
 		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 		//if Q2 is empty, go wait for the queue-not-empty condition to be signaled
 		if(localStopNow == TRUE){
