@@ -48,33 +48,32 @@ main(int argc, char *argv[]){
 	memset(&act, '\0', sizeof(struct sigaction));
 	act.sa_sigaction  = (void *) sig_handler;
 	
-	stats = (My402Stats *) malloc(sizeof(My402Stats));
-	if(stats == 0){
-		fprintf(stderr, "malloc() failed, unable to allocate memory\n");	
-		exit(EXIT_FAILURE);
-	}
 	aStats = (My402ArrivalStats *) malloc(sizeof(My402ArrivalStats));
 	if(aStats == 0){
 		fprintf(stderr, "malloc() failed, unable to allocate memory\n");	
 		exit(EXIT_FAILURE);
 	}
+	memset(aStats, '\0', sizeof(My402ArrivalStats));
 	tStats = (My402TokenStats *) malloc(sizeof(My402TokenStats));
 	if(tStats == 0){
 		fprintf(stderr, "malloc() failed, unable to allocate memory\n");	
 		exit(EXIT_FAILURE);
 	}
+	memset(tStats, '\0', sizeof(My402TokenStats));
 	sStats = (My402ServiceStats *) malloc(sizeof(My402ServiceStats));
 	if(sStats == 0){
 		fprintf(stderr, "malloc() failed, unable to allocate memory\n");	
 		exit(EXIT_FAILURE);
 	}
+	memset(sStats, '\0', sizeof(My402ServiceStats));
 
 	int isCreated = 1;
 	pthread_t arrival, token;
-	t = (char *)malloc(20*sizeof(char));
+	t = (char *)malloc(50*sizeof(char));
         if(t == NULL){
         	fprintf(stderr, "malloc() failed - unable to allocate memory\n");
         }
+	memset(t, '\0', 50*sizeof(char));
 	deterministic = isDeterministicMode(argc, argv);
 	if(deterministic == FALSE){
 		fp = fopen(t,"r");
@@ -270,12 +269,21 @@ arrivalManager(void *arg){
 		if(pCurrentPacket == NULL){
 			fprintf(stderr, "malloc() failed, unable to allocate memory\n");
 		}
+		memset(pCurrentPacket, '\0', sizeof(My402Packet));
 		if(deterministic == FALSE){
 			parseLine(buf, pCurrentPacket);
 		}
-
+			inter_arrival_time.tv_sec = 0;
+			if(deterministic == FALSE){
+				inter_arrival_time.tv_usec = pCurrentPacket->inter_arrival_time * 1000;	
+				cTokens = pCurrentPacket->tokens;
+			}else{
+				cInter_arrival_time = (double)1/lambda;
+				inter_arrival_time.tv_usec = cInter_arrival_time * 1000000  ;	
+					cTokens = P;
+			}
 			//===== validate the packet -- begins====
-			if(pCurrentPacket->tokens > B){
+			if(cTokens > B){
 		
 				pthread_mutex_lock(&mutex_on_startTimeStamp);
 					if(startTimeStamp.tv_sec == 0 && startTimeStamp.tv_usec == 0){
@@ -284,23 +292,17 @@ arrivalManager(void *arg){
 				pthread_mutex_unlock(&mutex_on_startTimeStamp);
 				//drop the packet and go to the next packet
 				gettimeofday(&timeStamp, NULL);
-				sub_printtime(&pTimeStamp, tv, startTimeStamp);	
-				printf("%08d.%03dms: packet p%d arrives, needs %d tokens, dropped\n",pTimeStamp.intPart, pTimeStamp.decPart, packet_num, pCurrentPacket->tokens);
+				sub_printtime(&pTimeStamp, timeStamp, startTimeStamp);	
+				printf("%08d.%03dms: packet p%d arrives, needs %d tokens, dropped\n",pTimeStamp.intPart, pTimeStamp.decPart, packet_num, cTokens);
 				prev_arrival_time.tv_sec = 0;
 				prev_arrival_time.tv_usec = pTimeStamp.actual_num;
 				aStats->packets_dropped = aStats->packets_dropped + 1;
+				packet_num = packet_num + 1;
+				aStats->avg_inter_arrival_time = getNewAvgByNewNum(aStats->avg_inter_arrival_time, inter_arrival_time.tv_usec, packet_num);
 				continue;
 			}
 			//===== validate the packet -- ends====
-				inter_arrival_time.tv_sec = 0;
-			if(deterministic == FALSE){
-				inter_arrival_time.tv_usec = pCurrentPacket->inter_arrival_time * 1000;	
-				cTokens = pCurrentPacket->tokens;
-			}else{
-				cInter_arrival_time = (double)1/lambda;
-				inter_arrival_time.tv_usec = cInter_arrival_time * 1000000  ;	
-					cTokens = P;
-			}	
+				
 			//FIXME: sending time in microseconds
 			aStats->avg_inter_arrival_time = getNewAvgByNewNum(aStats->avg_inter_arrival_time, inter_arrival_time.tv_usec, packet_num);
 			pthread_mutex_lock(&mutex_on_startTimeStamp);
@@ -466,8 +468,20 @@ arrivalManager(void *arg){
 		char **input = calloc(3, sizeof(**input));
 		
 		input[0] = malloc(50*sizeof(**input));
+		if(input[0] == NULL){
+			fprintf(stderr, "malloc() failed, unable to allocate memory\n");
+		}
+		memset(input[0], '\0', 50*sizeof(**input));
 		input[1] = malloc(50*sizeof(**input));
+		if(input[1] == NULL){
+			fprintf(stderr, "malloc() failed, unable to allocate memory\n");
+		}
+		memset(input[1], '\0', 50*sizeof(**input));
 		input[2] = malloc(50*sizeof(**input));
+		if(input[2] == NULL){
+			fprintf(stderr, "malloc() failed, unable to allocate memory\n");
+		}
+		memset(input[2], '\0', 50*sizeof(**input));
 
 		for(; tabNumber<2; tabNumber++){
 			ptr= start_ptr;

@@ -25,8 +25,13 @@ void runStats(My402ArrivalStats *aStats, My402TokenStats *tStats, My402ServiceSt
  	printf("\taverage number of packets in Q2 = %g\n",(double) ( (double) sStats->time_spent_q2/ emulation_time));
  	printf("\taverage number of packets in S = %g\n",(double) ( (double) sStats->time_spent_s/ emulation_time));
 	printf("\n");
- 	printf("\taverage time a packet spent in system = %g\n", (double)((double)sStats->system_time/((double)1000000*(double)sStats->packets_served)));
-	printf("\tstandard deviation for time spent in system = %g\n", (double) sStats->sd/ (double) 1000000);
+	if( sStats->packets_served == 0){
+	 	printf("\taverage time a packet spent in system = N/A (no packet arrived at the server)\n");
+		printf("\tstandard deviation for time spent in system = N/A (no packet arrived at the server)\n");
+	}else{	
+	 	printf("\taverage time a packet spent in system = %g\n", (double)((double)sStats->system_time/((double)1000000*(double)sStats->packets_served)));
+		printf("\tstandard deviation for time spent in system = %g\n", (double) sStats->sd/ (double) 1000000);
+	}
 	printf("\n");
 	if( tStats->current_tokens == 0){
 		printf("\ttoken drop probability = N/A (no token arrived at this facility)\n" );
