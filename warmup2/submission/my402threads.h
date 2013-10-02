@@ -77,7 +77,7 @@ typedef struct tagServiceStats {
 	long long packets_served;
 	struct timeval  emulation_time;
 	double sd;
-	long long old_avg;
+	double old_avg;
 } My402ServiceStats;
 
 

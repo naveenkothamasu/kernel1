@@ -77,7 +77,7 @@ main(int argc, char *argv[]){
         }
 	deterministic = isDeterministicMode(argc, argv);
 	if(deterministic == FALSE){
-		fp = fopen("tfile","r");
+		fp = fopen(t,"r");
 		if(fp == NULL){
 			perror("fopen");
 			exit(EXIT_FAILURE);	
@@ -460,6 +460,7 @@ arrivalManager(void *arg){
 	void parseLine(char *buf, My402Packet *pCurrentPacket){
 
 		char *start_ptr = buf;
+		char *ptr = NULL;
 		char *tab_ptr = NULL;
 		int tabNumber = 0;
 		char **input = calloc(3, sizeof(**input));
@@ -469,6 +470,8 @@ arrivalManager(void *arg){
 		input[2] = malloc(50*sizeof(**input));
 
 		for(; tabNumber<2; tabNumber++){
+			ptr= start_ptr;
+			
 			tab_ptr = strchr(start_ptr,'\t');
 			if(tab_ptr == NULL){
 				//din't see the tab, looking for space..
@@ -478,12 +481,22 @@ arrivalManager(void *arg){
 					exit(EXIT_FAILURE);	
 				}
 			}
+			
 			if(tab_ptr != NULL){
 				*tab_ptr = '\0';
+			}else{
+				fprintf(stderr, "input file is not in the correct format\n");
+				exit(EXIT_FAILURE);
 			}
+			
+			ptr = tab_ptr+1;
+			while(*ptr == '\t' || *ptr == ' '){
+				ptr++;
+			}
+			
 			//FIXME: check the length -- too big
 			strncpy(input[tabNumber],start_ptr, 50 );                
-			start_ptr = tab_ptr+1;
+			start_ptr = ptr;
 		}
 		strncpy(input[tabNumber], start_ptr, 50);                
 		
@@ -679,7 +692,6 @@ tokenManager(void *arg){
 	return (void *)0;
 }
 void clean_up(){
-	printf("inside clean_up\n");
 
 	gettimeofday(&(sStats->emulation_time), NULL);
 	sub_timeval(&(sStats->emulation_time), sStats->emulation_time, startTimeStamp);
@@ -802,7 +814,7 @@ serviceManager(void *arg){
 				getStandardDeviation(sStats, system_time.actual_num);
 			}
 		//TODO: should keep in micro-secs here and conver into secs at the time of printing?
-		sStats->avg_service_time = getAvg(sStats->avg_service_time, actual_s_time.actual_num, sStats->packets_served);
+		sStats->avg_service_time = getNewAvgByNewNum(sStats->avg_service_time, actual_s_time.actual_num, sStats->packets_served);
 		sStats->emulation_time.tv_usec = pCurrentPacket->q2_end_time.actual_num;
 		sStats->time_spent_s = sStats->time_spent_s + actual_s_time.actual_num;
 		sStats->time_spent_q2 = sStats->time_spent_q2 + time_in_Q2.actual_num;

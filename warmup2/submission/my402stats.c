@@ -26,7 +26,7 @@ void runStats(My402ArrivalStats *aStats, My402TokenStats *tStats, My402ServiceSt
  	printf("\taverage number of packets in S = %g\n",(double) ( (double) sStats->time_spent_s/ emulation_time));
 	printf("\n");
  	printf("\taverage time a packet spent in system = %g\n", (double)((double)sStats->system_time/((double)1000000*(double)sStats->packets_served)));
-	printf("\tstandard deviation for time spent in system = %g\n", (double) sStats->sd);
+	printf("\tstandard deviation for time spent in system = %g\n", (double) sStats->sd/ (double) 1000000);
 	printf("\n");
 	if( tStats->current_tokens == 0){
 		printf("\ttoken drop probability = N/A (no token arrived at this facility)\n" );
@@ -72,12 +72,12 @@ double getSD(My402ServiceStats *stats, long long elem){
 }
 
 void getStandardDeviation(My402ServiceStats *stats, long elem){
-
-	long long current_avg = stats->system_time/stats->packets_served;
-	long long firstTerm = pow(stats->sd,2) + pow(stats->old_avg,2);
-	firstTerm = firstTerm+ pow(elem,2)/ stats->packets_served;
 	
-	long long variance = firstTerm-pow(current_avg,2);
+	double current_avg = (double)stats->system_time/(double)stats->packets_served;
+	double temp = pow(stats->sd,2) + pow(stats->old_avg,2);
+	double firstTerm = ((temp*(double)(stats->packets_served-1)) + pow(elem,2))/ (double)stats->packets_served;
+	
+	double variance = firstTerm-pow(current_avg,2);
 	stats->sd = sqrt(variance);
 	stats->old_avg = current_avg;
 }
