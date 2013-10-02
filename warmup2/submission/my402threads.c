@@ -298,13 +298,12 @@ arrivalManager(void *arg){
 				prev_arrival_time.tv_usec = pTimeStamp.actual_num;
 				aStats->packets_dropped = aStats->packets_dropped + 1;
 				packet_num = packet_num + 1;
-				aStats->avg_inter_arrival_time = getNewAvgByNewNum(aStats->avg_inter_arrival_time, inter_arrival_time.tv_usec, packet_num);
+				aStats->avg_inter_arrival_time = getNewAvgByNewNum(aStats->avg_inter_arrival_time, pTimeStamp.actual_num, packet_num);
 				continue;
 			}
 			//===== validate the packet -- ends====
 				
 			//FIXME: sending time in microseconds
-			aStats->avg_inter_arrival_time = getNewAvgByNewNum(aStats->avg_inter_arrival_time, inter_arrival_time.tv_usec, packet_num);
 			pthread_mutex_lock(&mutex_on_startTimeStamp);
 				if(startTimeStamp.tv_sec == 0 && startTimeStamp.tv_usec == 0){
 					gettimeofday(&startTimeStamp, NULL); 	
@@ -384,6 +383,7 @@ arrivalManager(void *arg){
 				prev_arrival_time.tv_sec = 0;
 				prev_arrival_time.tv_usec = (pCurrentPacket->arrivalStamp).actual_num;
 				pthread_mutex_unlock(&mutex_on_stdout);
+				aStats->avg_inter_arrival_time = getNewAvgByNewNum(aStats->avg_inter_arrival_time, actual_inter_arrival.actual_num, pCurrentPacket->packet_num);
 
 				gettimeofday(&tv, NULL);
 				sub_printtime(&(pCurrentPacket->q1_begin_time),tv, startTimeStamp);

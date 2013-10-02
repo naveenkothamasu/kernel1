@@ -9,7 +9,7 @@
 #include<stdlib.h>
 #include<math.h>
 
-#include "my402threads.h"
+#include "my402util.h"
 
 //TODO: need a mutex on stats?
 

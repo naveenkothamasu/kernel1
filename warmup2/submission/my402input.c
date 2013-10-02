@@ -3,7 +3,7 @@
 #include<string.h>
 #include "cs402.h"
 
-#include "my402threads.h"
+#include "my402util.h"
 
 int intVal(char *str);
 extern double lambda, mu, r;
@@ -29,7 +29,8 @@ isDeterministicMode(int argc, char *argv[]){
 		
 		case 1:
 			lambda = strtod(argv[i+1], NULL);
-			if(lambda == 0){
+			if(lambda <= 0){
+				fprintf(stderr, "lambda must be a positive real number\n");
 				fprintf(stderr, "invalid input, malformed command\n");	
 				exit(EXIT_FAILURE);
 			}	
@@ -42,47 +43,87 @@ isDeterministicMode(int argc, char *argv[]){
 		case 2:
 			
 			mu = strtod(argv[i+1], NULL);
+			if(mu <= 0){
+				fprintf(stderr, "mu must be a positive real number\n");	
+				fprintf(stderr, "invalid input, malformed command\n");	
+				exit(EXIT_FAILURE);
+			}
 			if(mu < 0.1){
 				mu = 0.1;	
 			}
 			aMu = mu;
-			if(mu == 0){
-				fprintf(stderr, "invalid input, malformed command\n");	
-				exit(EXIT_FAILURE);
-			}	
+				
 			i++;
 			break;
 		case 3:
 			r = strtod(argv[i+1], NULL);
+			if(r <= 0){
+				fprintf(stderr, "r must be a positive real number\n");	
+				fprintf(stderr, "invalid input, malformed command\n");	
+				exit(EXIT_FAILURE);
+			}
 			if(r < 0.1){
 				r = 0.1;	
 			}
 			aR = r;
-			if(r == 0){
-				fprintf(stderr, "invalid input, malformed command\n");	
-				exit(EXIT_FAILURE);
-			}	
+				
 			i++;
 			break;
 		case 4:
-			B = strtol(argv[i+1], NULL, 10);
-			if(B == 0){
+			/*
+			 *	1. non-digits
+				2. decimal point
+				3. negatives
+				4. 0
+				5. Max val
+				
+			*/
+			if(isPositiveInt(argv[i+1]) == FALSE){
+				
+				fprintf(stderr, "B must be a positive integer\n");	
 				fprintf(stderr, "invalid input, malformed command\n");	
 				exit(EXIT_FAILURE);
-			}	
+			}
+			B = strtol(argv[i+1], NULL, 10);
+			if(B <= 0){
+				fprintf(stderr, "B must be a positive integer\n");	
+				fprintf(stderr, "invalid input, malformed command\n");	
+				exit(EXIT_FAILURE);
+			}
+			//this check might not be needed, as the vlaue in B itself would be -ve, once the OVERFLOW		
+			if(B > 2147483647 ){
+				fprintf(stderr, "The max valu of B is 2147483647 \n");	
+				fprintf(stderr, "invalid input, malformed command\n");	
+				exit(EXIT_FAILURE);
+			
+			}
 			i++;
 			break;
 		case 5:
+			if(isPositiveInt(argv[i+1]) == FALSE){
+				
+				fprintf(stderr, "P must be a positive integer\n");	
+				fprintf(stderr, "invalid input, malformed command\n");	
+				exit(EXIT_FAILURE);
+			}
 			P = strtol(argv[i+1], NULL, 10);
-			if(P == 0){
+			if( P <= 0){
+				fprintf(stderr, "P must be a positive integer\n");	
 				fprintf(stderr, "invalid input, malformed command\n");	
 				exit(EXIT_FAILURE);
 			}
 			i++;
 			break;
 		case 6:
+			if(isPositiveInt(argv[i+1]) == FALSE){
+				
+				fprintf(stderr, "n must be a positive integer\n");	
+				fprintf(stderr, "invalid input, malformed command\n");	
+				exit(EXIT_FAILURE);
+			}
 			n = strtol(argv[i+1], NULL, 10);
-			if(n == 0){
+			if(n <= 0){
+				fprintf(stderr, "n must be a positive integer\n");	
 				fprintf(stderr, "invalid input, malformed command\n");	
 				exit(EXIT_FAILURE);
 			}	
