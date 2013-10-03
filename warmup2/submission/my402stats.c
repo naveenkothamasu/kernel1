@@ -19,29 +19,29 @@ void runStats(My402ArrivalStats *aStats, My402TokenStats *tStats, My402ServiceSt
 	double emulation_time = sStats->emulation_time.tv_sec * 1000000 + sStats->emulation_time.tv_usec;
  	printf("Statistics:\n");
         printf("\taverage packet inter-arrival time = %.6g\n", (double)((double)aStats->avg_inter_arrival_time/(double)1000000) );
-        printf("\taverage packet service time = %g\n", (double) ((double)sStats->avg_service_time/(double)1000000));
+        printf("\taverage packet service time = %.6g\n", (double) ((double)sStats->avg_service_time/(double)1000000));
 	printf("\n");
- 	printf("\taverage number of packets in Q1 = %g\n",(double) ( ((double) aStats->time_spent_q1+(double) tStats->time_spent_q1) / emulation_time));
- 	printf("\taverage number of packets in Q2 = %g\n",(double) ( (double) sStats->time_spent_q2/ emulation_time));
- 	printf("\taverage number of packets in S = %g\n",(double) ( (double) sStats->time_spent_s/ emulation_time));
+ 	printf("\taverage number of packets in Q1 = %.6g\n",(double) ( ((double) aStats->time_spent_q1+(double) tStats->time_spent_q1) / emulation_time));
+ 	printf("\taverage number of packets in Q2 = %.6g\n",(double) ( (double) sStats->time_spent_q2/ emulation_time));
+ 	printf("\taverage number of packets in S = %.6g\n",(double) ( (double) sStats->time_spent_s/ emulation_time));
 	printf("\n");
 	if( sStats->packets_served == 0){
 	 	printf("\taverage time a packet spent in system = N/A (no packet arrived at the server)\n");
 		printf("\tstandard deviation for time spent in system = N/A (no packet arrived at the server)\n");
 	}else{	
-	 	printf("\taverage time a packet spent in system = %g\n", (double)((double)sStats->system_time/((double)1000000*(double)sStats->packets_served)));
-		printf("\tstandard deviation for time spent in system = %g\n", (double) sStats->sd/ (double) 1000000);
+	 	printf("\taverage time a packet spent in system = %.6g\n", (double)((double)sStats->system_time/((double)1000000*(double)sStats->packets_served)));
+		printf("\tstandard deviation for time spent in system = %.6g\n", (double) sStats->sd/ (double) 1000000);
 	}
 	printf("\n");
 	if( tStats->current_tokens == 0){
 		printf("\ttoken drop probability = N/A (no token arrived at this facility)\n" );
 	}else{
-		printf("\ttoken drop probability = %g\n", (double)tStats->tokens_dropped/(double)tStats->current_tokens);
+		printf("\ttoken drop probability = %.6g\n", (double)tStats->tokens_dropped/(double)tStats->current_tokens);
 	}
 	if( aStats->current_packets == 0){
 		printf("\tpacket drop probability = N/A (no packet arrived at this facility)\n" );
 	}else{
-		printf("\tpacket drop probability = %g\n",(double)aStats->packets_dropped/(double)aStats->current_packets);	
+		printf("\tpacket drop probability = %.6g\n",(double)aStats->packets_dropped/(double)aStats->current_packets);	
 	}
 }
 

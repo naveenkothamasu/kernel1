@@ -148,6 +148,7 @@ void sig_handler(int sig){
 		handle_errors(s, "pthread_mute_lock");	
 	}
 		stopNow = TRUE; //FIXME: handle FAQ pthread_kill()
+		//pthread_kill(arrival, SIGUSR1);
 	s = pthread_mutex_unlock(&mutex_on_stopNow);
 	if(s != 0){
 		handle_errors(s, "pthread_mute_unlock");	
@@ -210,28 +211,7 @@ arrivalManager(void *arg){
 	//TODO: validate tfile
 	for(;;){
 
-		s = pthread_mutex_lock(&mutex_on_stopNow);
-		if(s != 0){
-			handle_errors(s, "pthread_mute_lock");	
-		}
-			if(stopNow == TRUE){
-				printf("arrival: stopNow global var is set\n");
-				s = pthread_mutex_unlock(&mutex_on_stopNow);
-				if(s != 0){
-					handle_errors(s, "pthread_mute_unlock");	
-				}
-				//before exiting, check if the server is waiting on Q2 empty
-				pthread_mutex_lock(&mutex_on_filterData);
-					if(My402ListEmpty(pFilterData->pListQ2) == TRUE){
-						pthread_cancel(service);
-					}
-				pthread_mutex_unlock(&mutex_on_filterData);
-				pthread_exit(NULL);	
-			} //FIXME: handle FAQ pthread_kill()
-		s = pthread_mutex_unlock(&mutex_on_stopNow);
-		if(s != 0){
-			handle_errors(s, "pthread_mute_unlock");	
-		}
+		
 		aStats->current_packets = packet_num;
 			
 		
@@ -314,24 +294,26 @@ arrivalManager(void *arg){
 			
 			add_timeval(&timeStamp, prev_arrival_time, inter_arrival_time);
 			sub_timeval(&sleep_time, timeStamp, current_time);
-			/*	
+				
 			pthread_sigmask(SIG_BLOCK, &set, NULL);
 			s = pthread_mutex_lock(&mutex_on_stopNow);
 			
 			if(s != 0){
-				handle_errors(s, "pthread_mute_lock");	
+				handle_errors(s, "pthread_mutex_lock");	
 			}
 			
 			if(stopNow == TRUE){
 				printf("arrival: stopNow global var is set\n");
 				s = pthread_mutex_unlock(&mutex_on_stopNow);
 				if(s != 0){
-					handle_errors(s, "pthread_mute_unlock");	
+					handle_errors(s, "pthread_mutex_unlock");	
 				}
 				//before exiting, check if the server is waiting on Q2 empty
 				pthread_mutex_lock(&mutex_on_filterData);
 					if(My402ListEmpty(pFilterData->pListQ2) == TRUE){
-						pthread_cancel(service);
+						if(service != 0){
+							pthread_cancel(service);
+						}
 					}
 				pthread_mutex_unlock(&mutex_on_filterData);
 				pthread_exit(NULL);	
@@ -340,11 +322,13 @@ arrivalManager(void *arg){
 			if(s != 0){
 				handle_errors(s, "pthread_mute_unlock");	
 			}
-			*/
+			
+			
 			if(isPositive_timeval(sleep_time) == TRUE){
 				select(0, NULL, NULL, NULL, &sleep_time);
 			}
-			/*
+			
+			
 			pthread_sigmask(SIG_UNBLOCK, &set, NULL);
 			s = pthread_mutex_lock(&mutex_on_stopNow);
 			if(s != 0){
@@ -356,10 +340,11 @@ arrivalManager(void *arg){
 				if(s != 0){
 					handle_errors(s, "pthread_mute_unlock");	
 				}
-				//before exiting, check if the server is waiting on Q2 empty
 				pthread_mutex_lock(&mutex_on_filterData);
 					if(My402ListEmpty(pFilterData->pListQ2) == TRUE){
-						pthread_cancel(service);
+						if(service != 0){
+							pthread_cancel(service);
+						}
 					}
 				pthread_mutex_unlock(&mutex_on_filterData);
 				pthread_exit(NULL);	
@@ -368,7 +353,7 @@ arrivalManager(void *arg){
 			if(s != 0){
 				handle_errors(s, "pthread_mute_unlock");	
 			}
-			*/
+			
 			//else get on with the business right away
 			gettimeofday(&timeStamp, NULL);
 			sub_printtime(&(pCurrentPacket->arrivalStamp), timeStamp, startTimeStamp);	
@@ -577,6 +562,42 @@ tokenManager(void *arg){
 	for(;;current_token++){
 
 		tStats->current_tokens = current_token;	
+			
+		
+		timeStamp.tv_sec = 0;
+		timeStamp.tv_usec = ((double)1000000/r);
+
+		pthread_mutex_lock(&mutex_on_startTimeStamp);
+			if(startTimeStamp.tv_sec ==0 && startTimeStamp.tv_usec == 0){
+				gettimeofday(&startTimeStamp, NULL);	
+			}
+		pthread_mutex_unlock(&mutex_on_startTimeStamp);
+		gettimeofday(&current_time, NULL);
+		sub_timeval(&current_time, current_time, startTimeStamp);
+		add_timeval(&timeStamp, prev_arrival_time, timeStamp);
+		sub_timeval(&sleep_time, timeStamp, current_time);
+		
+		s = pthread_mutex_lock(&mutex_on_stopNow);
+		if(s != 0){
+			handle_errors(s, "pthread_mute_lock");	
+		}
+			if(stopNow == TRUE){
+				printf("token: stopNow global var is set\n");
+				s = pthread_mutex_unlock(&mutex_on_stopNow);
+				if(s != 0){
+					handle_errors(s, "pthread_mutex_unlock");	
+				}
+				pthread_exit(NULL);	
+			} //FIXME: handle FAQ pthread_kill()
+		s = pthread_mutex_unlock(&mutex_on_stopNow);
+		if(s != 0){
+			handle_errors(s, "pthread_mute_unlock");	
+		}
+		if(isPositive_timeval(sleep_time)){
+			select(0, NULL, NULL, NULL, &sleep_time);
+		}
+		
+		
 		s = pthread_mutex_lock(&mutex_on_stopNow);
 		if(s != 0){
 			handle_errors(s, "pthread_mute_lock");	
@@ -592,22 +613,6 @@ tokenManager(void *arg){
 		s = pthread_mutex_unlock(&mutex_on_stopNow);
 		if(s != 0){
 			handle_errors(s, "pthread_mute_unlock");	
-		}	
-		
-		timeStamp.tv_sec = 0;
-		timeStamp.tv_usec = ((double)1000000/r);
-
-		pthread_mutex_lock(&mutex_on_startTimeStamp);
-			if(startTimeStamp.tv_sec ==0 && startTimeStamp.tv_usec == 0){
-				gettimeofday(&startTimeStamp, NULL);	
-			}
-		pthread_mutex_unlock(&mutex_on_startTimeStamp);
-		gettimeofday(&current_time, NULL);
-		sub_timeval(&current_time, current_time, startTimeStamp);
-		add_timeval(&timeStamp, prev_arrival_time, timeStamp);
-		sub_timeval(&sleep_time, timeStamp, current_time);
-		if(isPositive_timeval(sleep_time)){
-			select(0, NULL, NULL, NULL, &sleep_time);
 		}
 		s = pthread_mutex_lock(&mutex_on_filterData);
 		if(s != 0){
@@ -835,6 +840,7 @@ serviceManager(void *arg){
 		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 		//if Q2 is empty, go wait for the queue-not-empty condition to be signaled
 		if(localStopNow == TRUE){
+			pthread_mutex_lock(&mutex_on_filterData); /* need lock here as clean up would unlock it*/
 			pthread_exit(NULL);
 		}
 	}	
