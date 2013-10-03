@@ -50,19 +50,19 @@ main(int argc, char *argv[]){
 	
 	aStats = (My402ArrivalStats *) malloc(sizeof(My402ArrivalStats));
 	if(aStats == 0){
-		fprintf(stderr, "malloc() failed, unable to allocate memory\n");	
+		fprintf(stderr, "ERROR: malloc() failed, unable to allocate memory\n");	
 		exit(EXIT_FAILURE);
 	}
 	memset(aStats, '\0', sizeof(My402ArrivalStats));
 	tStats = (My402TokenStats *) malloc(sizeof(My402TokenStats));
 	if(tStats == 0){
-		fprintf(stderr, "malloc() failed, unable to allocate memory\n");	
+		fprintf(stderr, "ERROR: malloc() failed, unable to allocate memory\n");	
 		exit(EXIT_FAILURE);
 	}
 	memset(tStats, '\0', sizeof(My402TokenStats));
 	sStats = (My402ServiceStats *) malloc(sizeof(My402ServiceStats));
 	if(sStats == 0){
-		fprintf(stderr, "malloc() failed, unable to allocate memory\n");	
+		fprintf(stderr, "ERROR: malloc() failed, unable to allocate memory\n");	
 		exit(EXIT_FAILURE);
 	}
 	memset(sStats, '\0', sizeof(My402ServiceStats));
@@ -71,7 +71,7 @@ main(int argc, char *argv[]){
 	pthread_t arrival, token;
 	t = (char *)malloc(50*sizeof(char));
         if(t == NULL){
-        	fprintf(stderr, "malloc() failed - unable to allocate memory\n");
+        	fprintf(stderr, "ERROR: malloc() failed - unable to allocate memory\n");
         }
 	memset(t, '\0', 50*sizeof(char));
 	deterministic = isDeterministicMode(argc, argv);
@@ -212,7 +212,6 @@ arrivalManager(void *arg){
 	for(;;){
 
 		
-		aStats->current_packets = packet_num;
 			
 		
 		if(deterministic == TRUE){
@@ -231,7 +230,7 @@ arrivalManager(void *arg){
 			if(isFirstLine == TRUE){
 				
 				if(!isPositiveInt(buf)){ //TODO: check zero case, especially
-					fprintf(stderr, "The number of packets should be a positive integer, but given as %s\n", buf);
+					fprintf(stderr, "ERROR: The number of packets should be a positive integer, but given as [%s]\n", buf);
 					exit(EXIT_FAILURE);
 				}
 				num_packets = strtol(buf, NULL, 10);
@@ -239,7 +238,7 @@ arrivalManager(void *arg){
 				continue;
 			}
 			if(line_num > num_packets+1){
-				fprintf(stderr, "The number of lines in the tsfile must be exacly n+1, but found %d\n", line_num);
+				fprintf(stderr, "ERROR: The number of lines in the tsfile must be exacly %d, but found line %d\n", num_packets+1, line_num);
 				exit(EXIT_FAILURE);
 			}
 			line_num++;
@@ -247,7 +246,7 @@ arrivalManager(void *arg){
 		//TODO: validate the tfile line
 		pCurrentPacket = (My402Packet *) malloc(sizeof(My402Packet)); 	
 		if(pCurrentPacket == NULL){
-			fprintf(stderr, "malloc() failed, unable to allocate memory\n");
+			fprintf(stderr, "ERROR: malloc() failed, unable to allocate memory\n");
 		}
 		memset(pCurrentPacket, '\0', sizeof(My402Packet));
 		if(deterministic == FALSE){
@@ -263,6 +262,7 @@ arrivalManager(void *arg){
 					cTokens = P;
 			}
 			//===== validate the packet -- begins====
+			aStats->current_packets = packet_num;
 			if(cTokens > B){
 		
 				pthread_mutex_lock(&mutex_on_startTimeStamp);
@@ -449,43 +449,42 @@ arrivalManager(void *arg){
 		char *start_ptr = buf;
 		char *ptr = NULL;
 		char *tab_ptr = NULL;
+		char *space_ptr = NULL;
 		int tabNumber = 0;
 		char **input = calloc(3, sizeof(**input));
 		
 		input[0] = malloc(50*sizeof(**input));
 		if(input[0] == NULL){
-			fprintf(stderr, "malloc() failed, unable to allocate memory\n");
+			fprintf(stderr, "ERROR: malloc() failed, unable to allocate memory\n");
 		}
 		memset(input[0], '\0', 50*sizeof(**input));
 		input[1] = malloc(50*sizeof(**input));
 		if(input[1] == NULL){
-			fprintf(stderr, "malloc() failed, unable to allocate memory\n");
+			fprintf(stderr, "ERROR: malloc() failed, unable to allocate memory\n");
 		}
 		memset(input[1], '\0', 50*sizeof(**input));
 		input[2] = malloc(50*sizeof(**input));
 		if(input[2] == NULL){
-			fprintf(stderr, "malloc() failed, unable to allocate memory\n");
+			fprintf(stderr, "ERROR: malloc() failed, unable to allocate memory\n");
 		}
 		memset(input[2], '\0', 50*sizeof(**input));
-
+	
 		for(; tabNumber<2; tabNumber++){
 			ptr= start_ptr;
 			
 			tab_ptr = strchr(start_ptr,'\t');
+			space_ptr = strchr(start_ptr, ' ');
+			if( tab_ptr == NULL || (space_ptr != NULL && space_ptr < tab_ptr)){
+				tab_ptr = space_ptr;
+			}	
 			if(tab_ptr == NULL){
-				//din't see the tab, looking for space..
-				tab_ptr = strchr(start_ptr, ' ');
-				if(tab_ptr == NULL){
-					fprintf(stderr, "The intput file is not in the correct format\n");
-					exit(EXIT_FAILURE);	
-				}
+				//din't see the tab nor space..
+				fprintf(stderr, "ERROR: The intput file is not in the correct format\n");
+				exit(EXIT_FAILURE);	
 			}
 			
 			if(tab_ptr != NULL){
 				*tab_ptr = '\0';
-			}else{
-				fprintf(stderr, "input file is not in the correct format\n");
-				exit(EXIT_FAILURE);
 			}
 			
 			ptr = tab_ptr+1;
@@ -501,15 +500,15 @@ arrivalManager(void *arg){
 		
 		//TODO:After all the validations,
 		if(!isPositiveInt(input[0])){
-			fprintf(stderr, "inter arrival time of a packet should be a positive integer, but given as %s\n", input[0]);	
+			fprintf(stderr, "ERROR: inter arrival time of a packet should be a positive integer, but given as [%s]\n", input[0]);	
 			exit(EXIT_FAILURE);
 		}
 		if(!isPositiveInt(input[1])){
-			fprintf(stderr, "inter arrival time of a packet should be a positive integer, but given as %s\n", input[0]);	
+			fprintf(stderr, "ERROR: token number should be a positive integer, but given as [%s]\n", input[1]);	
 			exit(EXIT_FAILURE);
 		}
 		if(!isPositiveInt(input[2])){
-			fprintf(stderr, "inter arrival time of a packet should be a positive integer, but given as %s\n", input[0]);	
+			fprintf(stderr, "ERROR: service time of a packet should be a positive integer, but given as [%s]\n", input[2]);	
 			exit(EXIT_FAILURE);
 		}
 		//TODO: max_int chek pending...
@@ -561,7 +560,6 @@ tokenManager(void *arg){
 
 	for(;;current_token++){
 
-		tStats->current_tokens = current_token;	
 			
 		
 		timeStamp.tv_sec = 0;
