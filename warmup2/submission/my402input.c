@@ -80,13 +80,13 @@ isDeterministicMode(int argc, char *argv[]){
 			*/
 			if(isPositiveInt(argv[i+1]) == FALSE){
 				
-				fprintf(stderr, "B must be a positive integer\n");	
+				fprintf(stderr, "B must be a positive integer and should not be more than 2147483647\n");	
 				fprintf(stderr, "invalid input, malformed command\n");	
 				exit(EXIT_FAILURE);
 			}
 			B = strtol(argv[i+1], NULL, 10);
 			if(B <= 0){
-				fprintf(stderr, "B must be a positive integer\n");	
+				fprintf(stderr, "B must be a positive integer and should not be more than 2147483647\n");	
 				fprintf(stderr, "invalid input, malformed command\n");	
 				exit(EXIT_FAILURE);
 			}
@@ -102,13 +102,13 @@ isDeterministicMode(int argc, char *argv[]){
 		case 5:
 			if(isPositiveInt(argv[i+1]) == FALSE){
 				
-				fprintf(stderr, "P must be a positive integer\n");	
+				fprintf(stderr, "P must be a positive integer and should not be more than 2147483647\n");	
 				fprintf(stderr, "invalid input, malformed command\n");	
 				exit(EXIT_FAILURE);
 			}
 			P = strtol(argv[i+1], NULL, 10);
 			if( P <= 0){
-				fprintf(stderr, "P must be a positive integer\n");	
+				fprintf(stderr, "P must be a positive integer and should not be more than 2147483647\n");	
 				fprintf(stderr, "invalid input, malformed command\n");	
 				exit(EXIT_FAILURE);
 			}
@@ -117,13 +117,13 @@ isDeterministicMode(int argc, char *argv[]){
 		case 6:
 			if(isPositiveInt(argv[i+1]) == FALSE){
 				
-				fprintf(stderr, "n must be a positive integer\n");	
+				fprintf(stderr, "n must be a positive integer and should not be more than 2147483647\n");	
 				fprintf(stderr, "invalid input, malformed command\n");	
 				exit(EXIT_FAILURE);
 			}
 			n = strtol(argv[i+1], NULL, 10);
 			if(n <= 0){
-				fprintf(stderr, "n must be a positive integer\n");	
+				fprintf(stderr, "n must be a positive integer and should not be more than 2147483647\n");	
 				fprintf(stderr, "invalid input, malformed command\n");	
 				exit(EXIT_FAILURE);
 			}	
@@ -140,9 +140,9 @@ isDeterministicMode(int argc, char *argv[]){
 		case 8:
 			break; //OK
 		default:
-			printf("some unidentified arg=%s\n", argv[i]);
+			printf("some unidentified argument is given=%s\n", argv[i]);
 			fprintf(stderr, "invalid input, malformed command\n");	
-			//exit(EXIT_FAILURE);
+			exit(EXIT_FAILURE);
 			break;
 		
 		}	

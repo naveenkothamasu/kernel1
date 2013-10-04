@@ -77,12 +77,21 @@ double getSD(My402ServiceStats *stats, long long elem){
 }
 
 void getStandardDeviation(My402ServiceStats *stats, long elem){
-	
+
+	//printf("\n=========================================\n");	
 	double current_avg = (double)stats->system_time/(double)stats->packets_served;
+	//printf("current_avg=%.6g\n", current_avg);
+	//printf("stats->old_avg=%.6g\n", stats->old_avg);
 	double temp = pow(stats->sd,2) + pow(stats->old_avg,2);
+	//printf("temp=%.6g\n", temp);
 	double firstTerm = ((temp*(double)(stats->packets_served-1)) + pow(elem,2))/ (double)stats->packets_served;
+	//printf("firstTerm=%.6g\n", firstTerm);
 	
 	double variance = firstTerm-pow(current_avg,2);
+	//printf("variance=%.6g\n", variance);
 	stats->sd = sqrt(variance);
+	//printf("stats->sd=%.6g\n", stats->sd);
+	//printf("stats->old_avg=%.6g\n", stats->old_avg);
 	stats->old_avg = current_avg;
+	//printf("\n=========================================\n");	
 }
