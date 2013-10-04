@@ -108,13 +108,13 @@ main(int argc, char *argv[]){
 	if(isCreated != 0){
 		handle_errors(isCreated, "pthread_create");
 	}
-
+	
 	//create tokens thread
 	isCreated = pthread_create(&token, NULL, (void *) tokenManager, (void *) &old_set);
 	if(isCreated != 0){
 		handle_errors(isCreated, "pthread_create");
 	}
-
+	
 		
 	//create service thread
 	isCreated = pthread_create(&service, NULL, (void *) serviceManager, (void *) &old_set);
@@ -270,41 +270,10 @@ arrivalManager(void *arg){
 			}
 			//===== validate the packet -- begins====
 			aStats->current_packets = packet_num;
-			if(cTokens > B){
-		
-				pthread_mutex_lock(&mutex_on_startTimeStamp);
-					if(startTimeStamp.tv_sec == 0 && startTimeStamp.tv_usec == 0){
-						gettimeofday(&startTimeStamp, NULL); 	
-					}
-				pthread_mutex_unlock(&mutex_on_startTimeStamp);
-				//drop the packet and go to the next packet
-				gettimeofday(&timeStamp, NULL);
-				sub_printtime(&(pCurrentPacket->arrivalStamp), timeStamp, startTimeStamp);	
-				printf("%08d.%03dms: packet p%d arrives, needs %d tokens, dropped\n",(pCurrentPacket->arrivalStamp).intPart, (pCurrentPacket->arrivalStamp).decPart, packet_num, cTokens);
-				timeStamp.tv_sec = 0;
-				timeStamp.tv_usec = (pCurrentPacket->arrivalStamp).actual_num;
-				sub_printtime(&actual_inter_arrival, timeStamp, prev_arrival_time);
-				//prev_arrival_time.tv_sec = 0;
-				//prev_arrival_time.tv_usec = pTimeStamp.actual_num;
-				aStats->packets_dropped = aStats->packets_dropped + 1;
-				packet_num = packet_num + 1;
-				aStats->avg_inter_arrival_time = getNewAvgByNewNum(aStats->avg_inter_arrival_time, actual_inter_arrival.actual_num, packet_num);
-				continue;
-			}
+
 			//===== validate the packet -- ends====
 				
-			//FIXME: sending time in microseconds
-			pthread_mutex_lock(&mutex_on_startTimeStamp);
-				if(startTimeStamp.tv_sec == 0 && startTimeStamp.tv_usec == 0){
-					gettimeofday(&startTimeStamp, NULL); 	
-				}
-			pthread_mutex_unlock(&mutex_on_startTimeStamp);
-			gettimeofday(&current_time, NULL);
-			sub_timeval(&current_time, current_time, startTimeStamp);
-			
-			add_timeval(&timeStamp, prev_arrival_time, inter_arrival_time);
-			sub_timeval(&sleep_time, timeStamp, current_time);
-				
+							
 			//pthread_sigmask(SIG_BLOCK, &set, NULL);
 			s = pthread_mutex_lock(&mutex_on_stopNow);
 			if(s != 0){
@@ -332,7 +301,27 @@ arrivalManager(void *arg){
 			if(s != 0){
 				handle_errors(s, "pthread_mute_unlock");	
 			}
+			//FIXME: sending time in microseconds
+			pthread_mutex_lock(&mutex_on_startTimeStamp);
+				if(startTimeStamp.tv_sec == 0 && startTimeStamp.tv_usec == 0){
+					gettimeofday(&startTimeStamp, NULL); 	
+				}
+			pthread_mutex_unlock(&mutex_on_startTimeStamp);
+			gettimeofday(&current_time, NULL);
+			sub_timeval(&current_time, current_time, startTimeStamp);
 			
+			add_timeval(&timeStamp, prev_arrival_time, inter_arrival_time);
+			sub_timeval(&sleep_time, timeStamp, current_time);
+			if(cTokens > B){
+				pthread_mutex_lock(&mutex_on_startTimeStamp);
+					if(startTimeStamp.tv_sec == 0 && startTimeStamp.tv_usec == 0){
+						gettimeofday(&startTimeStamp, NULL); 	
+					}
+				pthread_mutex_unlock(&mutex_on_startTimeStamp);
+				//drop the packet and go to the next packet
+				gettimeofday(&timeStamp, NULL);
+				sub_printtime(&(pCurrentPacket->arrivalStamp), timeStamp, startTimeStamp);	
+			}
 			
 			//pthread_sigmask(SIG_UNBLOCK, &set, NULL);
 			if(isPositive_timeval(sleep_time) == TRUE){
@@ -340,8 +329,12 @@ arrivalManager(void *arg){
 				//zeronano.tv_nsec = sleep_time.tv_usec*1000;
 				//sigtimedwait(&set, NULL, &zeronano);
 			}
-			
-			
+			gettimeofday(&timeStamp, NULL);
+			sub_printtime(&(pCurrentPacket->arrivalStamp), timeStamp, startTimeStamp);	
+			pCurrentPacket->packet_num = packet_num++ ;
+				timeStamp.tv_sec = 0;
+				timeStamp.tv_usec = (pCurrentPacket->arrivalStamp).actual_num;
+				sub_printtime(&actual_inter_arrival, timeStamp, prev_arrival_time);
 			s = pthread_mutex_lock(&mutex_on_stopNow);
 			if(s != 0){
 				handle_errors(s, "pthread_mute_lock");	
@@ -368,13 +361,17 @@ arrivalManager(void *arg){
 			}
 			
 			//else get on with the business right away
-			gettimeofday(&timeStamp, NULL);
-			sub_printtime(&(pCurrentPacket->arrivalStamp), timeStamp, startTimeStamp);	
-			pCurrentPacket->packet_num = packet_num++ ;
+			if(cTokens > B){
+				printf("%08d.%03dms: packet p%lld arrives, needs %d tokens, dropped\n",(pCurrentPacket->arrivalStamp).intPart, (pCurrentPacket->arrivalStamp).decPart, pCurrentPacket->packet_num, cTokens);
 				timeStamp.tv_sec = 0;
 				timeStamp.tv_usec = (pCurrentPacket->arrivalStamp).actual_num;
 				sub_printtime(&actual_inter_arrival, timeStamp, prev_arrival_time);
-				
+				prev_arrival_time.tv_sec = 0;
+				prev_arrival_time.tv_usec = actual_inter_arrival.actual_num;
+				aStats->packets_dropped = aStats->packets_dropped + 1;
+				aStats->avg_inter_arrival_time = getNewAvgByNewNum(aStats->avg_inter_arrival_time, actual_inter_arrival.actual_num, pCurrentPacket->packet_num);
+				continue;
+			}
 				//FIXME: waiting for 2 mutex locks?
 				pthread_mutex_lock(&mutex_on_stdout);
 					printf("%08d.%03dms: p%lld arrives, needs %d tokens, inter-arrival time = %d.%03dms\n", (pCurrentPacket->arrivalStamp).intPart, (pCurrentPacket->arrivalStamp).decPart, pCurrentPacket->packet_num, cTokens, actual_inter_arrival.intPart, actual_inter_arrival.decPart);
@@ -410,7 +407,7 @@ arrivalManager(void *arg){
 						tv_q1_begintime.tv_usec= pCurrentPacket->q1_begin_time.actual_num;
 						sub_printtime(&time_in_Q1, tv_q1_endtime, tv_q1_begintime);
 						pthread_mutex_lock(&mutex_on_stdout);
-							printf("%08d.%03dms: p%lld leaves Q1, time in Q1 = %d.%dms, token bucket now has %d tokens\n",
+							printf("%08d.%03dms: p%lld leaves Q1, time in Q1 = %d.%03dms, token bucket now has %d tokens\n",
 	pCurrentPacket->q1_end_time.intPart, pCurrentPacket->q1_end_time.decPart, pCurrentPacket->packet_num,time_in_Q1.intPart,time_in_Q1.decPart, pFilterData->tokenCount);
 						pthread_mutex_unlock(&mutex_on_stdout);
 						//keept it in micro-seconds for accuracy
@@ -570,30 +567,13 @@ tokenManager(void *arg){
 	memset(&tv_q1_begintime, '\0', sizeof(struct timeval));
 	printtime time_in_Q1;
 	memset(&time_in_Q1, '\0', sizeof(printtime));
-	struct timespec zeronano;
-	memset(&zeronano, '\0', sizeof(struct timespec));
-	sigset_t set;
-	sigemptyset(&set);
-	sigaddset(&set, SIGUSR1);
 
 	for(;;current_token++){
 
-			
-		
 		timeStamp.tv_sec = 0;
 		timeStamp.tv_usec = ((double)1000000/r);
 
-		pthread_mutex_lock(&mutex_on_startTimeStamp);
-			if(startTimeStamp.tv_sec ==0 && startTimeStamp.tv_usec == 0){
-				gettimeofday(&startTimeStamp, NULL);	
-			}
-		pthread_mutex_unlock(&mutex_on_startTimeStamp);
-		gettimeofday(&current_time, NULL);
-		sub_timeval(&current_time, current_time, startTimeStamp);
-		add_timeval(&timeStamp, prev_arrival_time, timeStamp);
-		sub_timeval(&sleep_time, timeStamp, current_time);
-		
-		pthread_sigmask(SIG_BLOCK, &set, NULL);		
+		//pthread_sigmask(SIG_BLOCK, &set, NULL);		
 		s = pthread_mutex_lock(&mutex_on_stopNow);
 		if(s != 0){
 			handle_errors(s, "pthread_mute_lock");	
@@ -610,11 +590,19 @@ tokenManager(void *arg){
 		if(s != 0){
 			handle_errors(s, "pthread_mute_unlock");	
 		}
+		pthread_mutex_lock(&mutex_on_startTimeStamp);
+			if(startTimeStamp.tv_sec ==0 && startTimeStamp.tv_usec == 0){
+				gettimeofday(&startTimeStamp, NULL);	
+			}
+		pthread_mutex_unlock(&mutex_on_startTimeStamp);
+		gettimeofday(&current_time, NULL);
+		sub_timeval(&current_time, current_time, startTimeStamp);
+		add_timeval(&timeStamp, prev_arrival_time, timeStamp);
+		sub_timeval(&sleep_time, timeStamp, current_time);
+		
+
 		if(isPositive_timeval(sleep_time)){
-			pthread_sigmask(SIG_UNBLOCK, &set, NULL);		
 			select(0, NULL, NULL, NULL, &sleep_time);
-			//zeronano.tv_usec = sleep_time.tv_usec * 1000;
-			//sigtimedwait(&set, NULL, &zeronano );
 		}
 		
 		
@@ -696,7 +684,7 @@ tokenManager(void *arg){
                                         tv_q1_begintime.tv_usec= pCurrentPacket->q1_begin_time.actual_num;
                                         sub_printtime(&time_in_Q1, tv_q1_endtime, tv_q1_begintime);
                                         pthread_mutex_lock(&mutex_on_stdout);
-                                                printf("%08d.%03dms: p%lld leaves Q1, time in Q1 = %d.%dms, token bucket now has %d tokens\n",pCurrentPacket->q1_end_time.intPart, pCurrentPacket->q1_end_time.decPart, pCurrentPacket->packet_num, time_in_Q1.intPart,time_in_Q1.decPart , pFilterData->tokenCount );
+                                                printf("%08d.%03dms: p%lld leaves Q1, time in Q1 = %d.%03dms, token bucket now has %d tokens\n",pCurrentPacket->q1_end_time.intPart, pCurrentPacket->q1_end_time.decPart, pCurrentPacket->packet_num, time_in_Q1.intPart,time_in_Q1.decPart , pFilterData->tokenCount );
                                         pthread_mutex_unlock(&mutex_on_stdout);
 					
 					tStats->time_spent_q1 = tStats->time_spent_q1 + time_in_Q1.actual_num;

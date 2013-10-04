@@ -142,7 +142,7 @@ isDeterministicMode(int argc, char *argv[]){
 		default:
 			printf("some unidentified argument is given=%s\n", argv[i]);
 			fprintf(stderr, "invalid input, malformed command\n");	
-			exit(EXIT_FAILURE);
+			//exit(EXIT_FAILURE);
 			break;
 		
 		}	
