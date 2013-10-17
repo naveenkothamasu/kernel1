@@ -80,15 +80,11 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
         
         /*NOT_YET_IMPLEMENTED("PROCS: kthread_create");*/
         kthread_t *pThread = (kthread_t *) kmalloc(sizeof(kthread_t));  
-        if(pThread == NULL){
-                /*fprintf(stderr, "not able to create thread\n");       */
-        }
+	KASSERT(pThread == NULL && "ERROR: kmalloc() failed, Unalbe to allocate memory for a thread struct.\n");
         memset(pThread, '\0', sizeof(kthread_t));
 
         context_t *pContext=(context_t *)kmalloc(sizeof(context_t));
-        if(pContext == NULL){
-                /*fprintf(stderr, "not able to create context\n");      */
-        }
+	KASSERT(pThread == NULL && "ERROR: kmalloc() failed, Unalbe to allocate memory for a thread context.\n");
         memset(pContext, '\0', sizeof(context_t));
 
         char *kstack=alloc_stack();
@@ -102,7 +98,7 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
         list_insert_tail(&(p->p_threads), &(pThread->kt_qlink)); 
         pThread->kt_plink = p->p_threads;
 
-        KASSERT(pThread);
+        KASSERT(pThread != NULL && "ERROR: kthread_create() failed.\n");
         return pThread;
 }
 

@@ -143,7 +143,19 @@ bootstrap(int arg1, void *arg2)
         /* necessary to finalize page table information */
         pt_template_init();
 
-        NOT_YET_IMPLEMENTED("PROCS: bootstrap");
+        /*NOT_YET_IMPLEMENTED("PROCS: bootstrap");*/
+	context_t idleproccontext; /*TODO: is there a possibility of this going out of scope? why is bootstrapcontext global?*/
+	memset(&idleproccontext, '\0', sizeof(idleproccontext));
+
+	void *idlestack = page_alloc();
+        pagedir_t *idlepdir = pt_get();
+        KASSERT(NULL != idlestack && "Ran out of memory while creating idle proc.\n");
+	
+	/*create idle proess*/
+	proc_t *pProc = proc_create("idle process");
+	curproc = pProc;
+	context_setup(&idleproccontext, idleproc_run, 0, NULL, idlestack, PAGE_SIZE, idlepdir);
+        context_make_active(&idleproccontext);
 
         panic("weenix returned to bootstrap()!!! BAD!!!\n");
         return NULL;
@@ -233,8 +245,19 @@ idleproc_run(int arg1, void *arg2)
 static kthread_t *
 initproc_create(void)
 {
-        NOT_YET_IMPLEMENTED("PROCS: initproc_create");
-        return NULL;
+        /*NOT_YET_IMPLEMENTED("PROCS: initproc_create");*/
+	kthread_t *pThread = NULL;
+	
+	/*create the init process*/
+	proc_t * pProc = proc_create("init process");
+	curproc = pProc;
+	
+	/*create a thread to execute init process*/
+	pThread = kthread_create(pProc, initproc_run, NULL, NULL);
+	curthr = pThread;
+
+	KASSERT(pThread != NULL && "ERROR: Failed to create thread to run init process.\n");
+        return pThread;
 }
 
 /**
@@ -251,7 +274,9 @@ initproc_create(void)
 static void *
 initproc_run(int arg1, void *arg2)
 {
-        NOT_YET_IMPLEMENTED("PROCS: initproc_run");
+       /* NOT_YET_IMPLEMENTED("PROCS: initproc_run");*/
+	
+	KASSERT(1==2 && "tests that need to be executed would be run from here...\n");
 
         return NULL;
 }
