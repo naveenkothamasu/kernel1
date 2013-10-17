@@ -26,6 +26,9 @@
 #include "fs/vnode.h"
 #include "fs/file.h"
 
+/*My includes*/
+#include "mm/kmalloc.h"
+
 proc_t *curproc = NULL; /* global */
 static slab_allocator_t *proc_allocator = NULL;
 
@@ -82,8 +85,21 @@ failed:
 proc_t *
 proc_create(char *name)
 {
-        NOT_YET_IMPLEMENTED("PROCS: proc_create");
-        return NULL;
+        /*NOT_YET_IMPLEMENTED("PROCS: proc_create");*/
+	proc_t *pProc = (proc_t *) kmalloc(sizeof(proc_t));
+	if(pProc == NULL){
+		/* fprintf(stderr, "not able to allocate memory\n");	*/
+	}
+	memset(pProc, '\0', sizeof(*pProc));
+
+	pProc->p_pid = _proc_getid();
+	if(pProc->p_pid == 1){
+		proc_initproc = pProc;
+	}
+	pProc->p_state = PROC_RUNNING;
+	/*FIXME: struct initialization */	
+	
+        return pProc;
 }
 
 /**

@@ -15,6 +15,9 @@
 #include "mm/slab.h"
 #include "mm/page.h"
 
+/*My includes*/
+#include "mm/kmalloc.h" 
+
 kthread_t *curthr; /* global */
 static slab_allocator_t *kthread_allocator = NULL;
 
@@ -74,8 +77,33 @@ free_stack(char *stack)
 kthread_t *
 kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 {
-        NOT_YET_IMPLEMENTED("PROCS: kthread_create");
-        return NULL;
+        
+        /*NOT_YET_IMPLEMENTED("PROCS: kthread_create");*/
+        kthread_t *pThread = (kthread_t *) kmalloc(sizeof(kthread_t));  
+        if(pThread == NULL){
+                /*fprintf(stderr, "not able to create thread\n");       */
+        }
+        memset(pThread, '\0', sizeof(kthread_t));
+
+        context_t *pContext=(context_t *)kmalloc(sizeof(context_t));
+        if(pContext == NULL){
+                /*fprintf(stderr, "not able to create context\n");      */
+        }
+        memset(pContext, '\0', sizeof(context_t));
+
+        char *kstack=alloc_stack();
+        context_setup(pContext, func, arg1, arg2, kstack, DEFAULT_STACK_SIZE, p->p_pagedir);
+
+        pThread->kt_ctx = *pContext;
+        pThread->kt_kstack = kstack;
+        pThread->kt_proc = p;
+        /*FIXME:pThread->kt_state =
+        FIXME:pThread->kt_cancelled =*/
+        /*FIXME: list_insert_tail(p->p_threads, pThread); */
+        pThread->kt_plink = p->p_threads;
+
+        KASSERT(pThread);
+        return pThread;
 }
 
 void
@@ -103,7 +131,16 @@ kthread_destroy(kthread_t *t)
 void
 kthread_cancel(kthread_t *kthr, void *retval)
 {
-        NOT_YET_IMPLEMENTED("PROCS: kthread_cancel");
+        /*NOT_YET_IMPLEMENTED("PROCS: kthread_cancel");*/
+
+        if(curthr == kthr){
+                kthread_exit(retval);   
+        }
+        kthr->kt_retval = retval;
+        /*FIXME:kthr->kt ..set the canceelled field*/
+        if( kthr->kt_cancelled == 1){
+                /*FIXME:wake up*/
+        }/*else do nothing*/
 }
 
 /*
@@ -119,7 +156,11 @@ kthread_cancel(kthread_t *kthr, void *retval)
 void
 kthread_exit(void *retval)
 {
-        NOT_YET_IMPLEMENTED("PROCS: kthread_exit");
+        /*NOT_YET_IMPLEMENTED("PROCS: kthread_exit");*/
+        curthr->kt_retval = retval;
+        curthr->kt_state = KT_EXITED;
+        
+        proc_thread_exited(retval);
 }
 
 /*
