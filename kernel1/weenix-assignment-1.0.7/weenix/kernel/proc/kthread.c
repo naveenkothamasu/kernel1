@@ -97,9 +97,9 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
         pThread->kt_ctx = *pContext;
         pThread->kt_kstack = kstack;
         pThread->kt_proc = p;
-        /*FIXME:pThread->kt_state =
-        FIXME:pThread->kt_cancelled =*/
-        /*FIXME: list_insert_tail(p->p_threads, pThread); */
+        pThread->kt_state = KT_RUN; /* currently running or on runq */
+        /*FIXME:FIXME:pThread->kt_cancelled =*/
+        list_insert_tail(&(p->p_threads), &(pThread->kt_qlink)); 
         pThread->kt_plink = p->p_threads;
 
         KASSERT(pThread);
