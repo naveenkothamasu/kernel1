@@ -79,27 +79,27 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 {
         
         /*NOT_YET_IMPLEMENTED("PROCS: kthread_create");*/
-        kthread_t *pThread = (kthread_t *) kmalloc(sizeof(kthread_t));  
-	KASSERT(pThread == NULL && "ERROR: kmalloc() failed, Unalbe to allocate memory for a thread struct.\n");
-        memset(pThread, '\0', sizeof(kthread_t));
-
-        context_t *pContext=(context_t *)kmalloc(sizeof(context_t));
-	KASSERT(pThread == NULL && "ERROR: kmalloc() failed, Unalbe to allocate memory for a thread context.\n");
-        memset(pContext, '\0', sizeof(context_t));
-
+        /*
+	kthread_t *pThread = (kthread_t *) slab_allocator_create("kthread1" ,sizeof(kthread_t));  
+	KASSERT(pThread != NULL && "ERROR: slab_allocator() failed, Unalbe to allocate memory for a thread struct.\n");
+	*/
+        context_t context; /*FIXME local variable fine?*/
+	
         char *kstack=alloc_stack();
-        context_setup(pContext, func, arg1, arg2, kstack, DEFAULT_STACK_SIZE, p->p_pagedir);
-
-        pThread->kt_ctx = *pContext;
-        pThread->kt_kstack = kstack;
-        pThread->kt_proc = p;
-        pThread->kt_state = KT_RUN; /* currently running or on runq */
+        context_setup(&context, func, arg1, arg2, kstack, DEFAULT_STACK_SIZE, p->p_pagedir);
+	
+	kthread_init();	
+        curthr = (kthread_t *) kthread_allocator;
+	curthr->kt_ctx = context;
+        curthr->kt_kstack = kstack;
+        curthr->kt_proc = p;
+        curthr->kt_state = KT_RUN; /* currently running or on runq */
         /*FIXME:FIXME:pThread->kt_cancelled =*/
-        list_insert_tail(&(p->p_threads), &(pThread->kt_qlink)); 
-        pThread->kt_plink = p->p_threads;
+        list_insert_tail(&(p->p_threads), &(curthr->kt_qlink)); 
+        curthr->kt_plink = p->p_threads;
 
-        KASSERT(pThread != NULL && "ERROR: kthread_create() failed.\n");
-        return pThread;
+        KASSERT(curthr != NULL && "ERROR: kthread_create() failed.\n");
+        return curthr;
 }
 
 void

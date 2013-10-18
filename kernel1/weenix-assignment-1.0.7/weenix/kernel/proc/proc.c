@@ -86,20 +86,22 @@ proc_t *
 proc_create(char *name)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: proc_create");*/
-	proc_t *pProc = (proc_t *) kmalloc(sizeof(proc_t));
-	if(pProc == NULL){
-		/* fprintf(stderr, "not able to allocate memory\n");	*/
-	}
-	memset(pProc, '\0', sizeof(*pProc));
+	/*
+	proc_t *pProc = (proc_t *) slab_allocator_create(name ,sizeof(proc_t));
+	KASSERT(pProc != NULL && "ERROR: proc_create failed.");
+	*/
+	
+	proc_init();
+	curproc = (proc_t *) proc_allocator;
+	curproc->p_pid = _proc_getid();
 
-	pProc->p_pid = _proc_getid();
-	if(pProc->p_pid == 1){
-		proc_initproc = pProc;
+	if(curproc->p_pid == 1){
+		proc_initproc = curproc;
 	}
-	pProc->p_state = PROC_RUNNING;
+	curproc->p_state = PROC_RUNNING;
 	/*FIXME: struct initialization */	
 	
-        return pProc;
+        return curproc;
 }
 
 /**

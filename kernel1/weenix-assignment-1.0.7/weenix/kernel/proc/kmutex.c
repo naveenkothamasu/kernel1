@@ -7,8 +7,7 @@
 #include "proc/kmutex.h"
 
 /*My includes*/
-#include "mm/kmalloc.h"
-#include "util/string.h"
+#include "mm/slab.h"
 /*
  * IMPORTANT: Mutexes can _NEVER_ be locked or unlocked from an
  * interrupt context. Mutexes are _ONLY_ lock or unlocked from a
@@ -19,12 +18,8 @@ void
 kmutex_init(kmutex_t *mtx)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: kmutex_init");*/
-        mtx = (kmutex_t *) kmalloc(sizeof(*mtx));
-        if( mtx == NULL){
-                /*fprintf(stderr, "unable to allocate memory\n")*/      
-        }
-        
-        memset(mtx, '\0', sizeof(*mtx));        
+        mtx = (kmutex_t *) slab_allocator_create("mutex", sizeof(kmutex_t));
+       	KASSERT(mtx != NULL && "ERROR: kmutex_init() failed."); 
 }
 
 /*

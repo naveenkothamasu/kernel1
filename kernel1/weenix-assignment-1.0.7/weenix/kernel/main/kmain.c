@@ -145,7 +145,6 @@ bootstrap(int arg1, void *arg2)
 
         /*NOT_YET_IMPLEMENTED("PROCS: bootstrap");*/
 	context_t idleproccontext; /*TODO: is there a possibility of this going out of scope? why is bootstrapcontext global?*/
-	memset(&idleproccontext, '\0', sizeof(idleproccontext));
 
 	void *idlestack = page_alloc();
         pagedir_t *idlepdir = pt_get();
