@@ -79,6 +79,9 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 {
         
         /*NOT_YET_IMPLEMENTED("PROCS: kthread_create");*/
+	KASSERT(NULL != p); /* should have associated process */
+	dbg_print("PASSED: should have associated process.\n");
+
         /*
 	kthread_t *pThread = (kthread_t *) slab_allocator_create("kthread1" ,sizeof(kthread_t));  
 	KASSERT(pThread != NULL && "ERROR: slab_allocator() failed, Unalbe to allocate memory for a thread struct.\n");
@@ -127,6 +130,9 @@ kthread_destroy(kthread_t *t)
 void
 kthread_cancel(kthread_t *kthr, void *retval)
 {
+	KASSERT(NULL != kthr); /* should have thread */
+	dbg_print("PASSED: should have thread.\n");
+
         /*NOT_YET_IMPLEMENTED("PROCS: kthread_cancel");*/
 
         if(curthr == kthr){
@@ -155,6 +161,15 @@ kthread_exit(void *retval)
         /*NOT_YET_IMPLEMENTED("PROCS: kthread_exit");*/
         curthr->kt_retval = retval;
         curthr->kt_state = KT_EXITED;
+  	
+	KASSERT(!curthr->kt_wchan); /* queue should be empty */
+	dbg_print("PASSED: queue should be empty.\n");
+	
+       	KASSERT(!curthr->kt_qlink.l_next && !curthr->kt_qlink.l_prev); /* queue should be empty */
+	dbg_print("PASSED: queue should be empty.\n");
+        
+	KASSERT(curthr->kt_proc == curproc);
+	dbg_print("PASSED: current process and the process associated with current thread are same.\n");
         
         proc_thread_exited(retval);
 }

@@ -152,7 +152,18 @@ bootstrap(int arg1, void *arg2)
 	
 	/*create idle proess*/
 	proc_t *pProc = proc_create("idle process");
-	curproc = pProc;
+	curproc = pProc; 
+	
+	KASSERT(NULL != curproc);
+	dbg_print("idle process has been created successfully.\n");
+	
+	KASSERT(PID_IDLE == curproc->p_pid);
+	dbg_print("what has been created is the idle process.\n");
+	
+	curthr = kthread_create(pProc, initproc_run, NULL, NULL);
+	KASSERT(NULL != curthr);	
+	dbg_print("the thread for the idle process has been created successfull.\n");
+
 	context_setup(&idleproccontext, idleproc_run, 0, NULL, idlestack, PAGE_SIZE, idlepdir);
         context_make_active(&idleproccontext);
 
@@ -245,17 +256,21 @@ static kthread_t *
 initproc_create(void)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: initproc_create");*/
-	kthread_t *pThread = NULL;
 	
 	/*create the init process*/
-	proc_t * pProc = proc_create("init process");
-	curproc = pProc;
+	kthread_t *pThread = NULL;
+	proc_t *pProc = proc_create("init process");
+	KASSERT(NULL != pProc); 	
+	dbg_print("init process has been created.\n");
+	
+	KASSERT(PID_INIT == pProc->p_pid);
+	dbg_print("what has been created is the init process.\n");
 	
 	/*create a thread to execute init process*/
 	pThread = kthread_create(pProc, initproc_run, NULL, NULL);
-	curthr = pThread;
+	KASSERT(/* pointer to the thread for the "init" process */ pThread != NULL);
+	dbg_print("thread for the init process has been created.\n");
 
-	KASSERT(pThread != NULL && "ERROR: Failed to create thread to run init process.\n");
         return pThread;
 }
 

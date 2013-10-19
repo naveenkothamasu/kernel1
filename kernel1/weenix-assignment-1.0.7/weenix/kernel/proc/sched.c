@@ -132,7 +132,11 @@ sched_wakeup_on(ktqueue_t *q)
         /*NOT_YET_IMPLEMENTED("PROCS: sched_wakeup_on");*/
 	kthread_t *pThread = ktqueue_dequeue(q);	
 	pThread->kt_state =  KT_RUN; /*FIXME:*/
-        return pThread;
+
+	KASSERT((pThread->kt_state == KT_SLEEP) || ( pThread->kt_state == KT_SLEEP_CANCELLABLE));
+	dbg_print("PASSED: kt_state is either KT_SLEEP or KT_SLEEP_CANCELLABLE.\n");
+        
+	return pThread;
 }
 
 void
@@ -226,6 +230,9 @@ sched_switch(void)
 void
 sched_make_runnable(kthread_t *thr)
 {
+	KASSERT(&kt_runq != thr->kt_wchan); /* make sure thread is not blocked */
+	dbg_print("PASSED: thread is not blocked.\n");
+
         /*NOT_YET_IMPLEMENTED("PROCS: sched_make_runnable");*/
 	/*
 		-set the IPL to high

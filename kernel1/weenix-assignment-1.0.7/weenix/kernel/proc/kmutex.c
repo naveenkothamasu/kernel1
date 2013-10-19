@@ -31,6 +31,9 @@ kmutex_init(kmutex_t *mtx)
 void
 kmutex_lock(kmutex_t *mtx)
 {
+	KASSERT(curthr && (curthr != mtx->km_holder));
+	dbg_print("PASSED: curthr is not null and curthr is not the mutex holder.\n");
+
         /*NOT_YET_IMPLEMENTED("PROCS: kmutex_lock");*/
         
         if(mtx->km_holder != NULL){
@@ -50,6 +53,10 @@ kmutex_lock(kmutex_t *mtx)
 int
 kmutex_lock_cancellable(kmutex_t *mtx)
 {
+
+	 KASSERT(curthr && (curthr != mtx->km_holder));
+	 dbg_print("PASSED: curthr is not null and curthr is not the mutex holder.\n");
+
         /*NOT_YET_IMPLEMENTED("PROCS: kmutex_lock_cancellable"); */
         if(mtx->km_holder != NULL){
                 /* mutex locked */
@@ -86,6 +93,10 @@ kmutex_lock_cancellable(kmutex_t *mtx)
 void
 kmutex_unlock(kmutex_t *mtx)
 {
+
+	KASSERT(curthr && (curthr == mtx->km_holder));
+	dbg_print("PASSED: curthr is not null and curthr IS the mutex holder.\n");
+
         /*NOT_YET_IMPLEMENTED("PROCS: kmutex_unlock");*/
 	list_link_t *link = NULL;
 	kthread_t *pThread = NULL;	
@@ -98,5 +109,8 @@ kmutex_unlock(kmutex_t *mtx)
 		/*add pThread to run queue*/ 
 		pThread->kt_state = KT_RUN;
 	}
+	KASSERT(curthr != mtx->km_holder);
+	dbg_print("PASSED: curthr is NOT the mutex holder.\n");
+
 }
 

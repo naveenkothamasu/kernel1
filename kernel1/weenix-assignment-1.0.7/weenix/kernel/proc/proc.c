@@ -94,14 +94,20 @@ proc_create(char *name)
 	proc_init();
 	curproc = (proc_t *) proc_allocator;
 	curproc->p_pid = _proc_getid();
+	pid_t pid = curproc->p_pid;
 
 	if(curproc->p_pid == 1){
 		proc_initproc = curproc;
 	}
 	curproc->p_state = PROC_RUNNING;
 	/*FIXME: struct initialization */	
-	
-        return curproc;
+	KASSERT(PID_IDLE != pid || list_empty(&_proc_list)); /* pid can only be PID_IDLE if this is the first process */
+	dbg_print("PASSED: pid can only be PID_IDLE if this is the first process");
+
+	KASSERT(PID_INIT != pid || PID_IDLE == curproc->p_pid); /* pid can only be PID_INIT when creating from idle process */
+	dbg_print("PASSED: pid can only be PID_INIT when creating from idle process");
+        
+	return curproc;
 }
 
 /**
@@ -131,7 +137,25 @@ proc_create(char *name)
 void
 proc_cleanup(int status)
 {
-        NOT_YET_IMPLEMENTED("PROCS: proc_cleanup");
+        /*NOT_YET_IMPLEMENTED("PROCS: proc_cleanup");*/
+	KASSERT(NULL != proc_initproc); /* should have an "init" process */
+	dbg_print("PASSED: should have an init process.\n");
+	KASSERT(1 <= curproc->p_pid); /* this process should not be idle process */
+	dbg_print("PASSED: this process should not be idle process.\n");
+        KASSERT(NULL != curproc->p_pproc); /* this process should have parent process */
+	dbg_print("PASSED: this process should have parent process.\n");
+        KASSERT(NULL != curproc->p_pproc); /* this process should have parent process */
+	dbg_print("PASSED: this process should have parent proces.\n");
+
+	proc_t *myChildProc = NULL;
+	proc_t *myParentProc = curproc->p_pproc;
+	/*TODO wake up myParentProc, if it is waiting*/
+	list_t *list = &(curproc->p_children);
+	list_link_t *link = NULL;
+	for( link = list->l_next; link != list; link = list->l_next ){
+		myChildProc = list_item(link, proc_t, p_child_link);	
+		myChildProc->p_pproc = myParentProc;
+	}
 }
 
 /*
@@ -145,7 +169,10 @@ proc_cleanup(int status)
 void
 proc_kill(proc_t *p, int status)
 {
-        NOT_YET_IMPLEMENTED("PROCS: proc_kill");
+        /*NOT_YET_IMPLEMENTED("PROCS: proc_kill");*/
+	if(p == curproc){
+		do_exit(status);	
+	}/*TODO: else part pending*/
 }
 
 /*
@@ -189,7 +216,28 @@ proc_list()
 void
 proc_thread_exited(void *retval)
 {
-        NOT_YET_IMPLEMENTED("PROCS: proc_thread_exited");
+        /*NOT_YET_IMPLEMENTED("PROCS: proc_thread_exited");*/
+	/*
+		1. Assign children to init process
+		2. If all threads exited, exit
+		2. parent of curproc will take care of cleaning up curproc
+	*/
+	
+	kthread_t *kthr = NULL;
+	void *pRetVal = &retval;
+	list_link_t *link = NULL;
+	list_t *list = &(curproc->p_threads);
+	int isJoinSucc = -1;
+	for(link = list->l_next; link != list; link = list->l_next){
+
+		kthr = list_item(link, kthread_t, kt_qlink); /*loop includes the thread which called this very functin TODO*/	
+		kthread_cancel(kthr, &retval);
+		/*isJoinSucc = kthread_join(kthr, &pRetVal); TODO: why retval captured twice, reval is also being over-written TODO:*/
+		/*KASSERT(isJoinSucc == 0 && "ERROR: proc_thread_exited() failed, unable to join another thread in the process.");*/
+		
+	}
+
+	
 }
 
 /* If pid is -1 dispose of one of the exited children of the current
@@ -210,8 +258,25 @@ proc_thread_exited(void *retval)
 pid_t
 do_waitpid(pid_t pid, int options, int *status)
 {
-        NOT_YET_IMPLEMENTED("PROCS: do_waitpid");
-        return 0;
+        /*NOT_YET_IMPLEMENTED("PROCS: do_waitpid");*/
+	proc_t *pProc = proc_lookup(pid);
+ 	KASSERT(NULL != pProc); /* the process should not be NULL */
+	dbg_print("PASSED: the process should not be NULL.\n");
+
+        KASSERT(-1 == pid || pProc->p_pid == pid); /* should be able to find the process */
+	dbg_print("PASSED: should be able to find the process.\n");
+
+	list_t *list = &(pProc->p_threads);
+	list_link_t *link = list->l_next;
+	kthread_t *pThread = list_item(link, kthread_t, kt_qlink); 
+
+        KASSERT(KT_EXITED == pThread->kt_state); /* thr points to a thread to be destroied */ 
+	dbg_print("PASSED: thr points to a thread to be destroied.\n");
+
+        KASSERT(NULL != pProc->p_pagedir); /* this process should have pagedir */
+	dbg_print("PASSED: this process should have pagedir.\n");
+
+        return pid;
 }
 
 /*
