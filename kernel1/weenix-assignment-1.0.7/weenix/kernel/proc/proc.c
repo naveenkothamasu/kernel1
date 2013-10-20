@@ -271,7 +271,7 @@ do_waitpid(pid_t pid, int options, int *status)
 	kthread_t *pThread = list_item(link, kthread_t, kt_qlink); 
 
         KASSERT(KT_EXITED == pThread->kt_state); /* thr points to a thread to be destroied */ 
-	dbg_print("PASSED: thr points to a thread to be destroied.\n");
+	dbg_print("PASSED: thr points to a thread to be destroyed.\n");
 
         KASSERT(NULL != pProc->p_pagedir); /* this process should have pagedir */
 	dbg_print("PASSED: this process should have pagedir.\n");
@@ -288,7 +288,13 @@ do_waitpid(pid_t pid, int options, int *status)
 void
 do_exit(int status)
 {
-        NOT_YET_IMPLEMENTED("PROCS: do_exit");
+        /*NOT_YET_IMPLEMENTED("PROCS: do_exit");*/
+	/*		
+	int retval = 0;
+	kthread_cancel(curthr, );
+	kthread_join();
+	kthread_exit(&retval);
+	*/
 }
 
 size_t
