@@ -92,6 +92,10 @@ proc_create(char *name)
 	*/
 	
 	proc_init();
+	proc_t *parentProc = NULL;
+	if(curproc != NULL){
+		parentProc = curproc->p_pproc;
+	}
 	curproc = (proc_t *) proc_allocator;
 	curproc->p_pid = _proc_getid();
 	pid_t pid = curproc->p_pid;
@@ -100,6 +104,8 @@ proc_create(char *name)
 		proc_initproc = curproc;
 	}
 	curproc->p_state = PROC_RUNNING;
+	strncpy(curproc->p_comm, name, strlen(name)+1); /*null character added?TODO*/
+	curproc->p_pproc = parentProc;
 	/*FIXME: struct initialization */	
 	KASSERT(PID_IDLE != pid || list_empty(&_proc_list)); /* pid can only be PID_IDLE if this is the first process */
 	dbg_print("PASSED: pid can only be PID_IDLE if this is the first process");

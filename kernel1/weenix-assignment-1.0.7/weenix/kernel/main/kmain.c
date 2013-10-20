@@ -144,11 +144,11 @@ bootstrap(int arg1, void *arg2)
         pt_template_init();
 
         /*NOT_YET_IMPLEMENTED("PROCS: bootstrap");*/
-	context_t idleproccontext; /*TODO: is there a possibility of this going out of scope? why is bootstrapcontext global?*/
+	/*context_t idleproccontext; TODO: is there a possibility of this going out of scope? why is bootstrapcontext global?*/
 
-	void *idlestack = page_alloc();
+	/*void *idlestack = page_alloc();
         pagedir_t *idlepdir = pt_get();
-        KASSERT(NULL != idlestack && "Ran out of memory while creating idle proc.\n");
+        KASSERT(NULL != idlestack && "Ran out of memory while creating idle proc.\n");*/
 	
 	/*create idle proess*/
 	proc_t *pProc = proc_create("idle process");
@@ -164,8 +164,9 @@ bootstrap(int arg1, void *arg2)
 	KASSERT(NULL != curthr);	
 	dbg_print("the thread for the idle process has been created successfull.\n");
 
-	context_setup(&idleproccontext, idleproc_run, 0, NULL, idlestack, PAGE_SIZE, idlepdir);
-        context_make_active(&idleproccontext);
+	sched_make_runnable(curthr);
+	/*context_setup(&idleproccontext, idleproc_run, 0, NULL, idlestack, PAGE_SIZE, idlepdir);
+        context_make_active(&idleproccontext);*/
 
         panic("weenix returned to bootstrap()!!! BAD!!!\n");
         return NULL;
