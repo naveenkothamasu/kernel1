@@ -94,7 +94,7 @@ proc_create(char *name)
 	proc_init();
 	proc_t *parentProc = NULL;
 	if(curproc != NULL){
-		parentProc = curproc->p_pproc;
+		parentProc = curproc;/*modified*/
 	}
 	curproc = (proc_t *) proc_allocator;
 	curproc->p_pid = _proc_getid();
@@ -103,15 +103,19 @@ proc_create(char *name)
 	if(curproc->p_pid == 1){
 		proc_initproc = curproc;
 	}
+        /*FIXME: struct initialization */
+	KASSERT(PID_IDLE != pid || list_empty(&_proc_list)); /* pid can only be PID_IDLE if this is the first process */
+	dbg_print("GRADING#1 2.a PASSED: pid can only be PID_IDLE if this is the first process");
+
+	KASSERT(PID_INIT != pid || PID_IDLE == curproc->p_pid); /* pid can only be PID_INIT when creating from idle process */
+	dbg_print("GRADING#2 2.a PASSED: pid can only be PID_INIT when creating from idle process");
+
+	curproc->p_pagedir=pt_create_pagedir();
 	curproc->p_state = PROC_RUNNING;
 	strncpy(curproc->p_comm, name, strlen(name)+1); /*null character added?TODO*/
 	curproc->p_pproc = parentProc;
-	/*FIXME: struct initialization */	
-	KASSERT(PID_IDLE != pid || list_empty(&_proc_list)); /* pid can only be PID_IDLE if this is the first process */
-	dbg_print("PASSED: pid can only be PID_IDLE if this is the first process");
-
-	KASSERT(PID_INIT != pid || PID_IDLE == curproc->p_pid); /* pid can only be PID_INIT when creating from idle process */
-	dbg_print("PASSED: pid can only be PID_INIT when creating from idle process");
+	list_insert_tail(&(parentProc->p_children),&(curproc->p_child_link));
+	list_insert_tail(&(_proc_list),&(curproc->p_list_link));
         
 	return curproc;
 }
