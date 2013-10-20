@@ -15,9 +15,6 @@
 #include "mm/slab.h"
 #include "mm/page.h"
 
-/*My includes*/
-#include "mm/kmalloc.h" 
-
 kthread_t *curthr; /* global */
 static slab_allocator_t *kthread_allocator = NULL;
 

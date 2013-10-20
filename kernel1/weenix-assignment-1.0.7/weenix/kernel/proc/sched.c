@@ -211,7 +211,21 @@ sched_cancel(struct kthread *kthr)
 void
 sched_switch(void)
 {
-        NOT_YET_IMPLEMENTED("PROCS: sched_switch");
+        /*NOT_YET_IMPLEMENTED("PROCS: sched_switch");*/
+	intr_disable();
+	/*remove first thread*/
+	kthread_t *thread1 = curthr;
+	ktqueue_enqueue(&kt_runq, thread1);
+	kthread_t *thread2 = ktqueue_dequeue(&kt_runq);
+	if(thread2 != NULL){
+		curthr = thread2;
+		curproc = thread2->kt_proc;
+		sched_make_runnable(thread2);	
+	}else{
+		/*threads may be waiting for the interrutps*/
+		
+	}
+	intr_enable();
 }
 
 /*
