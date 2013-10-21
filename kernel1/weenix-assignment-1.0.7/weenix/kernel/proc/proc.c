@@ -335,6 +335,7 @@ void
 do_exit(int status)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: do_exit");*/	
+	int *pStatus = &status;
 	list_t *list = &(curproc->p_threads);
 	kthread_t *pThread = NULL;
 	list_link_t *link=NULL;
@@ -343,7 +344,7 @@ do_exit(int status)
 		pThread = list_item(link, kthread_t, kt_qlink);	
 		if(pThread != curthr){
 			kthread_cancel(pThread, &status);
-			/*kthread_join(pThread,(void **)0);*/
+			kthread_join(pThread, &pStatus);
 		}
 	}		
 	kthread_exit(&status);

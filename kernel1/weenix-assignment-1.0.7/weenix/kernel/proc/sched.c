@@ -119,7 +119,7 @@ sched_cancellable_sleep_on(ktqueue_t *q)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: sched_cancellable_sleep_on");*/
 	if(curthr->kt_cancelled == 1){
-		/*do what here?*/	
+		/*TODO do what here?*/	
 	}
 	curthr->kt_state = KT_SLEEP_CANCELLABLE;
 	ktqueue_enqueue(q, curthr);
@@ -248,11 +248,9 @@ sched_make_runnable(kthread_t *thr)
 	dbg_print("PASSED: thread is not blocked.\n");
 
         /*NOT_YET_IMPLEMENTED("PROCS: sched_make_runnable");*/
-	/*
-		-set the IPL to high
-	*/
+	uint8_t ipl = intr_getipl();	
+	intr_setipl(IPL_HIGH);	
 	thr->kt_state = KT_RUN;	
-	/*		
-		-restore old IPL
-	*/	
+	
+	intr_setipl(ipl);
 }
