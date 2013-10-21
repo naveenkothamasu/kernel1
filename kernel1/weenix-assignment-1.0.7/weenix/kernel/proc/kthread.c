@@ -93,11 +93,10 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 	curthr->kt_ctx = context;
         curthr->kt_kstack = kstack;
         curthr->kt_proc = p;
-        curthr->kt_state = KT_RUN; /* currently running or on runq */
+        curthr->kt_state = KT_NO_STATE; /* TODO: currently running or on runq */
         /*FIXME:FIXME:pThread->kt_cancelled =*/
-        list_insert_tail(&(p->p_threads), &(curthr->kt_qlink)); 
-        curthr->kt_plink = p->p_threads;
-
+        list_insert_tail(&(p->p_threads), &(curthr->kt_plink)); 
+	/*TODO kt_qlink*/
         KASSERT(curthr != NULL && "ERROR: kthread_create() failed.\n");
         return curthr;
 }
@@ -134,12 +133,14 @@ kthread_cancel(kthread_t *kthr, void *retval)
 
         if(curthr == kthr){
                 kthread_exit(retval);   
-        }
-        kthr->kt_retval = retval;
-        /*FIXME:kthr->kt ..set the canceelled field*/
-        if( kthr->kt_cancelled == 1){
-                /*FIXME:wake up*/
-        }/*else do nothing*/
+        }else{
+	
+		if(kthr->kt_state == KT_SLEEP_CANCELLABLE){
+        		kthr->kt_retval = retval;
+			kthr->kt_cancelled = 1;	
+			sched_wakeup_on(kthr->kt_wchan);		
+		}
+	}
 }
 
 /*

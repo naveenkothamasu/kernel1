@@ -6,8 +6,11 @@
 #include "proc/kthread.h"
 #include "proc/kmutex.h"
 
-/*My includes*/
+/*my includes*/
 #include "mm/slab.h"
+#include "util/string.h"
+#include "proc/sched.h"
+
 /*
  * IMPORTANT: Mutexes can _NEVER_ be locked or unlocked from an
  * interrupt context. Mutexes are _ONLY_ lock or unlocked from a
@@ -19,7 +22,8 @@ kmutex_init(kmutex_t *mtx)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: kmutex_init");*/
         mtx = (kmutex_t *) slab_allocator_create("mutex", sizeof(kmutex_t));
-       	KASSERT(mtx != NULL && "ERROR: kmutex_init() failed."); 
+	memset(mtx, '\0', sizeof(kmutex_t));/*TODO is this needed?*/	
+       	/*KASSERT(mtx != NULL && "ERROR: kmutex_init() failed.");*/ 
 }
 
 /*
@@ -32,12 +36,14 @@ void
 kmutex_lock(kmutex_t *mtx)
 {
 	KASSERT(curthr && (curthr != mtx->km_holder));
-	dbg_print("PASSED: curthr is not null and curthr is not the mutex holder.\n");
+	dbg_print("GRADING1:5.a PASSED: curthr is not null and curthr is not the mutex holder.\n");
 
         /*NOT_YET_IMPLEMENTED("PROCS: kmutex_lock");*/
         
         if(mtx->km_holder != NULL){
                 /* mutex locked */
+		curthr->kt_state = KT_SLEEP; /*TODO mutext is already with the curthr*/
+		curthr->kt_wchan = &(mtx->km_waitq);
                 list_insert_tail(&(mtx->km_waitq.tq_list), &curthr->kt_qlink);        
                 (mtx->km_waitq.tq_size)++;
         }else{
@@ -60,20 +66,21 @@ kmutex_lock_cancellable(kmutex_t *mtx)
         /*NOT_YET_IMPLEMENTED("PROCS: kmutex_lock_cancellable"); */
         if(mtx->km_holder != NULL){
                 /* mutex locked */
-                curthr->kt_cancelled = 1;       
+		if(curthr->kt_cancelled == 1 && curthr != mtx->km_holder){
+			return -EINTR;	
+		}
+                curthr->kt_state = KT_SLEEP_CANCELLABLE;     
+		curthr->kt_wchan = &(mtx->km_waitq);
                 list_insert_tail(&(mtx->km_waitq.tq_list), &curthr->kt_qlink);        
                 (mtx->km_waitq.tq_size)++;
+		return 0; /*TODO what is the return value */
+		
         }else{
                 /* mutex is avalialbe*/
                 mtx->km_holder = curthr;
                 return 0;
         }
         
-        return 0;
-        /*
-        and -EINTR if
- * the sleep was cancelled and this thread does not hold the mutex      
-        */
 }
 
 /*
@@ -95,11 +102,12 @@ kmutex_unlock(kmutex_t *mtx)
 {
 
 	KASSERT(curthr && (curthr == mtx->km_holder));
-	dbg_print("PASSED: curthr is not null and curthr IS the mutex holder.\n");
+	dbg_print("GRADING1:5.c PASSED: curthr is not null and curthr IS the mutex holder.\n");
 
         /*NOT_YET_IMPLEMENTED("PROCS: kmutex_unlock");*/
 	list_link_t *link = NULL;
 	kthread_t *pThread = NULL;	
+	mtx->km_holder = NULL;
 	if(list_empty(&(mtx->km_waitq.tq_list)) != 1){
 		link = (mtx->km_waitq.tq_list).l_next;
 		list_remove_head(&((mtx->km_waitq).tq_list)); /*this is kt_qlink of the thread*/
@@ -107,10 +115,10 @@ kmutex_unlock(kmutex_t *mtx)
 		/*wake up the thread*/
 		mtx->km_holder = pThread;
 		/*add pThread to run queue*/ 
-		pThread->kt_state = KT_RUN;
+		sched_make_runnable(pThread);
 	}
 	KASSERT(curthr != mtx->km_holder);
-	dbg_print("PASSED: curthr is NOT the mutex holder.\n");
+	dbg_print("GRADING1:5.c PASSED: curthr is NOT the mutex holder.\n");
 
 }
 

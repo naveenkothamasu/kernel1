@@ -86,10 +86,6 @@ proc_t *
 proc_create(char *name)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: proc_create");*/
-	/*
-	proc_t *pProc = (proc_t *) slab_allocator_create(name ,sizeof(proc_t));
-	KASSERT(pProc != NULL && "ERROR: proc_create failed.");
-	*/
 	
 	proc_init();
 	proc_t *parentProc = NULL;
@@ -100,7 +96,7 @@ proc_create(char *name)
 	curproc->p_pid = _proc_getid();
 	pid_t pid = curproc->p_pid;
 
-	if(curproc->p_pid == 1){
+	if(curproc->p_pid == PID_INIT){
 		proc_initproc = curproc;
 	}
         /*FIXME: struct initialization */
@@ -114,8 +110,8 @@ proc_create(char *name)
 	curproc->p_state = PROC_RUNNING;
 	strncpy(curproc->p_comm, name, strlen(name)+1); /*null character added?TODO*/
 	curproc->p_pproc = parentProc;
-	list_insert_tail(&(parentProc->p_children),&(curproc->p_child_link));
-	list_insert_tail(&(_proc_list),&(curproc->p_list_link));
+	list_insert_tail(&(parentProc->p_children), &(curproc->p_child_link));
+	list_insert_tail(&(_proc_list), &(curproc->p_list_link));
         
 	return curproc;
 }
@@ -149,23 +145,27 @@ proc_cleanup(int status)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: proc_cleanup");*/
 	KASSERT(NULL != proc_initproc); /* should have an "init" process */
-	dbg_print("PASSED: should have an init process.\n");
+	dbg_print("GRADING 2.b PASSED: should have an init process.\n");
 	KASSERT(1 <= curproc->p_pid); /* this process should not be idle process */
-	dbg_print("PASSED: this process should not be idle process.\n");
+	dbg_print("GRADING 2.b PASSED: this process should not be idle process.\n");
         KASSERT(NULL != curproc->p_pproc); /* this process should have parent process */
-	dbg_print("PASSED: this process should have parent process.\n");
+	dbg_print("GRADING 2.b PASSED: this process should have parent process.\n");
         KASSERT(NULL != curproc->p_pproc); /* this process should have parent process */
-	dbg_print("PASSED: this process should have parent proces.\n");
+	dbg_print("GRADING 2.b PASSED: this process should have parent proces.\n");
 
 	proc_t *myChildProc = NULL;
 	proc_t *myParentProc = curproc->p_pproc;
 	/*TODO wake up myParentProc, if it is waiting*/
+
 	list_t *list = &(curproc->p_children);
 	list_link_t *link = NULL;
 	for( link = list->l_next; link != list; link = list->l_next ){
 		myChildProc = list_item(link, proc_t, p_child_link);	
-		myChildProc->p_pproc = myParentProc;
+		myChildProc->p_pproc = proc_initproc;
 	}
+	
+	curproc->p_state = PROC_DEAD;
+	curproc->p_status = status;
 }
 
 /*

@@ -144,29 +144,23 @@ bootstrap(int arg1, void *arg2)
         pt_template_init();
 
         /*NOT_YET_IMPLEMENTED("PROCS: bootstrap");*/
-	/*context_t idleproccontext; TODO: is there a possibility of this going out of scope? why is bootstrapcontext global?*/
-
-	/*void *idlestack = page_alloc();
-        pagedir_t *idlepdir = pt_get();
-        KASSERT(NULL != idlestack && "Ran out of memory while creating idle proc.\n");*/
 	
-	/*create idle proess*/
 	proc_t *pProc = proc_create("idle process");
 	curproc = pProc; 
 	
 	KASSERT(NULL != curproc);
-	dbg_print("idle process has been created successfully.\n");
+	dbg_print("GRADING1 1.a PASSED: idle process has been created successfully.\n");
 	
 	KASSERT(PID_IDLE == curproc->p_pid);
-	dbg_print("what has been created is the idle process.\n");
+	dbg_print("GRADING1 1.a PASSED: what has been created is the idle process.\n");
 	
 	curthr = kthread_create(pProc, initproc_run, NULL, NULL);
 	KASSERT(NULL != curthr);	
-	dbg_print("the thread for the idle process has been created successfull.\n");
+	dbg_print("GRADING1 1.a PASSED: the thread for the idle process has been created successfull.\n");
+
+        context_make_active(&(curthr->kt_ctx));
 
 	sched_make_runnable(curthr);
-	/*context_setup(&idleproccontext, idleproc_run, 0, NULL, idlestack, PAGE_SIZE, idlepdir);
-        context_make_active(&idleproccontext);*/
 
         panic("weenix returned to bootstrap()!!! BAD!!!\n");
         return NULL;
@@ -262,15 +256,17 @@ initproc_create(void)
 	kthread_t *pThread = NULL;
 	proc_t *pProc = proc_create("init process");
 	KASSERT(NULL != pProc); 	
-	dbg_print("init process has been created.\n");
+	dbg_print("GRADING1 1.b PASSED: init process has been created.\n");
 	
 	KASSERT(PID_INIT == pProc->p_pid);
-	dbg_print("what has been created is the init process.\n");
+	dbg_print("GRADING1 1.b PASSED: what has been created is the init process.\n");
 	
 	/*create a thread to execute init process*/
 	pThread = kthread_create(pProc, initproc_run, NULL, NULL);
 	KASSERT(/* pointer to the thread for the "init" process */ pThread != NULL);
-	dbg_print("thread for the init process has been created.\n");
+	dbg_print("GRADING1 1.b PASSED: thread for the init process has been created.\n");
+
+	sched_make_runnable(pThread); /*TODO is this call OK?*/
 
         return pThread;
 }
