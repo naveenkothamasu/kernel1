@@ -156,7 +156,7 @@ proc_cleanup(int status)
 	proc_t *myChildProc = NULL;
 	proc_t *myParentProc = curproc->p_pproc;
 	/*TODO wake up myParentProc, if it is waiting*/
-
+	
 	list_t *list = &(curproc->p_children);
 	list_link_t *link = NULL;
 	for( link = list->l_next; link != list; link = list->l_next ){
@@ -182,7 +182,15 @@ proc_kill(proc_t *p, int status)
         /*NOT_YET_IMPLEMENTED("PROCS: proc_kill");*/
 	if(p == curproc){
 		do_exit(status);	
-	}/*TODO: else part pending*/
+	}else{
+		list_t *list = &(p->p_threads);
+		list_link_t *link = NULL;
+		kthread_t *pThread = NULL;
+		for(link = list->l_next; link !=list; link= link->l_next){
+			pThread = list_item(link, kthread_t, kt_qlink);
+			kthread_cancel(pThread, (void *)0);	
+		}	
+	}
 }
 
 /*
@@ -194,7 +202,20 @@ proc_kill(proc_t *p, int status)
 void
 proc_kill_all()
 {
-        NOT_YET_IMPLEMENTED("PROCS: proc_kill_all");
+        /*NOT_YET_IMPLEMENTED("PROCS: proc_kill_all");*/
+	if( list_empty(&_proc_list) != 1){
+		list_link_t *link = NULL;
+		list_t *list =& _proc_list;
+		proc_t *pProc = NULL;
+		for(link = _proc_list.l_next; link != list; link = link->l_next){
+			pProc = list_item(link, proc_t, p_list_link);
+			if(pProc->p_pid == PID_IDLE || pProc->p_pproc->p_pid == PID_IDLE){
+				continue;	
+			}
+	
+			proc_kill(pProc, pProc->p_status);/* status set pending TODO*/	
+		} 
+	}
 }
 
 proc_t *
@@ -227,27 +248,8 @@ void
 proc_thread_exited(void *retval)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: proc_thread_exited");*/
-	/*
-		1. Assign children to init process
-		2. If all threads exited, exit
-		2. parent of curproc will take care of cleaning up curproc
-	*/
-	
-	kthread_t *kthr = NULL;
-	void *pRetVal = &retval;
-	list_link_t *link = NULL;
-	list_t *list = &(curproc->p_threads);
-	int isJoinSucc = -1;
-	for(link = list->l_next; link != list; link = list->l_next){
-
-		kthr = list_item(link, kthread_t, kt_qlink); /*loop includes the thread which called this very functin TODO*/	
-		kthread_cancel(kthr, &retval);
-		/*isJoinSucc = kthread_join(kthr, &pRetVal); TODO: why retval captured twice, reval is also being over-written TODO:*/
-		/*KASSERT(isJoinSucc == 0 && "ERROR: proc_thread_exited() failed, unable to join another thread in the process.");*/
-		
-	}
-
-	
+	proc_cleanup((int)retval);
+	sched_switch();
 }
 
 /* If pid is -1 dispose of one of the exited children of the current
@@ -270,21 +272,55 @@ do_waitpid(pid_t pid, int options, int *status)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: do_waitpid");*/
 	proc_t *pProc = proc_lookup(pid);
+	if(pid == -1){
+		proc_t *child = NULL;
+		list_t *list = &(pProc->p_children);
+		list_link_t *link=NULL;
+		for(link = list->l_next; link != list; link = link->l_next){
+			child = list_item(link, proc_t, p_list_link);
+			if(child->p_state == PROC_DEAD){
+				status = &child->p_status;
+				break;
+			}
+		}
+		if(child != NULL){
+			/*TODO dispoing...curproc = child;
+			proc_cleanup(status);*/
+			/*return status;*/
+			status = &child->p_status;
+		}else{
+			sched_sleep_on(&(curproc->p_wait));
+		}	
+	}else if(pid > 0){
+		if(pProc->p_pproc == curproc){
+			while(pProc->p_state == PROC_DEAD){
+				;
+			}
+			/*dispose it*/	
+		}
+	}else{
+		/*not supported*/	
+	}
+	if(list_empty(&curproc->p_children) == 1 
+		|| pProc->p_pproc != curproc){
+		return -ECHILD;
+	}
+	
  	KASSERT(NULL != pProc); /* the process should not be NULL */
-	dbg_print("PASSED: the process should not be NULL.\n");
+	dbg_print("GRADING1 PASSED: the process should not be NULL.\n");
 
         KASSERT(-1 == pid || pProc->p_pid == pid); /* should be able to find the process */
-	dbg_print("PASSED: should be able to find the process.\n");
+	dbg_print("GRADING1 PASSED: should be able to find the process.\n");
 
 	list_t *list = &(pProc->p_threads);
 	list_link_t *link = list->l_next;
 	kthread_t *pThread = list_item(link, kthread_t, kt_qlink); 
 
         KASSERT(KT_EXITED == pThread->kt_state); /* thr points to a thread to be destroied */ 
-	dbg_print("PASSED: thr points to a thread to be destroyed.\n");
+	dbg_print("GRADING1 PASSED: thr points to a thread to be destroyed.\n");
 
         KASSERT(NULL != pProc->p_pagedir); /* this process should have pagedir */
-	dbg_print("PASSED: this process should have pagedir.\n");
+	dbg_print("GRADING1 PASSED: this process should have pagedir.\n");
 
         return pid;
 }
@@ -298,13 +334,19 @@ do_waitpid(pid_t pid, int options, int *status)
 void
 do_exit(int status)
 {
-        /*NOT_YET_IMPLEMENTED("PROCS: do_exit");*/
-	/*		
-	int retval = 0;
-	kthread_cancel(curthr, );
-	kthread_join();
-	kthread_exit(&retval);
-	*/
+        /*NOT_YET_IMPLEMENTED("PROCS: do_exit");*/	
+	list_t *list = &(curproc->p_threads);
+	kthread_t *pThread = NULL;
+	list_link_t *link=NULL;
+	for( link=list->l_next; link != list; link=link->l_next){
+		
+		pThread = list_item(link, kthread_t, kt_qlink);	
+		if(pThread != curthr){
+			kthread_cancel(pThread, &status);
+			/*kthread_join(pThread,(void **)0);*/
+		}
+	}		
+	kthread_exit(&status);
 }
 
 size_t
