@@ -127,7 +127,7 @@ void
 kthread_cancel(kthread_t *kthr, void *retval)
 {
 	KASSERT(NULL != kthr); /* should have thread */
-	dbg_print("PASSED: should have thread.\n");
+	dbg_print("GRADING1 3.b PASSED: should have thread.\n");
 
         /*NOT_YET_IMPLEMENTED("PROCS: kthread_cancel");*/
 
@@ -161,13 +161,13 @@ kthread_exit(void *retval)
         curthr->kt_state = KT_EXITED;
   	
 	KASSERT(!curthr->kt_wchan); /* queue should be empty */
-	dbg_print("PASSED: queue should be empty.\n");
+	dbg_print("GRADING1 3.c PASSED: queue should be empty.\n");
 	
        	KASSERT(!curthr->kt_qlink.l_next && !curthr->kt_qlink.l_prev); /* queue should be empty */
-	dbg_print("PASSED: queue should be empty.\n");
+	dbg_print("GRADING1 3.c PASSED: queue should be empty.\n");
         
 	KASSERT(curthr->kt_proc == curproc);
-	dbg_print("PASSED: current process and the process associated with current thread are same.\n");
+	dbg_print("GRADING1 3.c PASSED: current process and the process associated with current thread are same.\n");
         
         proc_thread_exited(retval);
 }
