@@ -85,14 +85,22 @@ proc_create(char *name)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: proc_create");*/
 	
-	/*proc_init();*/
 	proc_t *parentProc = NULL;
+	
 	if(curproc != NULL){
-		parentProc = curproc;/*modified*/
-		curproc = (proc_t *) proc_allocator;
+		parentProc = curproc;
+		proc_allocator = slab_allocator_create(name, sizeof(proc_t));
 	}else{
-		curproc = (proc_t *) slab_allocator_create("proc", sizeof(proc_t));
+		proc_init();
 	}
+	curproc = (proc_t *)proc_allocator;
+	/*
+	proc_init();
+	if(curproc != NULL){
+		parentProc = curproc;
+	}
+	curproc = (proc_t *)proc_allocator;
+	*/
 	list_init(&(curproc->p_threads));
 	list_init(&(curproc->p_children));
 	curproc->p_pid = _proc_getid();
@@ -110,6 +118,9 @@ proc_create(char *name)
 
 	curproc->p_pagedir=pt_create_pagedir();
 	curproc->p_state = PROC_RUNNING;
+	curproc->p_status = 0;
+	list_init(&(curproc->p_wait.tq_list));
+
 	strncpy(curproc->p_comm, name, strlen(name)+1); /*null character added?TODO*/
 	curproc->p_pproc = parentProc;
 	if(parentProc != NULL){

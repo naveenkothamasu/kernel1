@@ -91,6 +91,10 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 	kthread_init();	
         curthr = (kthread_t *) kthread_allocator;
 	curthr->kt_ctx = context;
+	curthr->kt_retval = 0;
+	curthr->kt_errno = 0;
+	curthr->kt_cancelled = 0;
+	
         curthr->kt_kstack = kstack;
         curthr->kt_proc = p;
         curthr->kt_state = KT_NO_STATE; /* TODO: currently running or on runq */
