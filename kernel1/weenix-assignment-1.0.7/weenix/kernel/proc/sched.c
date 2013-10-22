@@ -130,12 +130,15 @@ kthread_t *
 sched_wakeup_on(ktqueue_t *q)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: sched_wakeup_on");*/
-	kthread_t *pThread = ktqueue_dequeue(q);	
-	pThread->kt_state =  KT_RUN; /*FIXME:*/
-	sched_make_runnable(pThread);
-	KASSERT((pThread->kt_state == KT_SLEEP) || ( pThread->kt_state == KT_SLEEP_CANCELLABLE));
-	dbg_print("PASSED: kt_state is either KT_SLEEP or KT_SLEEP_CANCELLABLE.\n");
+	kthread_t *pThread = NULL;
+	if(list_empty(&(q->tq_list)) != 1){
+		
+		pThread = ktqueue_dequeue(q);	
+		KASSERT((pThread->kt_state == KT_SLEEP) || ( pThread->kt_state == KT_SLEEP_CANCELLABLE));
+		dbg_print("GRADING1 4.a PASSED: kt_state is either KT_SLEEP or KT_SLEEP_CANCELLABLE.\n");
         
+		sched_make_runnable(pThread);
+	}
 	return pThread;
 }
 
@@ -147,7 +150,7 @@ sched_broadcast_on(ktqueue_t *q)
 	while(!sched_queue_empty(q)){
 		
 		pThread = ktqueue_dequeue(q);	
-		pThread->kt_state =  KT_RUN; /*FIXME:*/
+		/*pThread->kt_state =  KT_RUN; FIXME:*/
 		sched_make_runnable(pThread);
 	}
 	
@@ -262,7 +265,7 @@ void
 sched_make_runnable(kthread_t *thr)
 {
 	KASSERT(&kt_runq != thr->kt_wchan); /* make sure thread is not blocked */
-	dbg_print("PASSED: thread is not blocked.\n");
+	dbg_print("GRADING1 4.b PASSED: thread is not blocked.\n");
 
         /*NOT_YET_IMPLEMENTED("PROCS: sched_make_runnable");*/
 	uint8_t ipl = intr_getipl();	
