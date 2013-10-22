@@ -272,6 +272,17 @@ do_waitpid(pid_t pid, int options, int *status)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: do_waitpid");*/
 	proc_t *pProc = proc_lookup(pid);
+	
+	KASSERT(NULL != pProc); /* the process should not be NULL */
+	dbg_print("GRADING1 2.c PASSED: the process should not be NULL.\n");
+
+        KASSERT(-1 == pid || pProc->p_pid == pid); /* should be able to find the process */
+	dbg_print("GRADING1 2.c PASSED: should be able to find the process.\n");
+
+	KASSERT(NULL != pProc->p_pagedir); /* this process should have pagedir */
+	dbg_print("GRADING1 2.c PASSED: this process should have pagedir.\n");
+
+
 	if(pid == -1){
 		proc_t *child = NULL;
 		list_t *list = &(pProc->p_children);
@@ -284,19 +295,31 @@ do_waitpid(pid_t pid, int options, int *status)
 			}
 		}
 		if(child != NULL){
-			/*TODO dispoing...curproc = child;
-			proc_cleanup(status);*/
-			/*return status;*/
+		
+			kthread_t *pThread = list_item(child->p_threads.l_next, kthread_t, kt_qlink);
+			KASSERT(KT_EXITED == pThread->kt_state); /* thr points to a thread to be destroied */ 
+			dbg_print("GRADING1 2.c PASSED: thr points to a thread to be destroyed.\n");
+
+
+			pt_destroy_pagedir(child->p_pagedir);
+			list_remove(&child->p_child_link);
+			list_remove(&child->p_list_link);
+			slab_obj_free(proc_allocator,(void *)child);
+			/*slab_allocators_reclaim(-1);*/
 			status = &child->p_status;
+			return (pid_t)status;
 		}else{
 			sched_sleep_on(&(curproc->p_wait));
 		}	
 	}else if(pid > 0){
 		if(pProc->p_pproc == curproc){
-			while(pProc->p_state == PROC_DEAD){
+			while(pProc->p_state != PROC_DEAD){
 				;
 			}
-			/*dispose it*/	
+			pt_destroy_pagedir(pProc->p_pagedir);
+			list_remove(&pProc->p_child_link);
+			list_remove(&pProc->p_list_link);
+			slab_obj_free(proc_allocator, (void *)pProc);
 		}
 	}else{
 		/*not supported*/	
@@ -306,23 +329,7 @@ do_waitpid(pid_t pid, int options, int *status)
 		return -ECHILD;
 	}
 	
- 	KASSERT(NULL != pProc); /* the process should not be NULL */
-	dbg_print("GRADING1 PASSED: the process should not be NULL.\n");
-
-        KASSERT(-1 == pid || pProc->p_pid == pid); /* should be able to find the process */
-	dbg_print("GRADING1 PASSED: should be able to find the process.\n");
-
-	list_t *list = &(pProc->p_threads);
-	list_link_t *link = list->l_next;
-	kthread_t *pThread = list_item(link, kthread_t, kt_qlink); 
-
-        KASSERT(KT_EXITED == pThread->kt_state); /* thr points to a thread to be destroied */ 
-	dbg_print("GRADING1 PASSED: thr points to a thread to be destroyed.\n");
-
-        KASSERT(NULL != pProc->p_pagedir); /* this process should have pagedir */
-	dbg_print("GRADING1 PASSED: this process should have pagedir.\n");
-
-        return pid;
+	return pid;
 }
 
 /*
@@ -344,7 +351,7 @@ do_exit(int status)
 		pThread = list_item(link, kthread_t, kt_qlink);	
 		if(pThread != curthr){
 			kthread_cancel(pThread, &status);
-			kthread_join(pThread, &pStatus);
+			/*kthread_join(pThread, (void **) &pStatus);*/
 		}
 	}		
 	kthread_exit(&status);
