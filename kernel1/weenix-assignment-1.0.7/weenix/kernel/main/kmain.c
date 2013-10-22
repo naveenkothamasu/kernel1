@@ -287,7 +287,8 @@ initproc_run(int arg1, void *arg2)
 {
        /* NOT_YET_IMPLEMENTED("PROCS: initproc_run");*/
 	
-	KASSERT(1==2 && "tests that need to be executed would be run from here...\n");
+	dbg_print("tests that need to be executed would be run from here...\n");
+
 
         return NULL;
 }

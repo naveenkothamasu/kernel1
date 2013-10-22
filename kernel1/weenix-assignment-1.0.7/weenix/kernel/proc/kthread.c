@@ -94,7 +94,9 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
         curthr->kt_kstack = kstack;
         curthr->kt_proc = p;
         curthr->kt_state = KT_NO_STATE; /* TODO: currently running or on runq */
-        /*FIXME:FIXME:pThread->kt_cancelled =*/
+	curthr->kt_wchan = (ktqueue_t *)slab_allocator_create("kt_wchan", sizeof(ktqueue_t));
+       	sched_queue_init(curthr->kt_wchan); 
+	/*FIXME:FIXME:pThread->kt_cancelled =*/
         list_insert_tail(&(p->p_threads), &(curthr->kt_plink)); 
 	/*TODO kt_qlink*/
         KASSERT(curthr != NULL && "ERROR: kthread_create() failed.\n");

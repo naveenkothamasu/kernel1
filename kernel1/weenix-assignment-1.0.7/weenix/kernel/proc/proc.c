@@ -27,7 +27,7 @@
 #include "fs/file.h"
 
 /*My includes*/
-#include "mm/kmalloc.h"
+#include "util/string.h"
 
 proc_t *curproc = NULL; /* global */
 static slab_allocator_t *proc_allocator = NULL;
@@ -93,6 +93,8 @@ proc_create(char *name)
 		parentProc = curproc;/*modified*/
 	}
 	curproc = (proc_t *) proc_allocator;
+	list_init(&(curproc->p_threads));
+	list_init(&(curproc->p_children));
 	curproc->p_pid = _proc_getid();
 	pid_t pid = curproc->p_pid;
 
@@ -110,7 +112,9 @@ proc_create(char *name)
 	curproc->p_state = PROC_RUNNING;
 	strncpy(curproc->p_comm, name, strlen(name)+1); /*null character added?TODO*/
 	curproc->p_pproc = parentProc;
-	list_insert_tail(&(parentProc->p_children), &(curproc->p_child_link));
+	if(parentProc != NULL){
+		list_insert_tail(&(parentProc->p_children), &(curproc->p_child_link));
+	}
 	list_insert_tail(&(_proc_list), &(curproc->p_list_link));
         
 	return curproc;
