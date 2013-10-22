@@ -26,8 +26,6 @@
 #include "fs/vnode.h"
 #include "fs/file.h"
 
-/*My includes*/
-#include "util/string.h"
 
 proc_t *curproc = NULL; /* global */
 static slab_allocator_t *proc_allocator = NULL;
@@ -87,12 +85,14 @@ proc_create(char *name)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: proc_create");*/
 	
-	proc_init();
+	/*proc_init();*/
 	proc_t *parentProc = NULL;
 	if(curproc != NULL){
 		parentProc = curproc;/*modified*/
+		curproc = (proc_t *) proc_allocator;
+	}else{
+		curproc = (proc_t *) slab_allocator_create("proc", sizeof(proc_t));
 	}
-	curproc = (proc_t *) proc_allocator;
 	list_init(&(curproc->p_threads));
 	list_init(&(curproc->p_children));
 	curproc->p_pid = _proc_getid();
@@ -105,7 +105,7 @@ proc_create(char *name)
 	KASSERT(PID_IDLE != pid || list_empty(&_proc_list)); /* pid can only be PID_IDLE if this is the first process */
 	dbg_print("GRADING#1 2.a PASSED: pid can only be PID_IDLE if this is the first process");
 
-	KASSERT(PID_INIT != pid || PID_IDLE == curproc->p_pid); /* pid can only be PID_INIT when creating from idle process */
+	KASSERT(PID_INIT != pid || PID_IDLE == parentProc->p_pid); /* pid can only be PID_INIT when creating from idle process */
 	dbg_print("GRADING#2 2.a PASSED: pid can only be PID_INIT when creating from idle process");
 
 	curproc->p_pagedir=pt_create_pagedir();

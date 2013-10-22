@@ -154,7 +154,7 @@ bootstrap(int arg1, void *arg2)
 	KASSERT(PID_IDLE == curproc->p_pid);
 	dbg_print("GRADING1 1.a PASSED: what has been created is the idle process.\n");
 	
-	curthr = kthread_create(pProc, initproc_run, NULL, NULL);
+	curthr = kthread_create(pProc, idleproc_run, NULL, NULL);
 	KASSERT(NULL != curthr);	
 	dbg_print("GRADING1 1.a PASSED: the thread for the idle process has been created successfull.\n");
 
@@ -286,7 +286,17 @@ static void *
 initproc_run(int arg1, void *arg2)
 {
        /* NOT_YET_IMPLEMENTED("PROCS: initproc_run");*/
-	
+
+ 	#ifdef __DRIVERS__
+	/*
+        kshell_add_command("foo", do_foo, "invoke do_foo() to print a message...");
+
+        kshell_t *kshell = kshell_create(0);
+        if (NULL == kshell) panic("init: Couldn't create kernel shell\n");
+        while (kshell_execute_next(kshell));
+        kshell_destroy(kshell);
+	*/
+    	#endif /* __DRIVERS__ */	
 	dbg_print("tests that need to be executed would be run from here...\n");
 
 
