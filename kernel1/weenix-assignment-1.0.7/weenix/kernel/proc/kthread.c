@@ -79,10 +79,6 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 	KASSERT(NULL != p); /* should have associated process */
 	dbg_print("PASSED: should have associated process.\n");
 
-        /*
-	kthread_t *pThread = (kthread_t *) slab_allocator_create("kthread1" ,sizeof(kthread_t));  
-	KASSERT(pThread != NULL && "ERROR: slab_allocator() failed, Unalbe to allocate memory for a thread struct.\n");
-	*/
         context_t context; /*FIXME local variable fine?*/
 	
         char *kstack=alloc_stack();
@@ -91,24 +87,14 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 	curthr->kt_ctx = context;
 	curthr->kt_retval = 0;
 	curthr->kt_errno = 0;
-	curthr->kt_cancelled = 0;
-	
+	curthr->kt_cancelled = 0;	
         curthr->kt_kstack = kstack;
         curthr->kt_proc = p;
         curthr->kt_state = KT_NO_STATE; /* TODO: currently running or on runq */
 	curthr->kt_wchan = NULL;
-	curthr->kt_qlink.l_next = NULL;
-	curthr->kt_qlink.l_prev = NULL;
-
-	curthr->kt_plink.l_next = NULL;
-	curthr->kt_plink.l_prev = NULL;
-	/*curthr->kt_wchan = (ktqueue_t *)slab_allocator_create("kt_wchan", sizeof(ktqueue_t));
-	KASSERT(curthr->kt_wchan != NULL);
-       	sched_queue_init(curthr->kt_wchan); 
-	*/
-	/*FIXME:FIXME:pThread->kt_cancelled =*/
+	list_link_init(&curthr->kt_plink);
+	list_link_init(&curthr->kt_qlink);
         list_insert_tail(&(p->p_threads), &(curthr->kt_plink)); 
-	/*TODO kt_qlink*/
         KASSERT(curthr != NULL && "ERROR: kthread_create() failed.\n");
         return curthr;
 }
