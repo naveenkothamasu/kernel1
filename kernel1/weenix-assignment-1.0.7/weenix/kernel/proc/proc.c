@@ -305,7 +305,13 @@ do_waitpid(pid_t pid, int options, int *status)
 		
 			KASSERT(NULL != deadChild->p_pagedir); /* this process should have pagedir */
 			dbg_print("GRADING1 2.c PASSED: this process should have pagedir.\n");
-
+			kthread_t *pThread = NULL;
+			list_t *list = &(deadChild->p_threads);
+			list_link_t *link = NULL;
+			for(link = list->l_next; link!=list; link=link->l_next){
+				pThread = list_item(link, kthread_t, kt_qlink);
+				kthread_destroy(pThread);	
+			}
 		
 			pt_destroy_pagedir(deadChild->p_pagedir);
 			list_remove(&deadChild->p_child_link);
