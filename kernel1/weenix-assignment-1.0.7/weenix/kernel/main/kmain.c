@@ -55,6 +55,18 @@ static void       hard_shutdown(void);
 static context_t bootstrap_context;
 
 static int gdb_wait = GDBWAIT;
+
+    #ifdef __DRIVERS__
+
+        int do_foo(kshell_t *kshell, int argc, char **argv)
+        {
+            KASSERT(kshell != NULL);
+            dbg(DBG_INIT, "(GRADING): do_foo() is invoked, argc = %d, argv = 0x%08x\n",
+                    argc, (unsigned int)argv);
+            return 0;
+        }
+
+    #endif /* __DRIVERS__ */
 /**
  * This is the first real C function ever called. It performs a lot of
  * hardware-specific initialization, then creates a pseudo-context to
@@ -154,7 +166,7 @@ bootstrap(int arg1, void *arg2)
 	KASSERT(PID_IDLE == curproc->p_pid);
 	dbg_print("GRADING1 1.a PASSED: what has been created is the idle process.\n");
 	
-	curthr = kthread_create(pProc, idleproc_run, NULL, NULL);
+	curthr = kthread_create(curproc, idleproc_run, NULL, NULL);
 	KASSERT(NULL != curthr);	
 	dbg_print("GRADING1 1.a PASSED: the thread for the idle process has been created successfull.\n");
 
@@ -283,19 +295,17 @@ initproc_run(int arg1, void *arg2)
 {
        /* NOT_YET_IMPLEMENTED("PROCS: initproc_run");*/
 
- 	#ifdef __DRIVERS__
-	/*
+
+    #ifdef __DRIVERS__
+
         kshell_add_command("foo", do_foo, "invoke do_foo() to print a message...");
 
         kshell_t *kshell = kshell_create(0);
         if (NULL == kshell) panic("init: Couldn't create kernel shell\n");
-        while (kshell_execute_next(kshell));
+        kshell_execute_next(kshell);	
         kshell_destroy(kshell);
-	*/
-    	#endif /* __DRIVERS__ */	
-	dbg_print("tests that need to be executed would be run from here...\n");
 
-
+    #endif /* __DRIVERS__ */
         return NULL;
 }
 

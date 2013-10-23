@@ -95,6 +95,7 @@ proc_create(char *name)
 	list_init(&(proc->p_children));
 	list_link_init(&proc->p_list_link);
 	list_link_init(&proc->p_child_link);
+	sched_queue_init(&(proc->p_wait));
 	proc->p_pid = _proc_getid();
 	pid_t pid = proc->p_pid;
 
@@ -111,7 +112,7 @@ proc_create(char *name)
 	proc->p_pagedir=pt_create_pagedir();
 	proc->p_state = PROC_RUNNING;
 	proc->p_status = 0;
-	list_init(&(proc->p_wait.tq_list));
+	/*list_init(&(proc->p_wait.tq_list));*/
 
 	strncpy(proc->p_comm, name, PROC_NAME_LEN); /*null character added?TODO*/
 	proc->p_pproc = parentProc;

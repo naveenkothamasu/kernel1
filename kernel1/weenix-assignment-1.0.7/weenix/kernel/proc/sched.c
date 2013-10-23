@@ -101,6 +101,7 @@ void
 sched_sleep_on(ktqueue_t *q)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: sched_sleep_on");*/
+	uint8_t earlier_ipl = intr_getipl();
 	intr_setipl(IPL_HIGH);	
 	kthread_t *thread1 = curthr;
 	context_t oldc = thread1->kt_ctx;
@@ -116,12 +117,15 @@ sched_sleep_on(ktqueue_t *q)
 			newc = thread2->kt_ctx;
 			context_switch(&oldc, &newc);
 		}
-		intr_setipl(IPL_LOW);	
 			
 	}else{
 		/*threads may be waiting for the interrutps*/
+		while(sched_queue_empty(&kt_runq)){
 		intr_setipl(IPL_LOW);	
 		intr_wait();
+		intr_setipl(IPL_HIGH);
+		}
+
 		thread2 = ktqueue_dequeue(&kt_runq);
 		curthr = thread2;
 		curproc = thread2->kt_proc;
@@ -130,7 +134,7 @@ sched_sleep_on(ktqueue_t *q)
 			context_switch(&oldc, &newc);
 		}
 	}
-
+	intr_setipl(earlier_ipl);
 }
 
 
@@ -145,6 +149,7 @@ int
 sched_cancellable_sleep_on(ktqueue_t *q)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: sched_cancellable_sleep_on");*/
+	uint8_t earlier_ipl = intr_getipl();
 	intr_setipl(IPL_HIGH);	
 	kthread_t *thread1 = curthr;
 	context_t oldc = thread1->kt_ctx;
@@ -164,8 +169,11 @@ sched_cancellable_sleep_on(ktqueue_t *q)
 			
 	}else{
 		/*threads may be waiting for the interrutps*/
+		while(sched_queue_empty(&kt_runq)){
 		intr_setipl(IPL_LOW);	
 		intr_wait();
+		intr_setipl(IPL_HIGH);
+		}
 		thread2 = ktqueue_dequeue(&kt_runq);
 		curthr = thread2;
 		curproc = thread2->kt_proc;
@@ -174,6 +182,7 @@ sched_cancellable_sleep_on(ktqueue_t *q)
 			context_switch(&oldc, &newc);
 		}
 	}
+	intr_setipl(earlier_ipl);
 	if(curthr->kt_cancelled==1)
 	{
 		return -EINTR;	
@@ -273,6 +282,7 @@ void
 sched_switch(void)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: sched_switch");*/
+	uint8_t earlier_ipl = intr_getipl();	
 	intr_setipl(IPL_HIGH);	
 	/*remove first thread*/
 	kthread_t *thread1 = curthr;
@@ -292,8 +302,11 @@ sched_switch(void)
 			
 	}else{
 		/*threads may be waiting for the interrutps*/
+		while(sched_queue_empty(&kt_runq)){
 		intr_setipl(IPL_LOW);	
 		intr_wait();
+		intr_setipl(IPL_HIGH);
+		}
 		thread2 = ktqueue_dequeue(&kt_runq);
 		curthr = thread2;
 		curproc = thread2->kt_proc;
@@ -301,7 +314,8 @@ sched_switch(void)
 			newc = thread2->kt_ctx;
 			context_switch(&oldc, &newc);
 		}
-	}	
+	}
+	intr_setipl(earlier_ipl);	
 }
 
 /*
