@@ -101,8 +101,35 @@ void
 sched_sleep_on(ktqueue_t *q)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: sched_sleep_on");*/
+	intr_setipl(IPL_HIGH);	
+	kthread_t *thread1 = curthr;
+	context_t oldc = thread1->kt_ctx;
+	context_t newc;
 	curthr->kt_state = KT_SLEEP;
-	ktqueue_enqueue(q, curthr);
+	ktqueue_enqueue(q,curthr);
+	kthread_t *thread2 = NULL;
+	if( list_empty(&(kt_runq.tq_list)) != 1){
+		thread2 = ktqueue_dequeue(&kt_runq);
+		curthr = thread2;
+		curproc = thread2->kt_proc;
+		if(thread2 != NULL){
+			newc = thread2->kt_ctx;
+			context_switch(&oldc, &newc);
+		}
+		intr_setipl(IPL_LOW);	
+			
+	}else{
+		/*threads may be waiting for the interrutps*/
+		intr_setipl(IPL_LOW);	
+		intr_wait();
+		thread2 = ktqueue_dequeue(&kt_runq);
+		curthr = thread2;
+		curproc = thread2->kt_proc;
+		if(thread2 != NULL){
+			newc = thread2->kt_ctx;
+			context_switch(&oldc, &newc);
+		}
+	}
 
 }
 
@@ -118,12 +145,42 @@ int
 sched_cancellable_sleep_on(ktqueue_t *q)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: sched_cancellable_sleep_on");*/
-	if(curthr->kt_cancelled == 1){
-		/*TODO do what here?*/	
-	}
+	intr_setipl(IPL_HIGH);	
+	kthread_t *thread1 = curthr;
+	context_t oldc = thread1->kt_ctx;
+	context_t newc;
 	curthr->kt_state = KT_SLEEP_CANCELLABLE;
-	ktqueue_enqueue(q, curthr);
-        return 0;
+	ktqueue_enqueue(q,curthr);
+	kthread_t *thread2 = NULL;
+	if( list_empty(&(kt_runq.tq_list)) != 1){
+		thread2 = ktqueue_dequeue(&kt_runq);
+		curthr = thread2;
+		curproc = thread2->kt_proc;
+		if(thread2 != NULL){
+			newc = thread2->kt_ctx;
+			context_switch(&oldc, &newc);
+		}
+		intr_setipl(IPL_LOW);	
+			
+	}else{
+		/*threads may be waiting for the interrutps*/
+		intr_setipl(IPL_LOW);	
+		intr_wait();
+		thread2 = ktqueue_dequeue(&kt_runq);
+		curthr = thread2;
+		curproc = thread2->kt_proc;
+		if(thread2 != NULL){
+			newc = thread2->kt_ctx;
+			context_switch(&oldc, &newc);
+		}
+	}
+	if(curthr->kt_cancelled==1)
+	{
+		return -EINTR;	
+	}else
+	{
+     		 return 0;
+	}
 }
 
 kthread_t *
@@ -244,8 +301,7 @@ sched_switch(void)
 			newc = thread2->kt_ctx;
 			context_switch(&oldc, &newc);
 		}
-	}
-		
+	}	
 }
 
 /*
@@ -271,6 +327,6 @@ sched_make_runnable(kthread_t *thr)
 	uint8_t ipl = intr_getipl();	
 	intr_setipl(IPL_HIGH);	
 	thr->kt_state = KT_RUN;	
-	
+	ktqueue_enqueue(&kt_runq,thr);
 	intr_setipl(ipl);
 }
