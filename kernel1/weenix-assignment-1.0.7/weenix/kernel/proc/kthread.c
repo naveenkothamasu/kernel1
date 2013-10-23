@@ -87,9 +87,7 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 	
         char *kstack=alloc_stack();
         context_setup(&context, func, arg1, arg2, kstack, DEFAULT_STACK_SIZE, p->p_pagedir);
-	
-	kthread_init();	
-        curthr = (kthread_t *) kthread_allocator;
+        curthr = (kthread_t *)slab_obj_alloc(kthread_allocator);
 	curthr->kt_ctx = context;
 	curthr->kt_retval = 0;
 	curthr->kt_errno = 0;

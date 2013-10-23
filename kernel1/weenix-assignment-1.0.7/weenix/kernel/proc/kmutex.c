@@ -22,7 +22,7 @@ kmutex_init(kmutex_t *mtx)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: kmutex_init");*/
         mtx = (kmutex_t *) slab_allocator_create("mutex", sizeof(kmutex_t));
-	memset(mtx, '\0', sizeof(kmutex_t));/*TODO is this needed?*/	
+	/*memset(mtx, '\0', sizeof(kmutex_t));TODO is this needed?*/	
        	/*KASSERT(mtx != NULL && "ERROR: kmutex_init() failed.");*/ 
 }
 

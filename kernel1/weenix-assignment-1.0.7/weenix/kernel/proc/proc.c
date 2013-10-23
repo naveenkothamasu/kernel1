@@ -89,20 +89,12 @@ proc_create(char *name)
 	
 	if(curproc != NULL){
 		parentProc = curproc;
-		proc_allocator = slab_allocator_create(name, sizeof(proc_t));
-	}else{
-		proc_init();
 	}
-	curproc = (proc_t *)proc_allocator;
-	/*
-	proc_init();
-	if(curproc != NULL){
-		parentProc = curproc;
-	}
-	curproc = (proc_t *)proc_allocator;
-	*/
+	curproc =(proc_t *)slab_obj_alloc(proc_allocator);
 	list_init(&(curproc->p_threads));
 	list_init(&(curproc->p_children));
+	list_link_init(&curproc->p_list_link);
+	list_link_init(&curproc->p_child_link);
 	curproc->p_pid = _proc_getid();
 	pid_t pid = curproc->p_pid;
 
@@ -121,7 +113,7 @@ proc_create(char *name)
 	curproc->p_status = 0;
 	list_init(&(curproc->p_wait.tq_list));
 
-	strncpy(curproc->p_comm, name, strlen(name)+1); /*null character added?TODO*/
+	strncpy(curproc->p_comm, name, PROC_NAME_LEN); /*null character added?TODO*/
 	curproc->p_pproc = parentProc;
 	if(parentProc != NULL){
 		list_insert_tail(&(parentProc->p_children), &(curproc->p_child_link));
