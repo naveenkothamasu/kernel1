@@ -266,8 +266,6 @@ initproc_create(void)
 	KASSERT(/* pointer to the thread for the "init" process */ pThread != NULL);
 	dbg_print("GRADING1 1.b PASSED: thread for the init process has been created.\n");
 
-	sched_make_runnable(pThread); /*TODO is this call OK?*/
-
         return pThread;
 }
 
