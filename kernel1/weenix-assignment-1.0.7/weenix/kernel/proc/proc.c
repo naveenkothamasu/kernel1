@@ -90,15 +90,15 @@ proc_create(char *name)
 	if(curproc != NULL){
 		parentProc = curproc;
 	}
-	curproc =(proc_t *)slab_obj_alloc(proc_allocator);
-	list_init(&(curproc->p_threads));
-	list_init(&(curproc->p_children));
-	list_link_init(&curproc->p_list_link);
-	list_link_init(&curproc->p_child_link);
-	curproc->p_pid = _proc_getid();
-	pid_t pid = curproc->p_pid;
+	proc_t *proc =(proc_t *)slab_obj_alloc(proc_allocator);
+	list_init(&(proc->p_threads));
+	list_init(&(proc->p_children));
+	list_link_init(&proc->p_list_link);
+	list_link_init(&proc->p_child_link);
+	proc->p_pid = _proc_getid();
+	pid_t pid = proc->p_pid;
 
-	if(curproc->p_pid == PID_INIT){
+	if(proc->p_pid == PID_INIT){
 		proc_initproc = curproc;
 	}
         /*FIXME: struct initialization */
@@ -108,19 +108,19 @@ proc_create(char *name)
 	KASSERT(PID_INIT != pid || PID_IDLE == parentProc->p_pid); /* pid can only be PID_INIT when creating from idle process */
 	dbg_print("GRADING#2 2.a PASSED: pid can only be PID_INIT when creating from idle process");
 
-	curproc->p_pagedir=pt_create_pagedir();
-	curproc->p_state = PROC_RUNNING;
-	curproc->p_status = 0;
-	list_init(&(curproc->p_wait.tq_list));
+	proc->p_pagedir=pt_create_pagedir();
+	proc->p_state = PROC_RUNNING;
+	proc->p_status = 0;
+	list_init(&(proc->p_wait.tq_list));
 
-	strncpy(curproc->p_comm, name, PROC_NAME_LEN); /*null character added?TODO*/
-	curproc->p_pproc = parentProc;
+	strncpy(proc->p_comm, name, PROC_NAME_LEN); /*null character added?TODO*/
+	proc->p_pproc = parentProc;
 	if(parentProc != NULL){
-		list_insert_tail(&(parentProc->p_children), &(curproc->p_child_link));
+		list_insert_tail(&(parentProc->p_children), &(proc->p_child_link));
 	}
-	list_insert_tail(&(_proc_list), &(curproc->p_list_link));
+	list_insert_tail(&(_proc_list), &(proc->p_list_link));
         
-	return curproc;
+	return proc;
 }
 
 /**
@@ -283,14 +283,12 @@ do_waitpid(pid_t pid, int options, int *status)
 	KASSERT(NULL != pProc); /* the process should not be NULL */
 	dbg_print("GRADING1 2.c PASSED: the process should not be NULL.\n");
 
-        KASSERT(-1 == pid || pProc->p_pid == pid); /* should be able to find the process */
-	dbg_print("GRADING1 2.c PASSED: should be able to find the process.\n");
-
-	KASSERT(NULL != pProc->p_pagedir); /* this process should have pagedir */
+        KASSERT(NULL != pProc->p_pagedir); /* this process should have pagedir */
 	dbg_print("GRADING1 2.c PASSED: this process should have pagedir.\n");
 
 
 	if(pid == -1){
+		pProc = curproc;
 		proc_t *child = NULL;
 		list_t *list = &(pProc->p_children);
 		list_link_t *link=NULL;
@@ -331,6 +329,11 @@ do_waitpid(pid_t pid, int options, int *status)
 	}else{
 		/*not supported*/	
 	}
+	
+	KASSERT(-1 == pid || pProc->p_pid == pid); /* should be able to find the process */
+	dbg_print("GRADING1 2.c PASSED: should be able to find the process.\n");
+
+
 	if(list_empty(&curproc->p_children) == 1 
 		|| pProc->p_pproc != curproc){
 		return -ECHILD;

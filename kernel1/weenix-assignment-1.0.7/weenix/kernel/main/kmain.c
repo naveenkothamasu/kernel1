@@ -160,8 +160,6 @@ bootstrap(int arg1, void *arg2)
 
         context_make_active(&(curthr->kt_ctx));
 
-	sched_make_runnable(curthr);
-
         panic("weenix returned to bootstrap()!!! BAD!!!\n");
         return NULL;
 }

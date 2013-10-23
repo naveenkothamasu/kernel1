@@ -83,20 +83,19 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 	
         char *kstack=alloc_stack();
         context_setup(&context, func, arg1, arg2, kstack, DEFAULT_STACK_SIZE, p->p_pagedir);
-        curthr = (kthread_t *)slab_obj_alloc(kthread_allocator);
-	curthr->kt_ctx = context;
-	curthr->kt_retval = 0;
-	curthr->kt_errno = 0;
-	curthr->kt_cancelled = 0;	
-        curthr->kt_kstack = kstack;
-        curthr->kt_proc = p;
-        curthr->kt_state = KT_NO_STATE; /* TODO: currently running or on runq */
-	curthr->kt_wchan = NULL;
-	list_link_init(&curthr->kt_plink);
-	list_link_init(&curthr->kt_qlink);
-        list_insert_tail(&(p->p_threads), &(curthr->kt_plink)); 
-        KASSERT(curthr != NULL && "ERROR: kthread_create() failed.\n");
-        return curthr;
+        kthread_t *thr = (kthread_t *)slab_obj_alloc(kthread_allocator);
+	thr->kt_ctx = context;
+	thr->kt_retval = 0;
+	thr->kt_errno = 0;
+	thr->kt_cancelled = 0;	
+        thr->kt_kstack = kstack;
+        thr->kt_proc = p;
+        thr->kt_state = KT_NO_STATE; /* TODO: currently running or on runq */
+	thr->kt_wchan = NULL;
+	list_link_init(&thr->kt_plink);
+	list_link_init(&thr->kt_qlink);
+        list_insert_tail(&(p->p_threads), &(thr->kt_plink)); 
+        return thr;
 }
 
 void
