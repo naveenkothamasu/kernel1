@@ -285,6 +285,8 @@ do_waitpid(pid_t pid, int options, int *status)
 
         
 	if(pid == -1){
+		while(1)
+		{
 		pProc = curproc;
 		proc_t *child = NULL;
 		proc_t *deadChild = NULL;
@@ -297,7 +299,7 @@ do_waitpid(pid_t pid, int options, int *status)
 				status = &deadChild->p_status;
 				break;
 			}
-		}
+			}
 		if(deadChild != NULL){
 		
 			KASSERT(NULL != deadChild->p_pagedir); /* this process should have pagedir */
@@ -311,15 +313,29 @@ do_waitpid(pid_t pid, int options, int *status)
 			/*slab_allocators_reclaim(-1);*/
 			status = &deadChild->p_status;
 			return (pid_t)status;
-		}else{
+			}else{
 			sched_sleep_on(&(curproc->p_wait));
 			
+			}
 		}	
 	}else if(pid > 0){
 		if(pProc->p_pproc == curproc){
-			while(pProc->p_state != PROC_DEAD){
-				;
+			while(1){
+			pProc = curproc;
+			proc_t *child = NULL;
+			proc_t *deadChild = NULL;
+			list_t *list = &(pProc->p_children);
+			list_link_t *link=NULL;
+
+			for(link = list->l_next; link != list; link = link->l_next){
+			child = list_item(link, proc_t, p_list_link);
+			if(child->p_state == PROC_DEAD){
+				deadChild = child;
+				status = &deadChild->p_status;
+				break;
 			}
+			}
+			if(deadChild!=NULL){
 			kthread_t *pThread = list_item(pProc->p_threads.l_next, kthread_t, kt_qlink);
 			KASSERT(KT_EXITED == pThread->kt_state); /* thr points to a thread to be destroied */ 
 			dbg_print("GRADING1 2.c PASSED: thr points to a thread to be destroyed.\n");
@@ -329,6 +345,13 @@ do_waitpid(pid_t pid, int options, int *status)
 			list_remove(&pProc->p_child_link);
 			list_remove(&pProc->p_list_link);
 			slab_obj_free(proc_allocator, (void *)pProc);
+			}else{
+				sched_sleep_on(&curproc->p_wait);
+			}	
+		}
+		}
+		else {
+			return -ECHILD;
 		}
 	}else{
 		/*not supported*/	
