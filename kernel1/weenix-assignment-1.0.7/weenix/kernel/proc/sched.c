@@ -171,8 +171,8 @@ sched_cancel(struct kthread *kthr)
         /*NOT_YET_IMPLEMENTED("PROCS: sched_cancel");*/
 	kthr->kt_cancelled = 1;
 	if( kthr->kt_state == KT_SLEEP_CANCELLABLE ){
-		/*remove it from queue*/
-		ktqueue_remove(&kt_runq, kthr);
+		ktqueue_remove(kthr->kt_wchan, kthr);
+		sched_make_runnable(kthr);
 	}	
 }
 
