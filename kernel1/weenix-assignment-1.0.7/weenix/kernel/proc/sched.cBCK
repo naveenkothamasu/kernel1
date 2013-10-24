@@ -104,34 +104,33 @@ sched_sleep_on(ktqueue_t *q)
 	uint8_t earlier_ipl = intr_getipl();
 	intr_setipl(IPL_HIGH);	
 	kthread_t *thread1 = curthr;
-	context_t *oldc = &(thread1->kt_ctx);
-	context_t *newc;
+	context_t oldc = thread1->kt_ctx;
+	context_t newc;
 	curthr->kt_state = KT_SLEEP;
 	ktqueue_enqueue(q,curthr);
 	kthread_t *thread2 = NULL;
-	if( list_empty(&(kt_runq.tq_list)) != 1){
+	if( !sched_queue_empty(q)){
 		thread2 = ktqueue_dequeue(&kt_runq);
 		curthr = thread2;
 		curproc = thread2->kt_proc;
 		if(thread2 != NULL){
-			newc = &(thread2->kt_ctx);
-			context_switch(oldc, newc);
+			newc = thread2->kt_ctx;
+			context_switch(&oldc, &newc);
 		}
 			
 	}else{
 		/*threads may be waiting for the interrutps*/
-		intr_setipl(IPL_LOW);	
 		while(sched_queue_empty(&kt_runq)){
-		intr_wait();
-		}
+		intr_setipl(IPL_LOW);
+			intr_wait();
 		intr_setipl(IPL_HIGH);
-
+		}
 		thread2 = ktqueue_dequeue(&kt_runq);
 		curthr = thread2;
 		curproc = thread2->kt_proc;
 		if(thread2 != NULL){
-			newc = &(thread2->kt_ctx);
-			context_switch(oldc, newc);
+			newc = thread2->kt_ctx;
+			context_switch(&oldc, &newc);
 		}
 	}
 	intr_setipl(earlier_ipl);
@@ -152,34 +151,32 @@ sched_cancellable_sleep_on(ktqueue_t *q)
 	uint8_t earlier_ipl = intr_getipl();
 	intr_setipl(IPL_HIGH);	
 	kthread_t *thread1 = curthr;
-	context_t *oldc = &(thread1->kt_ctx);
-	context_t *newc;
+	context_t oldc = thread1->kt_ctx;
+	context_t newc;
 	curthr->kt_state = KT_SLEEP_CANCELLABLE;
 	ktqueue_enqueue(q,curthr);
 	kthread_t *thread2 = NULL;
-	if( list_empty(&(kt_runq.tq_list)) != 1){
+	if( !sched_queue_empty(q)){
 		thread2 = ktqueue_dequeue(&kt_runq);
 		curthr = thread2;
 		curproc = thread2->kt_proc;
 		if(thread2 != NULL){
-			newc = &(thread2->kt_ctx);
-			context_switch(oldc, newc);
+			newc = thread2->kt_ctx;
+			context_switch(&oldc, &newc);
 		}
-		intr_setipl(IPL_LOW);	
-			
 	}else{
 		/*threads may be waiting for the interrutps*/
-		intr_setipl(IPL_LOW);	
 		while(sched_queue_empty(&kt_runq)){
-		intr_wait();
+			intr_setipl(IPL_LOW);
+			intr_wait();
+			intr_setipl(IPL_HIGH);
 		}
-		intr_setipl(IPL_HIGH);
 		thread2 = ktqueue_dequeue(&kt_runq);
 		curthr = thread2;
 		curproc = thread2->kt_proc;
 		if(thread2 != NULL){
-			newc = &(thread2->kt_ctx);
-			context_switch(oldc, newc);
+			newc = thread2->kt_ctx;
+			context_switch(&oldc, &newc);
 		}
 	}
 	intr_setipl(earlier_ipl);
@@ -197,7 +194,7 @@ sched_wakeup_on(ktqueue_t *q)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: sched_wakeup_on");*/
 	kthread_t *pThread = NULL;
-	if(list_empty(&(q->tq_list)) != 1){
+	if(!sched_queue_empty(q)){
 		
 		pThread = ktqueue_dequeue(q);	
 		KASSERT((pThread->kt_state == KT_SLEEP) || ( pThread->kt_state == KT_SLEEP_CANCELLABLE));
@@ -286,35 +283,31 @@ sched_switch(void)
 	intr_setipl(IPL_HIGH);	
 	/*remove first thread*/
 	kthread_t *thread1 = curthr;
-	context_t *oldc = &(thread1->kt_ctx);
-	context_t *newc;
-	if(thread1->kt_state != KT_EXITED){
-		ktqueue_enqueue(&kt_runq, thread1);
-	}
+	context_t oldc = thread1->kt_ctx;
+	context_t newc;
+	ktqueue_enqueue(&kt_runq, thread1);
 	kthread_t *thread2 = NULL;
 	if( list_empty(&(kt_runq.tq_list)) != 1){
 		thread2 = ktqueue_dequeue(&kt_runq);
 		curthr = thread2;
 		curproc = thread2->kt_proc;
 		if(thread2 != NULL){
-			newc = &(thread2->kt_ctx);
-			context_switch(oldc, newc);
+			newc = thread2->kt_ctx;
+			context_switch(&oldc, &newc);
 		}
-		intr_setipl(IPL_LOW);	
-			
 	}else{
 		/*threads may be waiting for the interrutps*/
-		intr_setipl(IPL_LOW);	
 		while(sched_queue_empty(&kt_runq)){
-		intr_wait();
+			intr_setipl(IPL_LOW);
+			intr_wait();
+			intr_setipl(IPL_HIGH);
 		}
-		intr_setipl(IPL_HIGH);
 		thread2 = ktqueue_dequeue(&kt_runq);
 		curthr = thread2;
 		curproc = thread2->kt_proc;
 		if(thread2 != NULL){
-			newc = &(thread2->kt_ctx);
-			context_switch(oldc, newc);
+			newc = thread2->kt_ctx;
+			context_switch(&oldc, &newc);
 		}
 	}
 	intr_setipl(earlier_ipl);	

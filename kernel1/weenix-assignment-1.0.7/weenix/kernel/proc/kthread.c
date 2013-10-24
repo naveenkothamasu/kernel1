@@ -81,20 +81,19 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
 
         context_t context; /*FIXME local variable fine?*/
 	
-        char *kstack=alloc_stack();
-        context_setup(&context, func, arg1, arg2, kstack, DEFAULT_STACK_SIZE, p->p_pagedir);
         kthread_t *thr = (kthread_t *)slab_obj_alloc(kthread_allocator);
-	thr->kt_ctx = context;
 	thr->kt_retval = 0;
 	thr->kt_errno = 0;
 	thr->kt_cancelled = 0;	
-        thr->kt_kstack = kstack;
+        thr->kt_kstack = alloc_stack();
         thr->kt_proc = p;
         thr->kt_state = KT_NO_STATE; /* TODO: currently running or on runq */
 	thr->kt_wchan = NULL;
 	list_link_init(&thr->kt_plink);
 	list_link_init(&thr->kt_qlink);
         list_insert_tail(&(p->p_threads), &(thr->kt_plink)); 
+        
+	context_setup(&(thr->kt_ctx), func, arg1, arg2, thr->kt_kstack, DEFAULT_STACK_SIZE, p->p_pagedir);
         return thr;
 }
 

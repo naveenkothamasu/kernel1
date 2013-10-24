@@ -58,11 +58,12 @@ static int gdb_wait = GDBWAIT;
 
     #ifdef __DRIVERS__
 
-        int do_foo(kshell_t *kshell, int argc, char **argv)
+        int test(kshell_t *kshell, int argc, char **argv)
         {
             KASSERT(kshell != NULL);
             dbg(DBG_INIT, "(GRADING): do_foo() is invoked, argc = %d, argv = 0x%08x\n",
                     argc, (unsigned int)argv);
+		testproc(argc, *argv);
             return 0;
         }
 
@@ -298,11 +299,11 @@ initproc_run(int arg1, void *arg2)
 
     #ifdef __DRIVERS__
 
-        kshell_add_command("foo", do_foo, "invoke do_foo() to print a message...");
+        kshell_add_command("faber tests", test, "invoke do_foo() to print a message...");
 
         kshell_t *kshell = kshell_create(0);
         if (NULL == kshell) panic("init: Couldn't create kernel shell\n");
-        kshell_execute_next(kshell);	
+        while(kshell_execute_next(kshell));	
         kshell_destroy(kshell);
 
     #endif /* __DRIVERS__ */
