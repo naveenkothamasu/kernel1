@@ -86,11 +86,11 @@ proc_create(char *name)
         /*NOT_YET_IMPLEMENTED("PROCS: proc_create");*/
 	
 	proc_t *parentProc = NULL;
-	
+	proc_t *proc = NULL;
 	if(curproc != NULL){
 		parentProc = curproc;
 	}
-	proc_t *proc =(proc_t *)slab_obj_alloc(proc_allocator);
+	proc =(proc_t *)slab_obj_alloc(proc_allocator);
 	list_init(&(proc->p_threads));
 	list_init(&(proc->p_children));
 	list_link_init(&proc->p_list_link);
@@ -217,7 +217,7 @@ proc_kill_all()
 		list_t *list =& _proc_list;
 		proc_t *pProc = NULL;
 		for(link = _proc_list.l_next; link != list; link = link->l_next){
-			pProc = list_item(link, proc_t, p_child_link);
+			pProc = list_item(link, proc_t, p_list_link);
 			if(pProc->p_pid == PID_IDLE || pProc->p_pproc->p_pid == PID_IDLE){
 				continue;	
 			}
@@ -280,10 +280,9 @@ pid_t
 do_waitpid(pid_t pid, int options, int *status)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: do_waitpid");*/
-	proc_t *pProc = proc_lookup(pid);
+	proc_t *pProc = NULL;
 
-	if(list_empty(&curproc->p_children) == 1 
-		){
+	if(list_empty(&curproc->p_children) == 1){
 		return -ECHILD;
 	}
 	 
@@ -337,7 +336,9 @@ do_waitpid(pid_t pid, int options, int *status)
 			}
 		}	
 	}else if(pid > 0){
-		if(pProc->p_pproc != curproc){
+		
+		pProc = proc_lookup(pid);
+		if(pProc == NULL || pProc->p_pproc != curproc){
 			return -ECHILD;
 		}
 
@@ -367,14 +368,14 @@ do_waitpid(pid_t pid, int options, int *status)
 						pThread = list_item(link, kthread_t, kt_plink);
 						kthread_destroy(pThread);	
 					}*/
-					KASSERT(KT_EXITED == pThread->kt_state); /* thr points to a thread to be destroied */ 
 					pThread = list_item(list->l_next, kthread_t, kt_plink);
+					KASSERT(KT_EXITED == pThread->kt_state);/* thr points to a thread to be destroied */ 
 					kthread_destroy(pThread);
 		
 
-					pt_destroy_pagedir(pProc->p_pagedir);
-					list_remove(&pProc->p_child_link);
-					list_remove(&pProc->p_list_link);
+					pt_destroy_pagedir(deadChild->p_pagedir);
+					list_remove(&deadChild->p_child_link);
+					list_remove(&deadChild->p_list_link);
 					slab_obj_free(proc_allocator, (void *)pProc);
 				
 					return deadChild->p_pid;
