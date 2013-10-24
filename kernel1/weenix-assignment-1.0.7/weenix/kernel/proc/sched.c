@@ -148,6 +148,11 @@ sched_sleep_on(ktqueue_t *q)
 int
 sched_cancellable_sleep_on(ktqueue_t *q)
 {
+
+	if(curthr->kt_cancelled==1){
+		return -EINTR;	
+	}
+   
         /*NOT_YET_IMPLEMENTED("PROCS: sched_cancellable_sleep_on");*/
 	uint8_t earlier_ipl = intr_getipl();
 	intr_setipl(IPL_HIGH);	
@@ -183,13 +188,8 @@ sched_cancellable_sleep_on(ktqueue_t *q)
 		}
 	}
 	intr_setipl(earlier_ipl);
-	if(curthr->kt_cancelled==1)
-	{
-		return -EINTR;	
-	}else
-	{
-     		 return 0;
-	}
+	return 0;
+	
 }
 
 kthread_t *
@@ -288,9 +288,6 @@ sched_switch(void)
 	kthread_t *thread1 = curthr;
 	context_t *oldc = &(thread1->kt_ctx);
 	context_t *newc;
-	if(thread1->kt_state != KT_EXITED){
-		ktqueue_enqueue(&kt_runq, thread1);
-	}
 	kthread_t *thread2 = NULL;
 	if( list_empty(&(kt_runq.tq_list)) != 1){
 		thread2 = ktqueue_dequeue(&kt_runq);
