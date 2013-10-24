@@ -376,7 +376,7 @@ do_waitpid(pid_t pid, int options, int *status)
 					pt_destroy_pagedir(deadChild->p_pagedir);
 					list_remove(&deadChild->p_child_link);
 					list_remove(&deadChild->p_list_link);
-					slab_obj_free(proc_allocator, (void *)pProc);
+					slab_obj_free(proc_allocator, (void *)deadChild);
 				
 					return deadChild->p_pid;
 				}else{
