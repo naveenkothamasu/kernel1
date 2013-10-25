@@ -297,6 +297,10 @@ do_waitpid(pid_t pid, int options, int *status)
 
         
 	if(pid == -1){
+
+		KASSERT(-1 == pid || pProc->p_pid == pid); /* should be able to find the process */
+		dbg_print("GRADING1 2.c PASSED: should be able to find the process.\n");
+
 		while(1)
 		{
 			pProc = curproc;
@@ -317,17 +321,13 @@ do_waitpid(pid_t pid, int options, int *status)
 				KASSERT(NULL != deadChild->p_pagedir); /* this process should have pagedir */
 				dbg_print("GRADING1 2.c PASSED: this process should have pagedir.\n");
 				kthread_t *pThread = NULL;
-				list_t *list = &(deadChild->p_threads);
-				list_link_t *link = NULL;
-				/*
-				for(link = list->l_next; link!=list; link=link->l_next){
-					pThread = list_item(link, kthread_t, kt_plink);
-					kthread_destroy(pThread);	
-				}*/
-					
-				pThread = list_item(list->l_next, kthread_t, kt_plink);
-				kthread_destroy(pThread);
-		
+				list_iterate_begin(&deadChild->p_threads, pThread, kthread_t, kt_plink){	
+						KASSERT(KT_EXITED == pThread->kt_state);/* thr points to a thread to be destroied */ 
+						dbg_print("GRADING1 2.c PASSED: thr points to a thread to be destroyed.\n");
+						kthread_destroy(pThread);	
+					}list_iterate_end();	
+
+
 				pt_destroy_pagedir(deadChild->p_pagedir);
 				list_remove(&deadChild->p_child_link);
 				list_remove(&deadChild->p_list_link);
@@ -348,6 +348,10 @@ do_waitpid(pid_t pid, int options, int *status)
 		if(pProc == NULL || pProc->p_pproc != curproc){
 			return -ECHILD;
 		}
+
+		KASSERT(-1 == pid || pProc->p_pid == pid); /* should be able to find the process */
+		dbg_print("GRADING1 2.c PASSED: should be able to find the process.\n");
+
 
 		if(pProc->p_pproc == curproc){
 			while(1){
@@ -370,18 +374,12 @@ do_waitpid(pid_t pid, int options, int *status)
 					dbg_print("GRADING1 2.c PASSED: this process should have pagedir.\n");
 				
 					kthread_t *pThread = NULL;
-					list_t *list = &(deadChild->p_threads);
-					list_link_t *link = NULL;
-					/*
-					for(link = list->l_next; link!=list; link=link->l_next){
-						pThread = list_item(link, kthread_t, kt_plink);
+					
+					list_iterate_begin(&deadChild->p_threads, pThread, kthread_t, kt_plink){	
+						KASSERT(KT_EXITED == pThread->kt_state);/* thr points to a thread to be destroied */ 
+						dbg_print("GRADING1 2.c PASSED: thr points to a thread to be destroyed.\n");
 						kthread_destroy(pThread);	
-					}*/
-					pThread = list_item(list->l_next, kthread_t, kt_plink);
-					KASSERT(KT_EXITED == pThread->kt_state);/* thr points to a thread to be destroied */ 
-					dbg_print("GRADING1 2.c PASSED: thr points to a thread to be destroyed.\n");
-					kthread_destroy(pThread);
-		
+					}list_iterate_end();	
 
 					pt_destroy_pagedir(deadChild->p_pagedir);
 					list_remove(&deadChild->p_child_link);
@@ -398,10 +396,7 @@ do_waitpid(pid_t pid, int options, int *status)
 			return -ECHILD;
 		}
 	}
-	KASSERT(-1 == pid || pProc->p_pid == pid); /* should be able to find the process */
-	dbg_print("GRADING1 2.c PASSED: should be able to find the process.\n");
-
-
+	
 		return pid;
 }
 
