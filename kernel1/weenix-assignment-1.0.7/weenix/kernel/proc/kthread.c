@@ -77,7 +77,7 @@ kthread_create(struct proc *p, kthread_func_t func, long arg1, void *arg2)
         
         /*NOT_YET_IMPLEMENTED("PROCS: kthread_create");*/
 	KASSERT(NULL != p); /* should have associated process */
-	dbg_print("PASSED: should have associated process.\n");
+	dbg_print("GRADING1 3.a PASSED: should have associated process.\n");
 
         context_t context; /*FIXME local variable fine?*/
 	

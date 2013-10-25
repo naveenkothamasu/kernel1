@@ -55,23 +55,33 @@ static void       hard_shutdown(void);
 static context_t bootstrap_context;
 
 static int gdb_wait = GDBWAIT;
+extern void *sunghan_test(int, void*);
+extern void *sunghan_deadlock_test(int, void*);
+extern void *testproc(int, void*);
 
     #ifdef __DRIVERS__
 
-        int f(kshell_t *kshell, int argc, char **argv)
+        int faber(kshell_t *kshell, int argc, char **argv)
         {
             KASSERT(kshell != NULL);
-            dbg(DBG_INIT, "(GRADING): do_foo() is invoked, argc = %d, argv = 0x%08x\n",
+            dbg(DBG_INIT, "(GRADING): testproc() is invoked, argc = %d, argv = 0x%08x\n",
                     argc, (unsigned int)argv);
 		testproc(argc, *argv);
             return 0;
         }
-	int s(kshell_t *kshell, int argc, char **argv)
+	int sunghan(kshell_t *kshell, int argc, char **argv)
         {
             KASSERT(kshell != NULL);
-            dbg(DBG_INIT, "(GRADING): do_foo() is invoked, argc = %d, argv = 0x%08x\n",
+            dbg(DBG_INIT, "(GRADING): sunghan_test() and sunghan_deadlock_test are invoked, argc = %d, argv = 0x%08x\n",
                     argc, (unsigned int)argv);
 		sunghan_test(argc, *argv);
+            return 0;
+        }
+	int deadlock(kshell_t *kshell, int argc, char **argv)
+        {
+            KASSERT(kshell != NULL);
+            dbg(DBG_INIT, "(GRADING): sunghan_test() and sunghan_deadlock_test are invoked, argc = %d, argv = 0x%08x\n",
+                    argc, (unsigned int)argv);
 		sunghan_deadlock_test(argc, *argv);
             return 0;
         }
@@ -178,7 +188,7 @@ bootstrap(int arg1, void *arg2)
 	
 	curthr = kthread_create(curproc, idleproc_run, NULL, NULL);
 	KASSERT(NULL != curthr);	
-	dbg_print("GRADING1 1.a PASSED: the thread for the idle process has been created successfull.\n");
+	dbg_print("GRADING1 1.a PASSED: the thread for the idle process has been created successfully.\n");
 
         context_make_active(&(curthr->kt_ctx));
 
@@ -308,8 +318,9 @@ initproc_run(int arg1, void *arg2)
 
     #ifdef __DRIVERS__
 
-        kshell_add_command("f", f, "faber tests");
-        kshell_add_command("s", s, "sunghan tests");
+        kshell_add_command("faber", faber, "faber tests");
+        kshell_add_command("sunghan", sunghan, "sunghan tests");
+        kshell_add_command("deadlock", deadlock, "sunghan deadlock tests");
 
         kshell_t *kshell = kshell_create(0);
         if (NULL == kshell) panic("init: Couldn't create kernel shell\n");

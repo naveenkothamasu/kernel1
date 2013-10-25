@@ -57,7 +57,7 @@ kmutex_lock_cancellable(kmutex_t *mtx)
 {
 
 	 KASSERT(curthr && (curthr != mtx->km_holder));
-	 dbg_print("PASSED: curthr is not null and curthr is not the mutex holder.\n");
+	 dbg_print("GRADING1 5.b PASSED: curthr is not null and curthr is not the mutex holder.\n");
 	 int returnvalue=0;
 
         /*NOT_YET_IMPLEMENTED("PROCS: kmutex_lock_cancellable"); */

@@ -104,10 +104,10 @@ proc_create(char *name)
 	}
         /*FIXME: struct initialization */
 	KASSERT(PID_IDLE != pid || list_empty(&_proc_list)); /* pid can only be PID_IDLE if this is the first process */
-	dbg_print("GRADING#1 2.a PASSED: pid can only be PID_IDLE if this is the first process");
+	dbg_print("GRADING1 2.a PASSED: pid can only be PID_IDLE if this is the first process.\n");
 
 	KASSERT(PID_INIT != pid || PID_IDLE == parentProc->p_pid); /* pid can only be PID_INIT when creating from idle process */
-	dbg_print("GRADING#2 2.a PASSED: pid can only be PID_INIT when creating from idle process");
+	dbg_print("GRADING2 2.a PASSED: pid can only be PID_INIT when creating from idle process.\n");
 
 	proc->p_pagedir=pt_create_pagedir();
 	proc->p_state = PROC_RUNNING;
@@ -175,6 +175,11 @@ proc_cleanup(int status)
 	
 	curproc->p_state = PROC_DEAD;
 	curproc->p_status = status;
+
+	KASSERT(NULL != curproc->p_pproc); /* this process should have parent process */
+	dbg_print("GRADING 2.b PASSED: this process should have parent process.\n");
+
+
 }
 
 /*
@@ -303,7 +308,7 @@ do_waitpid(pid_t pid, int options, int *status)
 				child = list_item(link, proc_t, p_child_link);
 				if(child->p_state == PROC_DEAD){
 					deadChild = child;
-					status = &deadChild->p_status;
+					*status = deadChild->p_status;
 					break;
 				}
 			}
@@ -335,7 +340,9 @@ do_waitpid(pid_t pid, int options, int *status)
 			
 			}
 		}	
-	}else if(pid > 0){
+	}
+	else 
+	if(pid > 0){
 		
 		pProc = proc_lookup(pid);
 		if(pProc == NULL || pProc->p_pproc != curproc){
@@ -354,12 +361,14 @@ do_waitpid(pid_t pid, int options, int *status)
 					child = list_item(link, proc_t, p_child_link);
 					if(child->p_state == PROC_DEAD){
 						deadChild = child;
-						status = &deadChild->p_status;
+						*status = deadChild->p_status;
 						break;
 					}
 				}
 				if(deadChild!=NULL){
-					dbg_print("GRADING1 2.c PASSED: thr points to a thread to be destroyed.\n");
+					KASSERT(NULL != deadChild->p_pagedir); /* this process should have pagedir */
+					dbg_print("GRADING1 2.c PASSED: this process should have pagedir.\n");
+				
 					kthread_t *pThread = NULL;
 					list_t *list = &(deadChild->p_threads);
 					list_link_t *link = NULL;
@@ -370,6 +379,7 @@ do_waitpid(pid_t pid, int options, int *status)
 					}*/
 					pThread = list_item(list->l_next, kthread_t, kt_plink);
 					KASSERT(KT_EXITED == pThread->kt_state);/* thr points to a thread to be destroied */ 
+					dbg_print("GRADING1 2.c PASSED: thr points to a thread to be destroyed.\n");
 					kthread_destroy(pThread);
 		
 
@@ -387,10 +397,7 @@ do_waitpid(pid_t pid, int options, int *status)
 		else {
 			return -ECHILD;
 		}
-	}else{
-		/*not supported*/	
 	}
-	
 	KASSERT(-1 == pid || pProc->p_pid == pid); /* should be able to find the process */
 	dbg_print("GRADING1 2.c PASSED: should be able to find the process.\n");
 
