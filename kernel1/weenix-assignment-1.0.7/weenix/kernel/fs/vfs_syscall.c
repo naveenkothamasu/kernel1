@@ -42,13 +42,18 @@ int
 do_read(int fd, void *buf, size_t nbytes)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_read");*/
+	int readCount = 0;
 	file_t * f = fget(fd);
-	
-	f_pos
+	if(f == NULL || f.f_mode != FMODE_READ){ 
+		return EBADF;
+	}
+	if(S_ISDIR(f->f_vnode->vn_mode)){
+		return EISDIR;
+	}
+	readCount = f->f_vnode->read(f->f_vnode, f->f_pos, buf, nbytes); /*TODO: assumption f_pos will be updated by read appropriately*/	
 	fput(f);	
-	
 							
-        return -1;
+        return readCount;
 }
 
 /* Very similar to do_read.  Check f_mode to be sure the file is writable.  If
@@ -63,13 +68,24 @@ int
 do_write(int fd, const void *buf, size_t nbytes)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_write");*/
-	if (1/* write is successful */){
-		KASSERT((S_ISCHR(f->f_vnode->vn_mode)) ||
-                	(S_ISBLK(f->f_vnode->vn_mode)) ||
-                        ((S_ISREG(f->f_vnode->vn_mode)) && (f->f_pos <= f->f_vnode->vn_len)));
+
+	int writeCount = 0;
+	file_t * f = fget(fd);
+	if(f == NULL || f.f_mode != FMODE_WRITE){ 
+		return EBADF;
 	}
+	if(S_ISDIR(f->f_vnode->vn_mode)){
+		return EISDIR;/*FIXME: is this needed?*/
+	}
+	writeCount = f->f_vnode->write(f->f_vnode, f->f_pos, buf, nbytes); /*TODO: assumption f_pos will be updated by write appropriately*/	
+	fput(f);	
+							
+	KASSERT((S_ISCHR(f->f_vnode->vn_mode)) ||
+                (S_ISBLK(f->f_vnode->vn_mode)) ||
+                ((S_ISREG(f->f_vnode->vn_mode)) && (f->f_pos <= f->f_vnode->vn_len)));
+	dbg(DBG_PRINT, "GRADING 2A 3.a# PASSED; mode is either char or blk or regular with f_pos <= f_vnode->vn_len");
 	
-        return EBADF;
+        return writeCount;
 }
 
 /*
@@ -158,6 +174,11 @@ int
 do_mknod(const char *path, int mode, unsigned devid)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_mknod");*/
+	if(!(S_IFCHR(mode) || S_IFBLK(mode) )){
+		return EINVAL;
+	}
+        KASSERT(NULL != /* pointer to corresponding vnode */->vn_ops->mknod);
+	dbg(DBG_PRINT, "GRADING 2A 3.b# PASSED: pointer to corresponding vnode is not null.\n");
 	
         return -1;
 }
