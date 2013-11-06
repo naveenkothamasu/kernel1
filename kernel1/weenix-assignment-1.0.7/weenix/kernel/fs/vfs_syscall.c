@@ -331,7 +331,13 @@ do_mknod(const char *path, int mode, unsigned devid)
 int
 do_mkdir(const char *path)
 {
-        NOT_YET_IMPLEMENTED("VFS: do_mkdir");
+        /*NOT_YET_IMPLEMENTED("VFS: do_mkdir");*/
+	dir_namev(path, namelen, name, base, res_vnode);
+	lookup(); 
+      	 
+	KASSERT(NULL != /* pointer to corresponding vnode */->vn_ops->mknod);
+	dbg(DBG_PRINT, "GRADING 2A 3.c# PASSED: pointer to corresponding vnode is not null.\n");
+	
         return -1;
 }
 

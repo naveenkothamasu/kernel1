@@ -129,8 +129,7 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
 			}
 			int ispathexist=lookup(cur_dir,temppathname,slash_ptr-temppathname,res_vnode);
 			vput(cur_dir);	
-			if(ispathexist>0)
-			{
+			if(ispathexist>0){
 				cur_dir=*res_vnode;
 				slash_ptr++;
 				temppathname=slash_ptr;
@@ -174,17 +173,16 @@ open_namev(const char *pathname, int flag, vnode_t **res_vnode, vnode_t *base)
 		return 0;
 	}
 	if(nodelookup<0){
-	if(nodelookup == -ENOENT && (flag & O_CREAT)== O_CREAT){
-		int returnvalue=temp_res_vnode->vn_ops->create(temp_res_vnode,retname,length,res_vnode);
-		if(returnvalue<0){
-			vput(temp_res_vnode);
-			return returnvalue;
+		if(nodelookup == -ENOENT && (flag & O_CREAT)== O_CREAT){
+			int returnvalue=temp_res_vnode->vn_ops->create(temp_res_vnode,retname,length,res_vnode);
+			if(returnvalue<0){
+				vput(temp_res_vnode);
+				return returnvalue;
+			}else{
+				vput(temp_res_vnode);
+				return nodelookup;
 			}
-		else{
-			vput(temp_res_vnode);
-			return nodelookup;
 		}
-	}
 	}
 	vput(temp_res_vnode);
 	/*if ( file does not exist  && (flag &amp; O_CREAT)){
