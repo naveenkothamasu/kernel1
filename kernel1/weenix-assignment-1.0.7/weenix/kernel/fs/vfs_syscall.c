@@ -42,13 +42,35 @@ int
 do_read(int fd, void *buf, size_t nbytes)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_read");*/
+	if(fd==0 || fd>= NFILES || (curproc->p_files[fd]==NULL))
+	{
+		/*Bad file descriptor, either not initialized, or invalid*/
+		return EBADF;
+	}
 	file_t * f = fget(fd);
-	
-	f_pos
-	fput(f);	
-	
-							
-        return -1;
+	if(f==NULL){
+		fput(f);
+		return EBADF;
+	}
+	if(!(f->f_mode & FMODE_READ)){
+		/*No reading permissions*/
+		fput(f);
+		return EBADF;
+	}
+	if(S_ISDIR(f->f_vnode->vn_mode)){
+		/*it is a directory*/
+		fput(f);
+		return EISDIR;
+	}
+	int read_bytes;
+	read_bytes=f->f_vnode->vn_ops->read(f->f_vnode,f->f_pos,buf,nbytes);
+	if(read_bytes<0){
+		fput(f);
+		return read_bytes;
+	}
+	f->f_pos=f->f_pos+read_bytes;
+	fput(f);				
+        return read_bytes;
 }
 
 /* Very similar to do_read.  Check f_mode to be sure the file is writable.  If
@@ -325,7 +347,46 @@ int
 do_lseek(int fd, int offset, int whence)
 {
         NOT_YET_IMPLEMENTED("VFS: do_lseek");
-        return -1;
+	if(fd<0 || fd>=NFILES || (curproc->p_files[fd]==NULL)){
+		return -EBADF;
+	}
+	if((whence!=SEEK_END) && (whence!=SEEK_SET) && (whence!=SEEK_CUR)){
+		return -EINVAL;
+	}
+	file_t *f;
+	f=fget(fd);
+	if(f==NULL){
+		return -EBADF;
+	}
+	if(whence == SEEK_SET){
+		if(offset<0){
+			fput(f);
+			return -EINVAL;
+		}else{
+			f->f_pos=offset;
+			fput(f);
+		}
+	}
+	if(whence== SEEK_CUR){
+		if(f->f_pos+offset<0)
+		{
+			fput(f);
+			return -EINVAL;
+		}else{
+			f->f_pos=f->f_pos+offset;
+			fput(f);
+		}
+	}
+	if(whence == SEEK_END){
+		if(f->f_vnode->vn_len+offset<0){
+			fput(f);
+			return -EINVAL;
+		}else{
+			f->f_pos=f->f_vnode->vn_len+offset;
+			fput(f);
+		}
+	}
+        return f->f_pos;
 }
 
 /*
