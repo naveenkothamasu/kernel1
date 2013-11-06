@@ -85,6 +85,7 @@ int
 do_write(int fd, const void *buf, size_t nbytes)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_write");*/
+	file_t *f;
 	if (1/* write is successful */){
 		KASSERT((S_ISCHR(f->f_vnode->vn_mode)) ||
                 	(S_ISBLK(f->f_vnode->vn_mode)) ||
@@ -105,8 +106,6 @@ int
 do_close(int fd)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_close");*/
-	curproc->p_files[fd];
-	fput();
         return -1;
 }
 
@@ -130,8 +129,6 @@ int
 do_dup(int fd)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_dup");*/
-	fget(fd);
-	file_t *fd = get_empty_fd();
         return fd;
 }
 
@@ -404,7 +401,28 @@ int
 do_stat(const char *path, struct stat *buf)
 {
         NOT_YET_IMPLEMENTED("VFS: do_stat");
-        return -1;
+	vnode_t *temp_res_vnode;
+	const char *pname;
+	size_t nLength;
+	nLength=strlen(path);
+	if(nLength>MAXPATHLEN){
+		return -ENAMETOOLONG;
+	}
+	if(nLength<1){
+		return -EINVAL;
+	}
+	int temp_result=dir_namev(path,&nLength,&pname,NULL,&temp_res_vnode);
+	if(temp_result<0){
+		return temp_result;
+	}
+	vput(temp_res_vnode);
+	temp_result=lookup(temp_res_vnode,pname,nLength,&temp_res_vnode);
+	if(!temp_result){
+		temp_result=temp_res_vnode->vn_ops->stat(temp_res_vnode,buf);
+		vput(temp_res_vnode);
+		return temp_result;
+	}
+        return temp_result;
 }
 
 #ifdef __MOUNTING__
