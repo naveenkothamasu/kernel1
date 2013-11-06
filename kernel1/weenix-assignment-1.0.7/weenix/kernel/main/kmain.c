@@ -58,6 +58,7 @@ static int gdb_wait = GDBWAIT;
 extern void *sunghan_test(int, void*);
 extern void *sunghan_deadlock_test(int, void*);
 extern void *testproc(int, void*);
+extern void *vfstest_main(int argc, void *);	
 
     #ifdef __DRIVERS__
 
@@ -85,6 +86,17 @@ extern void *testproc(int, void*);
 		sunghan_deadlock_test(argc, *argv);
             return 0;
         }
+
+	int vfstest(kshell_t *kshell, int argc, char **argv){
+            
+		KASSERT(kshell != NULL);
+		/*
+		dbg(DBG_PRINT, "(GRADING): sunghan_test() and sunghan_deadlock_test are invoked, argc = %d, argv = 0x%08x\n",
+                    argc, (unsigned int)argv);
+		*/
+             	vfstest_main(argc, NULL);	
+		return 0;
+	}
 
     #endif /* __DRIVERS__ */
 /**
@@ -229,7 +241,13 @@ idleproc_run(int arg1, void *arg2)
         /* Here you need to make the null, zero, and tty devices using mknod */
         /* You can't do this until you have VFS, check the include/drivers/dev.h
          * file for macros with the device ID's you will need to pass to mknod */
-        NOT_YET_IMPLEMENTED("VFS: idleproc_run");
+        /*NOT_YET_IMPLEMENTED("VFS: idleproc_run");*/
+	const char *path = NULL; /*TODO:curproc->p_cwd->*/
+	do_chdir(path);
+	do_mknod(path, S_IFCHR, MEM_NULL_DEVID);	
+	do_mknod(path, S_IFCHR, MEM_ZERO_DEVID);	
+	do_mknod(path, S_IFCHR, MKDEVID(2,0)); /*tty first*/	
+	/*TODO: tty devide 2?*/
 #endif
 
         /* Finally, enable interrupts (we want to make sure interrupts
@@ -321,6 +339,8 @@ initproc_run(int arg1, void *arg2)
         kshell_add_command("faber", faber, "faber tests");
         kshell_add_command("sunghan", sunghan, "sunghan tests");
         kshell_add_command("deadlock", deadlock, "sunghan deadlock tests");
+        
+	kshell_add_command("vfstest", vfstest, "vfs tests");
 
         kshell_t *kshell = kshell_create(0);
         if (NULL == kshell) panic("init: Couldn't create kernel shell\n");

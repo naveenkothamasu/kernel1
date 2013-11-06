@@ -41,7 +41,13 @@
 int
 do_read(int fd, void *buf, size_t nbytes)
 {
-        NOT_YET_IMPLEMENTED("VFS: do_read");
+        /*NOT_YET_IMPLEMENTED("VFS: do_read");*/
+	file_t * f = fget(fd);
+	
+	f_pos
+	fput(f);	
+	
+							
         return -1;
 }
 
@@ -56,8 +62,14 @@ do_read(int fd, void *buf, size_t nbytes)
 int
 do_write(int fd, const void *buf, size_t nbytes)
 {
-        NOT_YET_IMPLEMENTED("VFS: do_write");
-        return -1;
+        /*NOT_YET_IMPLEMENTED("VFS: do_write");*/
+	if (1/* write is successful */){
+		KASSERT((S_ISCHR(f->f_vnode->vn_mode)) ||
+                	(S_ISBLK(f->f_vnode->vn_mode)) ||
+                        ((S_ISREG(f->f_vnode->vn_mode)) && (f->f_pos <= f->f_vnode->vn_len)));
+	}
+	
+        return EBADF;
 }
 
 /*
@@ -70,7 +82,9 @@ do_write(int fd, const void *buf, size_t nbytes)
 int
 do_close(int fd)
 {
-        NOT_YET_IMPLEMENTED("VFS: do_close");
+        /*NOT_YET_IMPLEMENTED("VFS: do_close");*/
+	curproc->p_files[fd];
+	fput();
         return -1;
 }
 
@@ -93,8 +107,10 @@ do_close(int fd)
 int
 do_dup(int fd)
 {
-        NOT_YET_IMPLEMENTED("VFS: do_dup");
-        return -1;
+        /*NOT_YET_IMPLEMENTED("VFS: do_dup");*/
+	fget(fd);
+	file_t *fd = get_empty_fd();
+        return fd;
 }
 
 /* Same as do_dup, but insted of using get_empty_fd() to get the new fd,
@@ -141,7 +157,8 @@ do_dup2(int ofd, int nfd)
 int
 do_mknod(const char *path, int mode, unsigned devid)
 {
-        NOT_YET_IMPLEMENTED("VFS: do_mknod");
+        /*NOT_YET_IMPLEMENTED("VFS: do_mknod");*/
+	
         return -1;
 }
 
