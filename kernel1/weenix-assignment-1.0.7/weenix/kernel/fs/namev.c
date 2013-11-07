@@ -112,7 +112,7 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
 	char *slash_ptr=(char *)pathname;
 	int pathlength=strlen(pathname);
 	char *pathend=(char *)pathname+pathlength;
-	while(slash_ptr!=pathend){
+	while(slash_ptr != pathend){
 		slash_ptr=strchr(temppathname,'/');
 		/*check whethre it is directory or not */
 		if(!S_ISDIR(cur_dir->vn_mode)){
@@ -175,6 +175,9 @@ open_namev(const char *pathname, int flag, vnode_t **res_vnode, vnode_t *base)
 	if(nodelookup<0){
 		if(nodelookup == -ENOENT && (flag & O_CREAT)== O_CREAT){
 			int returnvalue=temp_res_vnode->vn_ops->create(temp_res_vnode,retname,length,res_vnode);
+			KASSERT(NULL !=  temp_res_vnode->vn_ops->create);
+        		dbg(DBG_PRINT, "GRADING2 2.c #PASSED : vn_ops->create is not null");
+		
 			if(returnvalue<0){
 				vput(temp_res_vnode);
 				return returnvalue;
@@ -185,10 +188,6 @@ open_namev(const char *pathname, int flag, vnode_t **res_vnode, vnode_t *base)
 		}
 	}
 	vput(temp_res_vnode);
-	/*if ( file does not exist  && (flag &amp; O_CREAT)){
-        	KASSERT(NULL !=  pointer to corresponding vnode ->vn_ops->create);
-        	dbg(DBG_PRINT, "GRADING2 2.c #PASSED : vn_ops->create is not null");
-	}*/
         return 0;
 }
 

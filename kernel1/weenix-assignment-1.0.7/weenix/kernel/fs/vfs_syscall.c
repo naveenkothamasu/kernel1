@@ -90,7 +90,7 @@ do_write(int fd, const void *buf, size_t nbytes)
 		/*Bad file descriptor, either not initialized, or invalid*/
 		return -EBADF;
 	}
-	file_t * f = fget(fd);
+	file_t *f = fget(fd);
 	if(f==NULL){
 		fput(f);
 		return -EBADF;
