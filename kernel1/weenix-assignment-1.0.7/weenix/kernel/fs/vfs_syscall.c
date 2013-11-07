@@ -351,7 +351,7 @@ do_mkdir(const char *path)
 	if(s < 0){
 		return -ENOENT;
 	}
-      	if(pVnode != NULL){
+      	if(s < 0){
 		return -EEXIST;
 	} 
 
