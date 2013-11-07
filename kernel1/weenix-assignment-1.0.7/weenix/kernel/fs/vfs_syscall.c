@@ -332,13 +332,34 @@ int
 do_mkdir(const char *path)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_mkdir");*/
-	dir_namev(path, namelen, name, base, res_vnode);
-	lookup(); 
-      	 
-	KASSERT(NULL != /* pointer to corresponding vnode */->vn_ops->mknod);
+	if(strlen(path) > MAXPATHLEN){
+                return -ENAMETOOLONG;
+        }
+	vnode_t res_vnode;/*TODO: clean up*/
+	vnode_t *pVnode = &res_vnode; 
+	size_t namelen;
+	char name[strlen(path)+1] = {'\0'};
+	char *pName = &name;
+	int s = dir_namev(path, &namelen, &pName, NULL/*TODO:check*/, &pVnode);
+	if(s < 0){
+		return -ENOTDIR; /*TODO: return appropriately*/	
+	}
+	if(!S_ISDIR(pVnode->vn_modt)){
+		return -ENOTDIR;
+	}
+	s = lookup(pVnode, pName, namelen, &pVnode); 
+	if(s < 0){
+		return -ENOENT;
+	}
+      	if(pVnode != NULL){
+		return -EEXIST;
+	} 
+
+	s = pVode->mkdir(pVnode, pName, namelen);
+	KASSERT(NULL != pVnode->vn_ops->mknod);
 	dbg(DBG_PRINT, "GRADING 2A 3.c# PASSED: pointer to corresponding vnode is not null.\n");
 	
-        return -1;
+        return s;
 }
 
 /* Use dir_namev() to find the vnode of the directory containing the dir to be
