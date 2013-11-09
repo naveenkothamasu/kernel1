@@ -348,7 +348,7 @@ do_mkdir(const char *path)
 		return -ENOTDIR;
 	}
 	s = lookup(pVnode, pName, namelen, &pVnode); 
-	if(s < 0){
+	if(s < 0){ /*directory component is the path doesn't exist TODO*/
 		return -ENOENT;
 	}
       	if(s < 0){
@@ -383,8 +383,28 @@ do_mkdir(const char *path)
 int
 do_rmdir(const char *path)
 {
-        NOT_YET_IMPLEMENTED("VFS: do_rmdir");
-        return -1;
+        /*NOT_YET_IMPLEMENTED("VFS: do_rmdir");*/
+	if(path[strlen(path)-1] == '.'){
+		if(path[strlen(path)-2] == '.'){
+			return -ENOTEMPTY;
+		}
+		return -EINVAL;
+	}
+	if(strlen(path) > MAXPATHLEN){
+                return -ENAMETOOLONG;
+        }
+	
+	size_t namelen;
+	char *name = {'\0'};
+	char *pName = &name;
+	vnode_t res_vnode;
+	vnode_t *pVnode = &res_vnode;
+	int s = dir_namev(path, &namelen, &pName, NULL/*TODO: chcek this*/, &pVnode );
+	if(s < 0){
+		
+	}
+	s = pVnode->rmdir(pVnode, pName, namelen);
+        return s;
 }
 
 /*
@@ -403,8 +423,29 @@ do_rmdir(const char *path)
 int
 do_unlink(const char *path)
 {
-        NOT_YET_IMPLEMENTED("VFS: do_unlink");
-        return -1;
+        /*NOT_YET_IMPLEMENTED("VFS: do_unlink");*/
+	if(path[strlen(path)-1] == '.'){
+		if(path[strlen(path)-2] == '.'){
+			return -ENOTEMPTY;
+		}
+		return -EINVAL;
+	}
+	if(strlen(path) > MAXPATHLEN){
+                return -ENAMETOOLONG;
+        }
+	
+	size_t namelen;
+	char *name = {'\0'};
+	char *pName = &name;
+	vnode_t res_vnode;
+	vnode_t *pVnode = &res_vnode;
+	int s = dir_namev(path, &namelen, &pName, NULL/*TODO: chcek this*/, &pVnode );
+	if(s < 0){
+		
+	}
+	s = pVnode->unlink(pVnode, pName, namelen);
+        return s;
+
 }
 
 /* To link:
@@ -429,8 +470,25 @@ do_unlink(const char *path)
 int
 do_link(const char *from, const char *to)
 {
-        NOT_YET_IMPLEMENTED("VFS: do_link");
-        return -1;
+        /*NOT_YET_IMPLEMENTED("VFS: do_link");*/
+	if(strlen(from) > MAXPATHLEN){
+                return -ENAMETOOLONG;
+        }
+	if(strlen(to) > MAXPATHLEN){
+                return -ENAMETOOLONG;
+        }
+	vnode_t res_vnode;
+	vnode_t *pVnode = &res_vnode;
+	size_t namelen;
+	char name[strlen(to)] = {'\0'};
+	char *pName = &name;
+	open_namev(from);
+	int s = dir_namev(to, &namelen, &pName, &pVnode);
+	if(s < 0){
+	}
+	
+	s = pVnode->link();	
+        return s;
 }
 
 /*      o link newname to oldname
@@ -444,8 +502,10 @@ do_link(const char *from, const char *to)
 int
 do_rename(const char *oldname, const char *newname)
 {
-        NOT_YET_IMPLEMENTED("VFS: do_rename");
-        return -1;
+        /*NOT_YET_IMPLEMENTED("VFS: do_rename");*/
+	int s = do_link();
+	
+        return s;
 }
 
 /* Make the named directory the current process's cwd (current working
@@ -464,8 +524,20 @@ do_rename(const char *oldname, const char *newname)
 int
 do_chdir(const char *path)
 {
-        NOT_YET_IMPLEMENTED("VFS: do_chdir");
-        return -1;
+        /*NOT_YET_IMPLEMENTED("VFS: do_chdir");*/
+	if(strlen(path) > MAXPATHLEN){
+                return -ENAMETOOLONG;
+        }
+	vnode_t res_vnode;
+	vnode_t *pVnode = &res_vnode;
+	size_t namelen;
+	char name[strlen(path)] = {'\0'};
+	char *pName = &name;
+	int s = dir_namev( path, &namelen, &pName, NULL ,&pVnode);
+	curproc->p_cwd;
+	vput();
+	
+        return 0;
 }
 
 /* Call the readdir f_op on the given fd, filling in the given dirent_t*.
@@ -486,7 +558,8 @@ do_chdir(const char *path)
 int
 do_getdent(int fd, struct dirent *dirp)
 {
-        NOT_YET_IMPLEMENTED("VFS: do_getdent");
+        /*NOT_YET_IMPLEMENTED("VFS: do_getdent");*/
+	
         return -1;
 }
 
