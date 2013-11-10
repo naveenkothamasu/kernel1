@@ -42,7 +42,7 @@ int
 do_read(int fd, void *buf, size_t nbytes)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_read");*/
-	if(fd==0 || fd>= NFILES || (curproc->p_files[fd]==NULL))
+	if(fd==0 || fd>= NFILES || (curproc->p_files[fd]==NULL)) /*TODO fd 0 is valid I guess*/
 	{
 		/*Bad file descriptor, either not initialized, or invalid*/
 		return EBADF;
@@ -130,7 +130,10 @@ do_write(int fd, const void *buf, size_t nbytes)
 	               	 do_lseek(fd,write_bytes,SEEK_CUR);
 		}
         }
-	fput(f);
+	fput(f);/*TODO: isnerting KASSERT here as at this point write would have been successfull*/
+        KASSERT((S_ISCHR(f->f_vnode->vn_mode)) ||
+                                         (S_ISBLK(f->f_vnode->vn_mode)) ||
+                                         ((S_ISREG(f->f_vnode->vn_mode)) && (f->f_pos <= f->f_vnode->vn_len)))
 	return write_bytes;
 }
 
@@ -212,7 +215,7 @@ do_dup(int fd)
 int
 do_dup2(int ofd, int nfd)
 {
-        NOT_YET_IMPLEMENTED("VFS: do_dup2");
+        /*NOT_YET_IMPLEMENTED("VFS: do_dup2");*/
         if(ofd<0||ofd>=NFILES||(curproc->p_files[ofd]==NULL))
         {
                 return -EBADF;       
@@ -298,6 +301,7 @@ do_mknod(const char *path, int mode, unsigned devid)
 		vput(chd_node);
 		return -EEXIST;
 	}else{
+		KASSERT(NULL != dir_vnode->vn_ops->mknod);	
 		if(temp_result==-ENOTDIR || dir_vnode->vn_ops->mknod==NULL || !S_ISDIR(dir_vnode->vn_mode)){
 			vput(dir_vnode);
 			return -ENOTDIR;
@@ -347,14 +351,15 @@ do_mkdir(const char *path)
 	if(!S_ISDIR(pVnode->vn_mode)){
 		return -ENOTDIR;
 	}
-	s = lookup(pVnode, pName, namelen, &pVnode); 
-	if(s < 0){ /*directory component is the path doesn't exist TODO*/
+	s = lookup(pVnode, pName, namelen, &pVnode);
+	if(s < 0){
+		return -EEXIST;
+	}
+	KASSERT(NULL != pVnode->vn_ops->mkdir); 
+	pVnode->mkdir(pVnode, pName, namelen);	
+	if(!S_ISDIR(pVnode->vn_mode)){ /*directory component is the path doesn't exist TODO*/
 		return -ENOENT;
 	}
-      	if(s < 0){
-		return -EEXIST;
-	} 
-
 	s = pVode->mkdir(pVnode, pName, namelen);
 	KASSERT(NULL != pVnode->vn_ops->mknod);
 	dbg(DBG_PRINT, "GRADING 2A 3.c# PASSED: pointer to corresponding vnode is not null.\n");
@@ -399,10 +404,14 @@ do_rmdir(const char *path)
 	char *pName = &name;
 	vnode_t res_vnode;
 	vnode_t *pVnode = &res_vnode;
-	int s = dir_namev(path, &namelen, &pName, NULL/*TODO: chcek this*/, &pVnode );
+	int s = dir_namev(path, &namelen, &pName, NULL/*TODO: chcek this*/, &pVnode);
 	if(s < 0){
-		
+		return -ENOENT;		
+	}	
+	if(!S_ISDIR(pVnode->vn_mode)){
+		return -ENOTDIR;	
 	}
+	KASSERT(NULL != pVnode->vn_ops->rmdir);
 	s = pVnode->rmdir(pVnode, pName, namelen);
         return s;
 }
@@ -441,11 +450,14 @@ do_unlink(const char *path)
 	vnode_t *pVnode = &res_vnode;
 	int s = dir_namev(path, &namelen, &pName, NULL/*TODO: chcek this*/, &pVnode );
 	if(s < 0){
-		
+		return -ENOENT;	
 	}
+	if(S_ISDIR(pVnode->vn_mode)){
+		return -EISDIR;	
+	}
+	KASSERT(NULL != pVnode->vn_ops->unlink);
 	s = pVnode->unlink(pVnode, pName, namelen);
         return s;
-
 }
 
 /* To link:
@@ -649,7 +661,7 @@ do_lseek(int fd, int offset, int whence)
 int
 do_stat(const char *path, struct stat *buf)
 {
-        NOT_YET_IMPLEMENTED("VFS: do_stat");
+        /*NOT_YET_IMPLEMENTED("VFS: do_stat");*/
 	vnode_t *temp_res_vnode;
 	const char *pname;
 	size_t nLength;
@@ -667,6 +679,7 @@ do_stat(const char *path, struct stat *buf)
 	vput(temp_res_vnode);
 	temp_result=lookup(temp_res_vnode,pname,nLength,&temp_res_vnode);
 	if(!temp_result){
+		KASSERT(temp_res_vnode->vn_ops->stat);
 		temp_result=temp_res_vnode->vn_ops->stat(temp_res_vnode,buf);
 		vput(temp_res_vnode);
 		return temp_result;
