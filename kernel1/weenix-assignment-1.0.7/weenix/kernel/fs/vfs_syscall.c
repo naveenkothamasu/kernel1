@@ -103,7 +103,7 @@ do_write(int fd, const void *buf, size_t nbytes)
 	int write_bytes;
         if( (f->f_mode & FMODE_APPEND) == FMODE_APPEND)
         {
-                 do_lseek(fd,NULL,SEEK_END);
+                do_lseek(fd,NULL,SEEK_END);
                 write_bytes=f->f_vnode->vn_ops->write(f->f_vnode,f->f_pos,buf,nbytes);
 		if(write_bytes<0)
 		{
@@ -116,7 +116,7 @@ do_write(int fd, const void *buf, size_t nbytes)
 	               	 do_lseek(fd,NULL,SEEK_END);
 		}
         }
-        if( (f->f_mode & FMODE_APPEND) == FMODE_APPEND)
+        if( (f->f_mode & FMODE_APPEND) == FMODE_WRITE)
         {
                 write_bytes=f->f_vnode->vn_ops->write(f->f_vnode,f->f_pos,buf,nbytes);
 		if(write_bytes<0)
@@ -149,16 +149,13 @@ do_close(int fd)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_close");*/
 
-	if(fd==0 || fd>= NFILES || (curproc->p_files[fd]==NULL))
-	{
+	if(fd==0 || fd>= NFILES || (curproc->p_files[fd]==NULL)){
 		return -EBADF;
 	}
 	file_t *f=fget(fd);
-	if(f==NULL)
-	{
+	if(f == NULL){
 		return -EBADF;
 	}
-	fput(f);
 	curproc->p_files[fd]=NULL;
 	fput(f);
         return 0;
@@ -228,7 +225,7 @@ do_dup2(int ofd, int nfd)
 	if(f==NULL){
 		return -EBADF;
 	}
-        if(curproc->p_files[nfd] && nfd != ofd) 
+        if(curproc->p_files[nfd] != NULL && nfd != ofd) 
         {
 		int temp_result;
                 temp_result = do_close(nfd);        
@@ -282,11 +279,13 @@ do_mknod(const char *path, int mode, unsigned devid)
         if(strlen(path) > MAXPATHLEN){
                 return -ENAMETOOLONG;
         }
-	size_t pLength=0;
+	size_t length=0;
+	char *name[strlen(path)] = {'\0'}; 
 	const char *pName;
-	vnode_t *dir_vnode;
+	vnode_t node;
+	vnode_t *dir_vnode = &node;
 	int temp_result;
-	temp_result=dir_namev(path, &pLength,&pName,NULL,&dir_vnode);
+	temp_result=dir_namev(path, &length,&pName,NULL,&dir_vnode);
 	if(!temp_result){
 		return temp_result;
 	}
@@ -346,7 +345,7 @@ do_mkdir(const char *path)
 	char *pName = &name;
 	int s = dir_namev(path, &namelen, &pName, NULL/*TODO:check*/, &pVnode);
 	if(s < 0){
-		return -ENOTDIR; /*TODO: return appropriately*/	
+		return s; /*TODO: return appropriately*/	
 	}
 	if(!S_ISDIR(pVnode->vn_mode)){
 		return -ENOTDIR;
@@ -360,10 +359,10 @@ do_mkdir(const char *path)
 	if(!S_ISDIR(pVnode->vn_mode)){ /*directory component is the path doesn't exist TODO*/
 		return -ENOENT;
 	}
-	s = pVode->mkdir(pVnode, pName, namelen);
-	KASSERT(NULL != pVnode->vn_ops->mknod);
+	KASSERT(NULL != pVnode->vn_ops->mkdir);
 	dbg(DBG_PRINT, "GRADING 2A 3.c# PASSED: pointer to corresponding vnode is not null.\n");
 	
+	s = pVode->mkdir(pVnode, pName, namelen);
         return s;
 }
 
@@ -489,17 +488,32 @@ do_link(const char *from, const char *to)
 	if(strlen(to) > MAXPATHLEN){
                 return -ENAMETOOLONG;
         }
-	vnode_t res_vnode;
-	vnode_t *pVnode = &res_vnode;
+	vnode_t old_node;
+	vnode_t *old_vnode = &old_node;
+	vnode_t res_node;	
+	vnode_t *res_vnode = &res_node;
 	size_t namelen;
 	char name[strlen(to)] = {'\0'};
 	char *pName = &name;
-	open_namev(from);
-	int s = dir_namev(to, &namelen, &pName, &pVnode);
+	vnode_t dir;
+	vnode_t *pDir = &dir;
+	int s = dir_namev(from, &namelen, &pName, NULL, &old_node);
 	if(s < 0){
+		return -ENOENT;
 	}
-	
-	s = pVnode->link();	
+	if(!S_ISDIR(pVnode->vn_mode)){
+		return -ENOTDIR;
+	}
+	open_namev(from, O_CREAT, &res_vnode, old_vnode);
+
+	s = dir_namev(to, &namelen, &pName, &pDir);
+	if(s < 0){
+		return -ENOENT;
+	}
+	if(!S_ISDIR(pDir->vn_mode)){
+		return -ENOTDIR;
+	}
+	s = pDir->link(res_vnode, pDir, pName, namelen );	
         return s;
 }
 
@@ -515,8 +529,9 @@ int
 do_rename(const char *oldname, const char *newname)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_rename");*/
-	int s = do_link(newname);
-	if(){
+	int s = do_link(oldname, newname);
+	if(s < 0){
+		return s;
 	}
 	s = do_unlink(oldname);	
         return s;
@@ -542,15 +557,25 @@ do_chdir(const char *path)
 	if(strlen(path) > MAXPATHLEN){
                 return -ENAMETOOLONG;
         }
+	if(path == NULL){
+		return -ENOENT;
+	}
 	vnode_t res_vnode;
-	vnode_t *pVnode = &res_vnode;
+	vnode_t *new_vnode = &res_vnode;
 	size_t namelen;
 	char name[strlen(path)] = {'\0'};
 	char *pName = &name;
-	int s = dir_namev( path, &namelen, &pName, NULL ,&pVnode);
-	curproc->p_cwd;
-	vput();
-	
+	int s = dir_namev(path, &namelen, &pName, NULL ,&new_vnode);
+	if(s < 0){
+		return -ENOENT;
+	}
+	if(!S_ISDIR(new_vnode)){
+		return -ENOTDIR;
+	}
+	vref(new_vnode)
+	vnode_t *old_vnode = curproc->p_cwd;
+	vput(old_vnode);
+	curproc->p_cwd = new_vnode;	
         return 0;
 }
 
@@ -575,13 +600,16 @@ do_getdent(int fd, struct dirent *dirp)
         /*NOT_YET_IMPLEMENTED("VFS: do_getdent");*/
 	file_t *f = fget(fd);	
 	if(f == NULL){
+		fput(fd);
 		return -EBADF;
 	}
 	if(!S_ISDIR(f->f_vnode->f_vnmode)){
+		fput(fd);
 		return -ENOTDIR;
 	}
 	if(f->f_vnode->readdir == NULL){
-		return 0; /*TODO: check the return value*/ 
+		fput(fd);
+		return -EBADF; /*TODO: check the return value*/ 
 	}
 	int s = f->f_vnode->readdir(f->f_vnode, f->f_pos, dirp);	
 	if(s != 0){
@@ -604,7 +632,7 @@ do_getdent(int fd, struct dirent *dirp)
 int
 do_lseek(int fd, int offset, int whence)
 {
-        NOT_YET_IMPLEMENTED("VFS: do_lseek");
+        /*NOT_YET_IMPLEMENTED("VFS: do_lseek");*/
 	if(fd<0 || fd>=NFILES || (curproc->p_files[fd]==NULL)){
 		return -EBADF;
 	}
