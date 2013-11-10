@@ -73,6 +73,18 @@ get_empty_fd(proc_t *p)
 int
 do_open(const char *filename, int oflags)
 {
-        NOT_YET_IMPLEMENTED("VFS: do_open");
+        /*NOT_YET_IMPLEMENTED("VFS: do_open");*/
+	if(strlen(filename) > MAXPATHLEN){
+		return --ENAMETOOLONG;
+	}
+	vnode_t res_vnode;
+	vnode_t *pVnode = &res_vnode;
+	int fd = get_empty_fd(curproc);
+	file_t *f = fget(fd);
+	curproc->p_files[fd] = f;
+	int s = open_namev(filename, oflags, &pVnode, NULL);
+	if(s < 0){
+		curproc->p_files[fd] = NULL;	
+	}
         return -1;
 }

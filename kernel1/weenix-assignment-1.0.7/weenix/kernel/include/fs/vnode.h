@@ -204,7 +204,7 @@ typedef struct vnode {
         /*
          * File type.  See stat.h.
          */
-        int                vn_modt;
+        int                vn_mode;
 
         /*
          * Length of file.  Initialized at the fs-implementation-level (in the

@@ -344,7 +344,7 @@ do_mkdir(const char *path)
 	if(s < 0){
 		return -ENOTDIR; /*TODO: return appropriately*/	
 	}
-	if(!S_ISDIR(pVnode->vn_modt)){
+	if(!S_ISDIR(pVnode->vn_mode)){
 		return -ENOTDIR;
 	}
 	s = lookup(pVnode, pName, namelen, &pVnode); 
@@ -503,8 +503,10 @@ int
 do_rename(const char *oldname, const char *newname)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_rename");*/
-	int s = do_link();
-	
+	int s = do_link(newname);
+	if(){
+	}
+	s = do_unlink(oldname);	
         return s;
 }
 
@@ -559,8 +561,22 @@ int
 do_getdent(int fd, struct dirent *dirp)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_getdent");*/
-	
-        return -1;
+	file_t *f = fget(fd);	
+	if(f == NULL){
+		return -EBADF;
+	}
+	if(!S_ISDIR(f->f_vnode->f_vnmode)){
+		return -ENOTDIR;
+	}
+	if(f->f_vnode->readdir == NULL){
+		return 0; /*TODO: check the return value*/ 
+	}
+	int s = f->f_vnode->readdir(f->f_vnode, f->f_pos, dirp);	
+	if(s != 0){
+		return sizeof(*dirp);
+	}
+        return s;
+		
 }
 
 /*
