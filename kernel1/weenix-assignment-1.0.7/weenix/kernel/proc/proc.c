@@ -99,13 +99,21 @@ proc_create(char *name)
 	proc->p_pid = _proc_getid();
 	pid_t pid = proc->p_pid;
 
-	if(proc->p_pid == PID_INIT){
-		proc_initproc = proc;
-		proc->p_cwd =  vfs_root_vn;
+	if(parentProc!=NULL)
+	{
+		proc->p_cwd=parentProc->p_cwd;
+		if(parentProc->p_cwd!=NULL)
+			vref(parentProc->p_cwd);
 	}
-	if(proc->p_pid == PID_IDLE){
-		proc->p_cwd = vfs_root_vn;
+	else
+	{
+		proc->p_cwd=NULL;
 	}
+	int i;
+	for(i=0;i<NFILES;i++)
+        {
+                proc->p_files[i]=NULL;
+        }
         /*FIXME: struct initialization */
 	KASSERT(PID_IDLE != pid || list_empty(&_proc_list)); /* pid can only be PID_IDLE if this is the first process */
 	dbg_print("GRADING1 2.a PASSED: pid can only be PID_IDLE if this is the first process.\n");

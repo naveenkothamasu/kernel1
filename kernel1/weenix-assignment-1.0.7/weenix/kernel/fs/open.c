@@ -89,7 +89,7 @@ do_open(const char *filename, int oflags)
 	if( fd > NFILES){
 		return -EMFILE;
 	}
-	file_t *f = fget(fd);
+	file_t *f = fget(-1);
 	if( f == NULL){
 		return -ENOENT;
 	}
@@ -99,9 +99,6 @@ do_open(const char *filename, int oflags)
          * O_APPEND.
 	*/
 	/*FIXME check the logic below*/	
-	if(S_ISDIR(f->f_vnode->vn_mode) && ((oflags & O_WRONLY) || (oflags & O_RDWR)) ){
-		return -EISDIR;
-	}
 	if(oflags == O_RDONLY){
 		f->f_mode = FMODE_READ;
 	}else if(oflags == O_WRONLY || oflags == (O_WRONLY | O_APPEND)){
@@ -112,6 +109,9 @@ do_open(const char *filename, int oflags)
 		f->f_mode = FMODE_WRITE | FMODE_APPEND;
 	}
 	int s = open_namev(filename, oflags, &pVnode, NULL);
+        if(S_ISDIR(pVnode->vn_mode) && ((oflags & O_WRONLY) || (oflags & O_RDWR)) ){
+                return -EISDIR;
+        }
 	if(s < 0){
 		curproc->p_files[fd] = NULL;	
 		return s;
