@@ -42,25 +42,25 @@ int
 do_read(int fd, void *buf, size_t nbytes)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_read");*/
-	if(fd==0 || fd>= NFILES || (curproc->p_files[fd]==NULL)) /*TODO fd 0 is valid I guess*/
+	if(fd==0 || fd > NFILES || (curproc->p_files[fd]==NULL)) /*TODO fd 0 is valid I guess*/
 	{
 		/*Bad file descriptor, either not initialized, or invalid*/
-		return EBADF;
+		return -EBADF;
 	}
 	file_t * f = fget(fd);
 	if(f==NULL){
 		fput(f);
-		return EBADF;
+		return -EBADF;
 	}
 	if(!(f->f_mode & FMODE_READ)){
 		/*No reading permissions*/
 		fput(f);
-		return EBADF;
+		return -EBADF;
 	}
 	if(S_ISDIR(f->f_vnode->vn_mode)){
 		/*it is a directory*/
 		fput(f);
-		return EISDIR;
+		return -EISDIR;
 	}
 	int read_bytes;
 	read_bytes=f->f_vnode->vn_ops->read(f->f_vnode,f->f_pos,buf,nbytes);
@@ -85,7 +85,7 @@ int
 do_write(int fd, const void *buf, size_t nbytes)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_write");*/
-	if(fd==0 || fd>= NFILES || (curproc->p_files[fd]==NULL))
+	if(fd==0 || fd > NFILES || (curproc->p_files[fd]==NULL))
 	{
 		/*Bad file descriptor, either not initialized, or invalid*/
 		return -EBADF;
@@ -149,7 +149,7 @@ do_close(int fd)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_close");*/
 
-	if(fd==0 || fd>= NFILES || (curproc->p_files[fd]==NULL)){
+	if(fd==0 || fd > NFILES || (curproc->p_files[fd]==NULL)){
 		return -EBADF;
 	}
 	file_t *f=fget(fd);
@@ -181,7 +181,7 @@ int
 do_dup(int fd)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_dup");*/
-	if(fd==0 || fd>= NFILES || (curproc->p_files[fd]==NULL))
+	if(fd==0 || fd > NFILES || (curproc->p_files[fd]==NULL))
 	{
 		return -EBADF;
 	}
@@ -194,7 +194,7 @@ do_dup(int fd)
 	if(newfd<0)
 	{
 		fput(f);
-		return EMFILE;
+		return -EMFILE;
 	}
 	curproc->p_files[newfd]=f;
 	return newfd;
@@ -213,16 +213,16 @@ int
 do_dup2(int ofd, int nfd)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_dup2");*/
-        if(ofd<0||ofd>=NFILES||(curproc->p_files[ofd]==NULL))
+        if(ofd<0 || ofd > NFILES ||(curproc->p_files[ofd]==NULL))
         {
                 return -EBADF;       
         }
-        if(nfd<0||nfd>=NFILES)
+        if(nfd<0 || nfd > NFILES)
         {
                 return -EBADF;       
         }
 	file_t *f=fget(ofd);
-	if(f==NULL){
+	if(f == NULL){
 		return -EBADF;
 	}
         if(curproc->p_files[nfd] != NULL && nfd != ofd) 
@@ -312,7 +312,6 @@ do_mknod(const char *path, int mode, unsigned devid)
 		vput(dir_vnode);
 		return temp_result;
 	}
-        return -1;
 }
 
 /* Use dir_namev() to find the vnode of the dir we want to make the new

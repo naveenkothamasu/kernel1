@@ -74,31 +74,42 @@ int
 do_open(const char *filename, int oflags)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_open");*/
-	if(!( oflags == O_RDONLY || oflags == O_RDONLY || oflags == O_RDONLY) ){
+	/*
+	if(!( oflags == O_RDONLY || oflags == O_RDONLY | O_CREAT || oflags == O_WRONLY || oflags == O_RDWR) ){
 		return -EINVAL;	
+	}*/
+	if(oflags == O_RDONLY | O_WRONLY){
+		return -EINVAL;
 	}
 	if(strlen(filename) > MAXPATHLEN){
 		return -ENAMETOOLONG;
 	}
-	vnode_t res_vnode;
-	vnode_t *pVnode = &res_vnode;
+	vnode_t *pVnode;
 	int fd = get_empty_fd(curproc);
 	if( fd > NFILES){
 		return -EMFILE;
 	}
 	file_t *f = fget(fd);
+	if( f == NULL){
+		return -ENOENT;
+	}
 	curproc->p_files[fd] = f;
 	/*Set file_t->f_mode to OR of FMODE_(READ|WRITE|APPEND) based on
- *         oflags, which can be O_RDONLY, O_WRONLY or O_RDWR, possibly OR'd with
- *         O_APPEND.
+         * oflags, which can be O_RDONLY, O_WRONLY or O_RDWR, possibly OR'd with
+         * O_APPEND.
 	*/
-	/*FIXME check the logic below*/
+	/*FIXME check the logic below*/	
+	if(S_ISDIR(f->f_vnode->vn_mode) && oflags & O_WRONLY || oflags & O_RDWR){
+		return -EISDIR;
+	}
 	if(oflags == O_RDONLY){
 		f->f_mode = FMODE_READ;
-	}else if(oflags == O_WRONLY){
+	}else if(oflags == O_WRONLY || oflags == (O_WRONLY | O_APPEND)){
 		f->f_mode =  FMODE_WRITE | FMODE_APPEND;
 	}else if(oflags == O_RDWR){
 		f->f_mode = FMODE_READ | FMODE_WRITE | FMODE_APPEND;
+	}else if(oflags == O_APPEND){
+		f->f_mode = FMODE_WRITE | FMODE_APPEND;
 	}
 	int s = open_namev(filename, oflags, &pVnode, NULL);
 	if(s < 0){
