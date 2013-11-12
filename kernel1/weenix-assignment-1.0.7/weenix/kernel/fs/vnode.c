@@ -448,6 +448,8 @@ special_file_read(vnode_t *file, off_t offset, void *buf, size_t count)
 	if(S_ISBLK(file->vn_mode)){
 		return -ENOTSUP;
 	}
+	
+	return 0;
 }
 
 /*
@@ -462,10 +464,10 @@ special_file_write(vnode_t *file, off_t offset, const void *buf, size_t count)
         /*NOT_YET_IMPLEMENTED("VFS: special_file_write");*/
 	KASSERT(file);
 	dbg(DBG_PRINT,"GRADING2A 1.b");
-	KASSERT((S_ISCHR(file->vn_mode) || S_ISBLK(file->vn_mode)))
+	KASSERT((S_ISCHR(file->vn_mode) || S_ISBLK(file->vn_mode)));
 	dbg(DBG_PRINT,"GRADING2A 1.b");
 	if (S_ISCHR(file->vn_mode)){
-        	KASSERT(file->vn_cdev && file->vn_cdev->cd_ops && file->vn_cdev->cd_ops->write)
+        	KASSERT(file->vn_cdev && file->vn_cdev->cd_ops && file->vn_cdev->cd_ops->write);
 		dbg(DBG_PRINT,"GRADING2A 1.b");
 		
 		return tty_write(file->vn_cdev, offset, buf, count);
@@ -474,6 +476,8 @@ special_file_write(vnode_t *file, off_t offset, const void *buf, size_t count)
 	if(S_ISBLK(file->vn_mode)){
 		return -ENOTSUP;	
 	}
+
+	return 0;
 }
 
 /* Memory map the special file represented by <file>. All of the

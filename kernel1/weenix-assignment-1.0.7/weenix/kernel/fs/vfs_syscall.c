@@ -292,7 +292,7 @@ do_mknod(const char *path, int mode, unsigned devid)
 		return -ENAMETOOLONG;
 	}
 	vnode_t *chd_node;
-	temp_result=lookup(dir_vnode,pName, &length,&chd_node);
+	temp_result=lookup(dir_vnode,pName, length,&chd_node);
 	if(!temp_result){
 		vput(dir_vnode);
 		vput(chd_node);
@@ -305,7 +305,7 @@ do_mknod(const char *path, int mode, unsigned devid)
 		}
                 if (temp_result== -ENOENT)
                 {
-                        temp_result = dir_vnode->vn_ops->mknod(dir_vnode,pName,pLength, mode,devid);
+                        temp_result = dir_vnode->vn_ops->mknod(dir_vnode,pName, length, mode,devid);
                         vput(dir_vnode);
                         return temp_result;
                 }
@@ -357,7 +357,7 @@ do_mkdir(const char *path)
 	KASSERT(NULL != pVnode->vn_ops->mkdir);
 	dbg(DBG_PRINT, "GRADING 2A 3.c# PASSED: pointer to corresponding vnode is not null.\n");
 	
-	s = pVode->vn_ops->unlink(pVnode, pName, namelen);
+	s = pVnode->vn_ops->unlink(pVnode, pName, namelen);
         return s;
 }
 
@@ -393,25 +393,25 @@ do_link(const char *from, const char *to)
 	vnode_t *old_vnode;
 	vnode_t *res_vnode;
 	size_t namelen;
-	char *pName;
+	const char *pName;
 	vnode_t *pDir;
 	int s = dir_namev(from, &namelen, &pName, NULL, &old_vnode);
 	if(s < 0){
 		return -ENOENT;
 	}
-	if(!S_ISDIR(pVnode->vn_mode)){
+	if(!S_ISDIR(old_vnode->vn_mode)){
 		return -ENOTDIR;
 	}
 	open_namev(from, O_CREAT, &res_vnode, old_vnode);
 
-	s = dir_namev(to, &namelen, &pName, &pDir);
+	s = dir_namev(to, &namelen, &pName, NULL, &pDir);
 	if(s < 0){
 		return -ENOENT;
 	}
 	if(!S_ISDIR(pDir->vn_mode)){
 		return -ENOTDIR;
 	}
-	s = pDir->link(res_vnode, pDir, pName, namelen );	
+	s = pDir->vn_ops->link(res_vnode, pDir, pName, namelen );	
         return s;
 }
 
@@ -459,17 +459,18 @@ do_chdir(const char *path)
 		return -ENOENT;
 	}
 	vnode_t *new_vnode;
+	vnode_t *old_vnode;
 	size_t namelen;
-	char *pName;
+	const char *pName;
 	int s = dir_namev(path, &namelen, &pName, NULL ,&new_vnode);
 	if(s < 0){
 		return -ENOENT;
 	}
-	if(!S_ISDIR(new_vnode)){
+	if(!S_ISDIR(new_vnode->vn_mode)){
 		return -ENOTDIR;
 	}
-	vref(new_vnode)
-	vnode_t *old_vnode = curproc->p_cwd;
+	vref(new_vnode);
+	old_vnode = curproc->p_cwd;
 	vput(old_vnode);
 	curproc->p_cwd = new_vnode;	
         return 0;
@@ -496,18 +497,18 @@ do_getdent(int fd, struct dirent *dirp)
         /*NOT_YET_IMPLEMENTED("VFS: do_getdent");*/
 	file_t *f = fget(fd);	
 	if(f == NULL){
-		fput(fd);
+		fput(f);
 		return -EBADF;
 	}
-	if(!S_ISDIR(f->f_vnode->f_vnmode)){
-		fput(fd);
+	if(!S_ISDIR(f->f_vnode->vn_mode)){
+		fput(f);
 		return -ENOTDIR;
 	}
-	if(f->f_vnode->readdir == NULL){
-		fput(fd);
+	if(f->f_vnode->vn_ops->readdir == NULL){
+		fput(f);
 		return -EBADF; /*TODO: check the return value*/ 
 	}
-	int s = f->f_vnode->readdir(f->f_vnode, f->f_pos, dirp);	
+	int s = f->f_vnode->vn_ops->readdir(f->f_vnode, f->f_pos, dirp);	
 	if(s != 0){
 		return sizeof(*dirp);
 	}
