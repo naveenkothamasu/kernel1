@@ -107,16 +107,16 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
 	}else{
 		cur_dir=base;
 	}
-	if(pathname[0]=='/'){
-		cur_dir=vfs_root_vn;
-	}
 	char *temppathname=(char *)pathname;
+	if(pathname[0]=='/'){
+		cur_dir=vfs_root_vn;	
+	}
 	char *slash_ptr=(char *)pathname;
 	int pathlength=strlen(pathname);
 	char *pathend=(char *)pathname+pathlength;
 	
+	slash_ptr=strchr(temppathname,'/'); /*TODO this is increasing the count for vfs_root as well*/
 	while(slash_ptr != pathend){
-		slash_ptr=strchr(temppathname,'/'); /*TODO this is increasing the count for vfs_root as well*/
 		/*check whethre it is directory or not */
 		if(!S_ISDIR(cur_dir->vn_mode)){
 			return -ENOTDIR;
@@ -124,9 +124,9 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
 		if(slash_ptr==NULL){
 			break;
 		}else{
-			
+			dbg_print("\n..%s...\n", temppathname);	
 			int ispathexist = lookup(cur_dir,temppathname,slash_ptr-temppathname,res_vnode);
-			if(ispathexist > 0){
+			if(ispathexist >= 0){
 				cur_dir=*res_vnode;
 				vref(cur_dir);
 				slash_ptr++;
@@ -135,6 +135,7 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
 				return ispathexist;
 			}
 		}
+		slash_ptr=strchr(temppathname,'/'); /*TODO this is increasing the count for vfs_root as well*/
 	}
 	*namelen = pathend-temppathname;
 	*name=temppathname;
