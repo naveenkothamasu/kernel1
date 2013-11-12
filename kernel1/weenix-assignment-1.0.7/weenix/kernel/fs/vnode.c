@@ -443,7 +443,7 @@ special_file_read(vnode_t *file, off_t offset, void *buf, size_t count)
 		KASSERT(file->vn_cdev && file->vn_cdev->cd_ops && file->vn_cdev->cd_ops->read);
 		dbg(DBG_PRINT,"GRADING2A 1.a");
 		/*byte device is same as char device, ref: vnode.h*/
-		return tty_read(file->vn_cdev, offset, buf, count);
+		return file->vn_ops->read(file, offset, buf, count);
 	}
 	if(S_ISBLK(file->vn_mode)){
 		return -ENOTSUP;
@@ -470,7 +470,7 @@ special_file_write(vnode_t *file, off_t offset, const void *buf, size_t count)
         	KASSERT(file->vn_cdev && file->vn_cdev->cd_ops && file->vn_cdev->cd_ops->write);
 		dbg(DBG_PRINT,"GRADING2A 1.b");
 		
-		return tty_write(file->vn_cdev, offset, buf, count);
+		return file->vn_ops->write(file, offset, buf, count);
 	}
 	
 	if(S_ISBLK(file->vn_mode)){

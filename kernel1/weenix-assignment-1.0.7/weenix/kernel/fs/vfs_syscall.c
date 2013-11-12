@@ -360,7 +360,96 @@ do_mkdir(const char *path)
 	s = pVnode->vn_ops->unlink(pVnode, pName, namelen);
         return s;
 }
+/* Use dir_namev() to find the vnode of the directory containing the dir to be
+ * removed. Then call the containing dir's rmdir v_op.  The rmdir v_op will
+ * return an error if the dir to be removed does not exist or is not empty, so
+ * you don't need to worry about that here. Return the value of the v_op,
+ * or an error.
+ *
+ * Error cases you must handle for this function at the VFS level:
+ *      o EINVAL
+ *        path has "." as its final component.
+ *      o ENOTEMPTY
+ *        path has ".." as its final component.
+ *      o ENOENT
+ *        A directory component in path does not exist.
+ *      o ENOTDIR
+ *        A component used as a directory in path is not, in fact, a directory.
+ *      o ENAMETOOLONG
+ *        A component of path was too long.
+ */
 
+int
+do_rmdir(const char *path)
+{
+        /*NOT_YET_IMPLEMENTED("VFS: do_rmdir");*/
+        if(path[strlen(path)-1] == '.'){
+                if(path[strlen(path)-2] == '.'){
+                        return -ENOTEMPTY;
+                }
+                return -EINVAL;
+        }
+        if(strlen(path) > MAXPATHLEN){
+                return -ENAMETOOLONG;
+        }
+        
+        size_t namelen;
+        const char *pName;
+        vnode_t res_vnode;
+        vnode_t *pVnode = &res_vnode;
+        int s = dir_namev(path, &namelen, &pName, NULL/*TODO: chcek this*/, &pVnode);
+        if(s < 0){
+                return -ENOENT;                
+        }        
+        if(!S_ISDIR(pVnode->vn_mode)){
+                return -ENOTDIR;        
+        }
+        KASSERT(NULL != pVnode->vn_ops->rmdir);
+        s = pVnode->vn_ops->rmdir(pVnode, pName, namelen);
+        return s;
+}
+
+/*
+ * Same as do_rmdir, but for files.
+ *
+ * Error cases you must handle for this function at the VFS level:
+ *      o EISDIR
+ *        path refers to a directory.
+ *      o ENOENT
+ *        A component in path does not exist.
+ *      o ENOTDIR
+ *        A component used as a directory in path is not, in fact, a directory.
+ *      o ENAMETOOLONG
+ *        A component of path was too long.
+ */
+int
+do_unlink(const char *path)
+{
+        /*NOT_YET_IMPLEMENTED("VFS: do_unlink");*/
+        if(path[strlen(path)-1] == '.'){
+                if(path[strlen(path)-2] == '.'){
+                        return -ENOTEMPTY;
+                }
+                return -EINVAL;
+        }
+        if(strlen(path) > MAXPATHLEN){
+                return -ENAMETOOLONG;
+        }
+        
+        size_t namelen;
+        const char *pName;
+        vnode_t *pVnode;
+        int s = dir_namev(path, &namelen, &pName, NULL/*TODO: chcek this*/, &pVnode );
+        if(s < 0){
+                return -ENOENT;        
+        }
+        if(S_ISDIR(pVnode->vn_mode)){
+                return -EISDIR;        
+        }
+        KASSERT(NULL != pVnode->vn_ops->unlink);
+        s = pVnode->vn_ops->unlink(pVnode, pName, namelen);
+        return s;
+}
 /* To link:
  *      o open_namev(from)
  *      o dir_namev(to)
