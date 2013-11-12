@@ -74,6 +74,9 @@ int
 do_open(const char *filename, int oflags)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_open");*/
+	if(!( oflags == O_RDONLY || oflags == O_RDONLY || oflags == O_RDONLY) ){
+		return -EINVAL;	
+	}
 	if(strlen(filename) > MAXPATHLEN){
 		return -ENAMETOOLONG;
 	}

@@ -280,10 +280,8 @@ do_mknod(const char *path, int mode, unsigned devid)
                 return -ENAMETOOLONG;
         }
 	size_t length=0;
-	char *name[strlen(path)] = {'\0'}; 
 	const char *pName;
-	vnode_t node;
-	vnode_t *dir_vnode = &node;
+	vnode_t *dir_vnode;
 	int temp_result;
 	temp_result=dir_namev(path, &length,&pName,NULL,&dir_vnode);
 	if(!temp_result){
@@ -338,11 +336,9 @@ do_mkdir(const char *path)
 	if(strlen(path) > MAXPATHLEN){
                 return -ENAMETOOLONG;
         }
-	vnode_t res_vnode;/*TODO: clean up*/
-	vnode_t *pVnode = &res_vnode; 
+	vnode_t *pVnode; 
 	size_t namelen;
-	char name[strlen(path)+1] = {'\0'};
-	char *pName = &name;
+	char *pName;
 	int s = dir_namev(path, &namelen, &pName, NULL/*TODO:check*/, &pVnode);
 	if(s < 0){
 		return s; /*TODO: return appropriately*/	
@@ -443,10 +439,8 @@ do_unlink(const char *path)
         }
 	
 	size_t namelen;
-	char *name = {'\0'};
-	char *pName = &name;
-	vnode_t res_vnode;
-	vnode_t *pVnode = &res_vnode;
+	char *pName;
+	vnode_t *pVnode;
 	int s = dir_namev(path, &namelen, &pName, NULL/*TODO: chcek this*/, &pVnode );
 	if(s < 0){
 		return -ENOENT;	
@@ -488,15 +482,11 @@ do_link(const char *from, const char *to)
 	if(strlen(to) > MAXPATHLEN){
                 return -ENAMETOOLONG;
         }
-	vnode_t old_node;
-	vnode_t *old_vnode = &old_node;
-	vnode_t res_node;	
-	vnode_t *res_vnode = &res_node;
+	vnode_t *old_vnode;
+	vnode_t *res_vnode;
 	size_t namelen;
-	char name[strlen(to)] = {'\0'};
-	char *pName = &name;
-	vnode_t dir;
-	vnode_t *pDir = &dir;
+	char *pName;
+	vnode_t *pDir;
 	int s = dir_namev(from, &namelen, &pName, NULL, &old_node);
 	if(s < 0){
 		return -ENOENT;
@@ -560,11 +550,9 @@ do_chdir(const char *path)
 	if(path == NULL){
 		return -ENOENT;
 	}
-	vnode_t res_vnode;
-	vnode_t *new_vnode = &res_vnode;
+	vnode_t *new_vnode;
 	size_t namelen;
-	char name[strlen(path)] = {'\0'};
-	char *pName = &name;
+	char *pName;
 	int s = dir_namev(path, &namelen, &pName, NULL ,&new_vnode);
 	if(s < 0){
 		return -ENOENT;
