@@ -175,11 +175,11 @@ open_namev(const char *pathname, int flag, vnode_t **res_vnode, vnode_t *base)
 			if(returnvalue < 0){
 				return returnvalue;
 			}else{
-				vref(res_vnode);
+				vref(*res_vnode);
 			}
 		}
 	}else{
-		vref(res_vnode);
+		vref(*res_vnode);
 	}
 	return nodelookup;
 }

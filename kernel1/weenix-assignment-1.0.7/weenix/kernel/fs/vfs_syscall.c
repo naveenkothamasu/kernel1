@@ -133,7 +133,7 @@ do_write(int fd, const void *buf, size_t nbytes)
 	fput(f);/*TODO: isnerting KASSERT here as at this point write would have been successfull*/
         KASSERT((S_ISCHR(f->f_vnode->vn_mode)) ||
                                          (S_ISBLK(f->f_vnode->vn_mode)) ||
-                                         ((S_ISREG(f->f_vnode->vn_mode)) && (f->f_pos <= f->f_vnode->vn_len)))
+                                         ((S_ISREG(f->f_vnode->vn_mode)) && (f->f_pos <= f->f_vnode->vn_len)));
 	return write_bytes;
 }
 
@@ -292,7 +292,7 @@ do_mknod(const char *path, int mode, unsigned devid)
 		return -ENAMETOOLONG;
 	}
 	vnode_t *chd_node;
-	temp_result=lookup(dir_vnode,pName,pLength,&chd_node);
+	temp_result=lookup(dir_vnode,pName, &length,&chd_node);
 	if(!temp_result){
 		vput(dir_vnode);
 		vput(chd_node);
@@ -337,7 +337,7 @@ do_mkdir(const char *path)
         }
 	vnode_t *pVnode; 
 	size_t namelen;
-	char *pName;
+	const char *pName;
 	int s = dir_namev(path, &namelen, &pName, NULL/*TODO:check*/, &pVnode);
 	if(s < 0){
 		return s; /*TODO: return appropriately*/	
@@ -350,105 +350,14 @@ do_mkdir(const char *path)
 		return -EEXIST;
 	}
 	KASSERT(NULL != pVnode->vn_ops->mkdir); 
-	pVnode->mkdir(pVnode, pName, namelen);	
+	pVnode->vn_ops->mkdir(pVnode, pName, namelen);	
 	if(!S_ISDIR(pVnode->vn_mode)){ /*directory component is the path doesn't exist TODO*/
 		return -ENOENT;
 	}
 	KASSERT(NULL != pVnode->vn_ops->mkdir);
 	dbg(DBG_PRINT, "GRADING 2A 3.c# PASSED: pointer to corresponding vnode is not null.\n");
 	
-	s = pVode->mkdir(pVnode, pName, namelen);
-        return s;
-}
-
-/* Use dir_namev() to find the vnode of the directory containing the dir to be
- * removed. Then call the containing dir's rmdir v_op.  The rmdir v_op will
- * return an error if the dir to be removed does not exist or is not empty, so
- * you don't need to worry about that here. Return the value of the v_op,
- * or an error.
- *
- * Error cases you must handle for this function at the VFS level:
- *      o EINVAL
- *        path has "." as its final component.
- *      o ENOTEMPTY
- *        path has ".." as its final component.
- *      o ENOENT
- *        A directory component in path does not exist.
- *      o ENOTDIR
- *        A component used as a directory in path is not, in fact, a directory.
- *      o ENAMETOOLONG
- *        A component of path was too long.
- */
-int
-do_rmdir(const char *path)
-{
-        /*NOT_YET_IMPLEMENTED("VFS: do_rmdir");*/
-	if(path[strlen(path)-1] == '.'){
-		if(path[strlen(path)-2] == '.'){
-			return -ENOTEMPTY;
-		}
-		return -EINVAL;
-	}
-	if(strlen(path) > MAXPATHLEN){
-                return -ENAMETOOLONG;
-        }
-	
-	size_t namelen;
-	char *name = {'\0'};
-	char *pName = &name;
-	vnode_t res_vnode;
-	vnode_t *pVnode = &res_vnode;
-	int s = dir_namev(path, &namelen, &pName, NULL/*TODO: chcek this*/, &pVnode);
-	if(s < 0){
-		return -ENOENT;		
-	}	
-	if(!S_ISDIR(pVnode->vn_mode)){
-		return -ENOTDIR;	
-	}
-	KASSERT(NULL != pVnode->vn_ops->rmdir);
-	s = pVnode->rmdir(pVnode, pName, namelen);
-        return s;
-}
-
-/*
- * Same as do_rmdir, but for files.
- *
- * Error cases you must handle for this function at the VFS level:
- *      o EISDIR
- *        path refers to a directory.
- *      o ENOENT
- *        A component in path does not exist.
- *      o ENOTDIR
- *        A component used as a directory in path is not, in fact, a directory.
- *      o ENAMETOOLONG
- *        A component of path was too long.
- */
-int
-do_unlink(const char *path)
-{
-        /*NOT_YET_IMPLEMENTED("VFS: do_unlink");*/
-	if(path[strlen(path)-1] == '.'){
-		if(path[strlen(path)-2] == '.'){
-			return -ENOTEMPTY;
-		}
-		return -EINVAL;
-	}
-	if(strlen(path) > MAXPATHLEN){
-                return -ENAMETOOLONG;
-        }
-	
-	size_t namelen;
-	char *pName;
-	vnode_t *pVnode;
-	int s = dir_namev(path, &namelen, &pName, NULL/*TODO: chcek this*/, &pVnode );
-	if(s < 0){
-		return -ENOENT;	
-	}
-	if(S_ISDIR(pVnode->vn_mode)){
-		return -EISDIR;	
-	}
-	KASSERT(NULL != pVnode->vn_ops->unlink);
-	s = pVnode->unlink(pVnode, pName, namelen);
+	s = pVode->vn_ops->unlink(pVnode, pName, namelen);
         return s;
 }
 
@@ -486,7 +395,7 @@ do_link(const char *from, const char *to)
 	size_t namelen;
 	char *pName;
 	vnode_t *pDir;
-	int s = dir_namev(from, &namelen, &pName, NULL, &old_node);
+	int s = dir_namev(from, &namelen, &pName, NULL, &old_vnode);
 	if(s < 0){
 		return -ENOENT;
 	}

@@ -78,7 +78,7 @@ do_open(const char *filename, int oflags)
 	if(!( oflags == O_RDONLY || oflags == O_RDONLY | O_CREAT || oflags == O_WRONLY || oflags == O_RDWR) ){
 		return -EINVAL;	
 	}*/
-	if(oflags == O_RDONLY | O_WRONLY){
+	if(oflags == ( O_RDONLY | O_WRONLY) ){
 		return -EINVAL;
 	}
 	if(strlen(filename) > MAXPATHLEN){
@@ -99,7 +99,7 @@ do_open(const char *filename, int oflags)
          * O_APPEND.
 	*/
 	/*FIXME check the logic below*/	
-	if(S_ISDIR(f->f_vnode->vn_mode) && oflags & O_WRONLY || oflags & O_RDWR){
+	if(S_ISDIR(f->f_vnode->vn_mode) && (oflags & O_WRONLY) || (oflags & O_RDWR) ){
 		return -EISDIR;
 	}
 	if(oflags == O_RDONLY){
