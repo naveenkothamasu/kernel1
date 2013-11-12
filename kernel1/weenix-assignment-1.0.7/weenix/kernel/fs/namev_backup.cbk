@@ -60,6 +60,7 @@ lookup(vnode_t *dir, const char *name, size_t len, vnode_t **result)
 	}
 }
 
+
 /* When successful this function returns data in the following "out"-arguments:
  *  o res_vnode: the vnode of the parent directory of "name"
  *  o name: the `basename' (the element of the pathname)
@@ -103,12 +104,9 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
 	
 	if(base==NULL){
 		cur_dir=curproc->p_cwd;
-		vref(cur_dir);
 	}else{
 		cur_dir=base;
-		vref(cur_dir);
 	}
-
 	if(pathname[0]=='/'){
 		cur_dir=vfs_root_vn;
 		vref(cur_dir);
@@ -136,7 +134,6 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
 				slash_ptr++;
 				temppathname=slash_ptr;
 			}else{
-				vput(cur_dir);
 				return ispathexist;
 			}
 		}
@@ -144,7 +141,6 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
 	}
 	*namelen = pathend-temppathname;
 	*name=temppathname;
-	*res_vnode=cur_dir;
         return 0;
 }
 

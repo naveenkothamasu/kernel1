@@ -99,16 +99,9 @@ proc_create(char *name)
 	proc->p_pid = _proc_getid();
 	pid_t pid = proc->p_pid;
 
-	if(parentProc!=NULL)
-	{
-		proc->p_cwd=parentProc->p_cwd;
-		if(parentProc->p_cwd!=NULL)
-			vref(parentProc->p_cwd);
-	}
-	else
-	{
-		proc->p_cwd=NULL;
-	}
+	proc->p_cwd=vfs_root_vn;
+	if(proc->p_cwd!=NULL)
+		vref(proc->p_cwd);
 	int i;
 	for(i=0;i<NFILES;i++)
         {
@@ -175,7 +168,14 @@ proc_cleanup(int status)
 	proc_t *myParentProc = curproc->p_pproc;
 	/*TODO wake up myParentProc, if it is waiting*/
 	sched_wakeup_on(&(myParentProc->p_wait));
-	
+	int fd;
+        for(fd=0;fd<NFILES;fd++)
+        {
+              if(curproc->p_files[fd]!=NULL)
+              {
+                 int fd=do_close(fd);
+              }
+        }
 	list_t *list = &(curproc->p_children);
 	list_link_t *link = NULL;
 	for( link = list->l_next; link != list; link = list->l_next ){
@@ -206,6 +206,14 @@ void
 proc_kill(proc_t *p, int status)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: proc_kill");*/
+	int fd;
+        for(fd=0;fd<NFILES;fd++)
+        {
+              if(curproc->p_files[fd]!=NULL)
+              {
+                 int fd=do_close(fd);
+              }
+        }
 	if(p == curproc){
 		do_exit(status);	
 	}else{
