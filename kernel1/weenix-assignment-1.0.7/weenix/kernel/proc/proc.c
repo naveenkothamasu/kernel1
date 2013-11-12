@@ -101,6 +101,10 @@ proc_create(char *name)
 
 	if(proc->p_pid == PID_INIT){
 		proc_initproc = proc;
+		proc->p_cwd = 
+	}
+	if(proc->p_pid == PID_IDLE){
+		proc->p_cwd = 
 	}
         /*FIXME: struct initialization */
 	KASSERT(PID_IDLE != pid || list_empty(&_proc_list)); /* pid can only be PID_IDLE if this is the first process */
