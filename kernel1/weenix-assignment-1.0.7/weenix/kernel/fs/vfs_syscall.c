@@ -676,7 +676,7 @@ do_getdent(int fd, struct dirent *dirp)
 	}
 	int s = f->f_vnode->vn_ops->readdir(f->f_vnode, f->f_pos, dirp);
 	f->f_pos=f->f_pos+s;	
-	if(s >= 0){
+	if(s > 0){
 		fput(f);
 		return sizeof(*dirp);
 	}
