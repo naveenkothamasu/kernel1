@@ -178,7 +178,7 @@ do_dup(int fd)
 		return -EBADF;
 	}
 	int newfd=get_empty_fd(curproc);
-	if(newfd==0)
+	if(newfd<0)
 	{
 		fput(f);
 		return -EMFILE;
@@ -536,15 +536,16 @@ do_link(const char *from, const char *to)
         }
 	vnode_t *old_vnode;
 	vnode_t *res_vnode;
+	vnode_t *temp_vnode;
 	size_t namelen;
 	const char *pName;
 	vnode_t *pDir;
 	int s = open_namev(from,0,&old_vnode,NULL);
-	if(s < 0){
+	if(s != 0){
 		return s;
 	}
         s = dir_namev(to,&namelen,&pName,NULL,&res_vnode);
-        if (s < 0)
+        if (s != 0)
         {
                 vput(old_vnode);
                 return s;
@@ -560,18 +561,16 @@ do_link(const char *from, const char *to)
 		return -ENOENT;
 	}
         vput(res_vnode);
-        s = lookup(res_vnode,pName,namelen,&res_vnode);
-	if(!S_ISDIR(old_vnode->vn_mode)){
-		return -ENOTDIR;
-	}
+        s = lookup(res_vnode,pName,namelen,&temp_vnode);
 	if(s==0)
 	{
 		vput(old_vnode);
 		vput(res_vnode);
+		vput(temp_vnode);
 		return -EEXIST;
 	}
         KASSERT(res_vnode->vn_ops->link);                   
-        s=(res_vnode->vn_ops->link)(old_vnode,res_vnode,pName,namelen);
+        s=res_vnode->vn_ops->link(old_vnode,res_vnode,pName,namelen);
         vput(old_vnode);
         vput(res_vnode);
         return s;
@@ -621,7 +620,8 @@ do_chdir(const char *path)
 		return -ENOENT;
 	}
 	vnode_t *new_vnode;
-	vnode_t *old_vnode;
+	vnode_t *old_vnode=curproc->p_cwd;
+	dbg(DBG_VFS,"Entered chdir(), oldvnode=%d, oldnoderefcount=%d\n", old_vnode -> vn_vno, old_vnode -> vn_refcount);
 	size_t namelen;
 	const char *pName;
 	int s = open_namev(path,0,&new_vnode,NULL);
@@ -632,9 +632,10 @@ do_chdir(const char *path)
 		vput(new_vnode);
 		return -ENOTDIR;
 	}
-	old_vnode = curproc->p_cwd;
+	dbg(DBG_VFS,"chdir():after openv, newvnode=%d, newnoderefcount=%d\n", new_vnode -> vn_vno, new_vnode -> vn_refcount);
 	vput(old_vnode);
-	curproc->p_cwd = new_vnode;	
+	curproc->p_cwd = new_vnode;
+	dbg(DBG_VFS,"leaving chdir(), oldvnode=%d, oldnoderefcount=%d\n", old_vnode -> vn_vno, old_vnode -> vn_refcount);
         return 0;
 }
 
@@ -761,6 +762,7 @@ do_stat(const char *path, struct stat *buf)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_stat");*/
 	vnode_t *temp_res_vnode;
+	vnode_t *temp_vnode;
 	const char *pname;
 	size_t nLength;
 	nLength=strlen(path);
@@ -774,15 +776,24 @@ do_stat(const char *path, struct stat *buf)
 	if(temp_result<0){
 		return temp_result;
 	}
-	vput(temp_res_vnode);
-	temp_result=lookup(temp_res_vnode,pname,nLength,&temp_res_vnode);
-	if(temp_result>0){
-		KASSERT(temp_res_vnode->vn_ops->stat);
-		temp_result=temp_res_vnode->vn_ops->stat(temp_res_vnode,buf);
+	if(temp_res_vnode==NULL)
+	{
+		return -ENOENT;
+	}
+        if(!S_ISDIR(temp_res_vnode->vn_mode)){
+                vput(temp_res_vnode);
+                return -ENOTDIR;
+        }
+	temp_result=lookup(temp_res_vnode,pname,nLength,&temp_vnode);
+	if(temp_result!=0){
 		vput(temp_res_vnode);
 		return temp_result;
 	}
-        return temp_result;
+	KASSERT(temp_vnode->vn_ops->stat);
+	temp_result=temp_res_vnode->vn_ops->stat(temp_vnode,buf);
+	vput(temp_res_vnode);
+	vput(temp_vnode);
+	return temp_result;
 }
 
 #ifdef __MOUNTING__

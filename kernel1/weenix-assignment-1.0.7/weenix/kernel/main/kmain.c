@@ -247,11 +247,13 @@ idleproc_run(int arg1, void *arg2)
         curproc->p_cwd = vfs_root_vn;
         initthr->kt_proc->p_cwd = vfs_root_vn;
 	vref(vfs_root_vn);
+
 	do_mkdir("/dev");
 	do_mknod("/dev/null", S_IFCHR, MKDEVID(1,0));	
 	do_mknod("/dev/zero", S_IFCHR, MKDEVID(1,1));	
 	do_mknod("/dev/tty0", S_IFCHR, MKDEVID(2,0));	
-	do_mknod("/dev/tty1", S_IFCHR, MKDEVID(2,1)); /*tty first*/	
+	do_mknod("/dev/tty1", S_IFCHR, MKDEVID(2,1)); 
+	do_mknod("/dev/tty2", S_IFCHR, MKDEVID(2,3));/*tty first*/	
 	/*TODO: tty devide 2?*/
 #endif
 

@@ -99,13 +99,11 @@ proc_create(char *name)
 	proc->p_pid = _proc_getid();
 	pid_t pid = proc->p_pid;
 
-	proc->p_cwd=NULL;
-	if(proc->p_pid!=PID_INIT && proc->p_pid!=PID_IDLE){
-		if(parentProc!=NULL && parentProc->p_cwd!=NULL){
-			proc->p_cwd=parentProc->p_cwd;
-			vref(proc->p_cwd);
-		}
-	}
+        proc->p_cwd = vfs_root_vn;
+        if (proc->p_cwd)
+        {
+            vref(proc->p_cwd);
+        }
 	if(proc->p_pid == PID_INIT){
                 proc_initproc = proc;
         }
@@ -177,6 +175,10 @@ proc_cleanup(int status)
 	/*TODO wake up myParentProc, if it is waiting*/
 	sched_wakeup_on(&(myParentProc->p_wait));
 	int fd;
+        /*(if(curproc->p_cwd->vn_refcount!=0 && curproc->p_pid!=PID_IDLE)
+        {
+            vput(curproc->p_cwd);
+        }*/
         for(fd=0;fd<NFILES;fd++)
         {
               if(curproc->p_files[fd]!=NULL)
