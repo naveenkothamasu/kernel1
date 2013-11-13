@@ -178,7 +178,7 @@ do_dup(int fd)
 		return -EBADF;
 	}
 	int newfd=get_empty_fd(curproc);
-	if(!newfd)
+	if(newfd==0)
 	{
 		fput(f);
 		return -EMFILE;
@@ -228,8 +228,6 @@ do_dup2(int ofd, int nfd)
 		
         }
 	curproc->p_files[nfd]=f;
-	file_t *newfile=fget(nfd);
-	fput(newfile);
         return nfd;
 }
 
@@ -274,10 +272,16 @@ do_mknod(const char *path, int mode, unsigned devid)
 	vnode_t *dir_vnode;
 	int temp_result;
 	temp_result=dir_namev(path, &length,&pName,NULL,&dir_vnode);
-	if(temp_result!=0){
+	if(temp_result<0){
 		return temp_result;
 	}
-	
+	if(dir_vnode==NULL){
+		return -ENOENT;
+	}
+	if(!S_ISDIR(dir_vnode->vn_mode)){
+		vput(dir_vnode);
+		return -ENOTDIR;
+	}
 	vnode_t *chd_node;
 	temp_result=lookup(dir_vnode,pName, length,&chd_node);
 	if(temp_result==0){
@@ -285,18 +289,16 @@ do_mknod(const char *path, int mode, unsigned devid)
 		vput(chd_node);
 		return -EEXIST;
 	}else{
-		KASSERT(NULL != dir_vnode->vn_ops->mknod);	
+		KASSERT(NULL != dir_vnode->vn_ops->mknod);
+		vput(dir_vnode);	
 		if(temp_result==-ENOTDIR || dir_vnode->vn_ops->mknod==NULL || !S_ISDIR(dir_vnode->vn_mode)){
-			vput(dir_vnode);
 			return -ENOTDIR;
 		}
                 if (temp_result== -ENOENT)
                 {
                         temp_result = dir_vnode->vn_ops->mknod(dir_vnode,pName, length, mode,devid);
-                        vput(dir_vnode);
                         return temp_result;
                 }
-		vput(dir_vnode);
 		return temp_result;
 	}
 }
@@ -674,9 +676,11 @@ do_getdent(int fd, struct dirent *dirp)
 	}
 	int s = f->f_vnode->vn_ops->readdir(f->f_vnode, f->f_pos, dirp);
 	f->f_pos=f->f_pos+s;	
-	if(s != 0){
+	if(s >= 0){
+		fput(f);
 		return sizeof(*dirp);
 	}
+	fput(f);
         return s;
 		
 }
@@ -737,6 +741,7 @@ do_lseek(int fd, int offset, int whence)
 		fput(f);
 		return -EINVAL;
 	}
+	fput(f);
         return f->f_pos;
 }
 
