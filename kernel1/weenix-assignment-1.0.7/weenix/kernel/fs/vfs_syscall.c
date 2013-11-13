@@ -135,7 +135,7 @@ do_close(int fd)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_close");*/
 
-	if(fd > NFILES || (curproc->p_files[fd]==NULL)){
+	if(fd<0 || fd > NFILES || (curproc->p_files[fd]==NULL)){
 		return -EBADF;
 	}
 	file_t *f=fget(fd);
@@ -277,10 +277,7 @@ do_mknod(const char *path, int mode, unsigned devid)
 	if(temp_result!=0){
 		return temp_result;
 	}
-	if(strlen(pName)>NAME_LEN){
-		vput(dir_vnode);
-		return -ENAMETOOLONG;
-	}
+	
 	vnode_t *chd_node;
 	temp_result=lookup(dir_vnode,pName, length,&chd_node);
 	if(temp_result==0){
@@ -658,15 +655,15 @@ int
 do_getdent(int fd, struct dirent *dirp)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_getdent");*/
-	file_t *f = fget(fd);	
-	if(f == NULL){
-		fput(f);
-		return -EBADF;
-	}
+	
         if(fd < 0 || fd >= NFILES)
         {
                 return -EBADF;        
-        } 
+        }
+	file_t *f = fget(fd);	
+	if(f == NULL){
+		return -EBADF;
+	} 
 	if(!S_ISDIR(f->f_vnode->vn_mode)){
 		fput(f);
 		return -ENOTDIR;

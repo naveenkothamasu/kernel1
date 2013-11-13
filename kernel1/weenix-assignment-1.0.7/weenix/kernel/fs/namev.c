@@ -111,7 +111,6 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
 
 	if(pathname[0]=='/'){
 		cur_dir=vfs_root_vn;
-		vref(cur_dir);
 		pathname++;	
 	}
 	char *temppathname=(char *)pathname;
@@ -123,12 +122,12 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
 	while(slash_ptr != pathend){
 		/*check whethre it is directory or not */
 		if(!S_ISDIR(cur_dir->vn_mode)){
+			vput(cur_dir);
 			return -ENOTDIR;
 		}
 		if(slash_ptr==NULL){
 			break;
 		}else{
-			dbg_print("\n..%s...\n", temppathname);	
 			int ispathexist = lookup(cur_dir,temppathname,slash_ptr-temppathname,res_vnode);
 			if(ispathexist >= 0){
 				cur_dir=*res_vnode;
@@ -168,8 +167,7 @@ open_namev(const char *pathname, int flag, vnode_t **res_vnode, vnode_t *base)
 	if(result_dir<0){
 		return result_dir;
 	}
-	if(!S_ISDIR(temp_res_vnode->vn_mode))
-	{
+	if(!S_ISDIR(temp_res_vnode->vn_mode)){
 		vput(temp_res_vnode);
 		return -ENOTDIR;
 	}
@@ -180,16 +178,15 @@ open_namev(const char *pathname, int flag, vnode_t **res_vnode, vnode_t *base)
 			KASSERT(NULL !=  temp_res_vnode->vn_ops->create);
         		dbg(DBG_PRINT, "GRADING2 2.c #PASSED : vn_ops->create is not null");
 		
-			if(returnvalue < 0){
+				if(returnvalue < 0){
+					vput(temp_res_vnode);
+					return returnvalue;
+				}
+			}else{
 				vput(temp_res_vnode);
-				return returnvalue;
+				return nodelookup;
 			}
-			}	
-		else{
-			vput(temp_res_vnode);
-			return nodelookup;
-		}
-		}
+	}
 	vput(temp_res_vnode);
 	return nodelookup;
 }

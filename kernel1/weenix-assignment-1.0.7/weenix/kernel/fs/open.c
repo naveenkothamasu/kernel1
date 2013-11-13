@@ -111,12 +111,10 @@ do_open(const char *filename, int oflags)
 	int s = open_namev(filename, oflags, &pVnode, NULL);
 	if(s < 0){
 		curproc->p_files[fd] = NULL;	
-		vput(pVnode);
                 fput(f);
 		return s;
 	}
         if(S_ISDIR(pVnode->vn_mode) && ((oflags & O_WRONLY) || (oflags & O_RDWR)) ){
-		vput(pVnode);
                 fput(f);
 		return -EISDIR;
         }
