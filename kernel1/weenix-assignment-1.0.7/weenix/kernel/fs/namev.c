@@ -48,7 +48,8 @@ lookup(vnode_t *dir, const char *name, size_t len, vnode_t **result)
 	else{
 		int k=strcmp(name,".");
 		if(len==0 || k==0){
-			*result=vget(dir->vn_fs,dir->vn_vno);
+			vref(dir);
+			*result=dir;
 			return 0;
 		}
 	}
@@ -109,8 +110,9 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
 		vref(cur_dir);
 	}
 
-	if(pathname[0]=='/'){
+	if(pathname[0]=='/' && base!=NULL){
 		cur_dir=vfs_root_vn;
+		vref(cur_dir);
 		pathname++;	
 	}
 	char *temppathname=(char *)pathname;
@@ -130,8 +132,8 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
 		}else{
 			int ispathexist = lookup(cur_dir,temppathname,slash_ptr-temppathname,res_vnode);
 			if(ispathexist >= 0){
+				vput(cur_dir);
 				cur_dir=*res_vnode;
-				vref(cur_dir);
 				slash_ptr++;
 				temppathname=slash_ptr;
 			}else{
