@@ -175,7 +175,7 @@ open_namev(const char *pathname, int flag, vnode_t **res_vnode, vnode_t *base)
 	}
 	int nodelookup=lookup(temp_res_vnode,retname,length,res_vnode);
 	if(nodelookup<0){
-		if(nodelookup == -ENOENT && (flag & O_CREAT)== O_CREAT){
+		if(nodelookup == -ENOENT && flag == O_CREAT){
 			int returnvalue=temp_res_vnode->vn_ops->create(temp_res_vnode,retname,length,res_vnode);
 			KASSERT(NULL !=  temp_res_vnode->vn_ops->create);
         		dbg(DBG_PRINT, "GRADING2 2.c #PASSED : vn_ops->create is not null");

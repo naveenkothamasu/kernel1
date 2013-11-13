@@ -102,6 +102,10 @@ proc_create(char *name)
 	proc->p_cwd=vfs_root_vn;
 	if(proc->p_cwd!=NULL)
 		vref(proc->p_cwd);
+	if(proc->p_pid == PID_INIT){
+                proc_initproc = proc;
+        }
+
 	int i;
 	for(i=0;i<NFILES;i++)
         {

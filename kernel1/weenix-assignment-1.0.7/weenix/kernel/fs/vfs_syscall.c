@@ -42,7 +42,7 @@ int
 do_read(int fd, void *buf, size_t nbytes)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_read");*/
-	if(fd==0 || fd > NFILES || (curproc->p_files[fd]==NULL)) /*TODO fd 0 is valid I guess*/
+	if(fd > NFILES || (curproc->p_files[fd]==NULL)) 
 	{
 		/*Bad file descriptor, either not initialized, or invalid*/
 		return -EBADF;
@@ -84,7 +84,7 @@ int
 do_write(int fd, const void *buf, size_t nbytes)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_write");*/
-	if(fd==0 || fd > NFILES || (curproc->p_files[fd]==NULL))
+	if(fd > NFILES || (curproc->p_files[fd]==NULL))
 	{
 		/*Bad file descriptor, either not initialized, or invalid*/
 		return -EBADF;
@@ -135,7 +135,7 @@ do_close(int fd)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_close");*/
 
-	if(fd==0 || fd > NFILES || (curproc->p_files[fd]==NULL)){
+	if(fd > NFILES || (curproc->p_files[fd]==NULL)){
 		return -EBADF;
 	}
 	file_t *f=fget(fd);
@@ -168,7 +168,7 @@ int
 do_dup(int fd)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_dup");*/
-	if(fd==0 || fd > NFILES || (curproc->p_files[fd]==NULL))
+	if(fd > NFILES || (curproc->p_files[fd]==NULL))
 	{
 		return -EBADF;
 	}
@@ -357,7 +357,7 @@ do_mkdir(const char *path)
 		return -EEXIST;
 	}
 	KASSERT(NULL != pVnode->vn_ops->mkdir); 
-	pVnode->vn_ops->mkdir(pVnode, pName, namelen);
+	s = pVnode->vn_ops->mkdir(pVnode, pName, namelen);
 	KASSERT(NULL != pVnode->vn_ops->mkdir);
 	dbg(DBG_PRINT, "GRADING 2A 3.c# PASSED: pointer to corresponding vnode is not null.\n");
 	vput(pVnode);

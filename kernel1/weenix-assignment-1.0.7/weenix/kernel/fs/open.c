@@ -109,12 +109,22 @@ do_open(const char *filename, int oflags)
 		f->f_mode = FMODE_WRITE | FMODE_APPEND;
 	}
 	int s = open_namev(filename, oflags, &pVnode, NULL);
-        if(S_ISDIR(pVnode->vn_mode) && ((oflags & O_WRONLY) || (oflags & O_RDWR)) ){
-                return -EISDIR;
-        }
 	if(s < 0){
 		curproc->p_files[fd] = NULL;	
+		vput(pVnode);
+                fput(f);
 		return s;
 	}
+        if(S_ISDIR(pVnode->vn_mode) && ((oflags & O_WRONLY) || (oflags & O_RDWR)) ){
+		vput(pVnode);
+                fput(f);
+		return -EISDIR;
+        }
+	
+	f->f_vnode = pVnode;
+	if(pVnode->vn_devid != NULL ){
+		pVnode->vn_mode = S_IFCHR;
+	}
+
         return fd;
 }
