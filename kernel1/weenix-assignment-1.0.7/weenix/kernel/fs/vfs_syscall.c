@@ -156,7 +156,7 @@ do_close(int fd)
  *
  * Don't fput() the fd unless something goes wrong.  Since we are creating
  * another reference to the file_t*, we want to up the refcount.
- *
+ *d
  * Error cases you must handle for this function at the VFS level:
  *      o EBADF
  *        fd isn't an open file descriptor.
@@ -560,7 +560,7 @@ do_link(const char *from, const char *to)
 	{
 		return -ENOENT;
 	}
-        vput(res_vnode);
+        
         s = lookup(res_vnode,pName,namelen,&temp_vnode);
 	if(s==0)
 	{
@@ -633,7 +633,10 @@ do_chdir(const char *path)
 		return -ENOTDIR;
 	}
 	dbg(DBG_VFS,"chdir():after openv, newvnode=%d, newnoderefcount=%d\n", new_vnode -> vn_vno, new_vnode -> vn_refcount);
-	vput(old_vnode);
+	if(curproc->p_cwd->vn_vno!=0)
+	{
+		vput(old_vnode);
+	}
 	curproc->p_cwd = new_vnode;
 	dbg(DBG_VFS,"leaving chdir(), oldvnode=%d, oldnoderefcount=%d\n", old_vnode -> vn_vno, old_vnode -> vn_refcount);
         return 0;

@@ -115,6 +115,7 @@ do_open(const char *filename, int oflags)
 		return s;
 	}
         if(S_ISDIR(pVnode->vn_mode) && ((oflags & O_WRONLY) || (oflags & O_RDWR)) ){
+		vput(pVnode);
                 fput(f);
 		return -EISDIR;
         }
@@ -123,6 +124,6 @@ do_open(const char *filename, int oflags)
 	if(pVnode->vn_devid != NULL ){
 		pVnode->vn_mode = S_IFCHR;
 	}
-
+	/*vput(pVnode);*/
         return fd;
 }

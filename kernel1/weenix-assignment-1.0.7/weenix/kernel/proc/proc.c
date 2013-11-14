@@ -175,10 +175,10 @@ proc_cleanup(int status)
 	/*TODO wake up myParentProc, if it is waiting*/
 	sched_wakeup_on(&(myParentProc->p_wait));
 	int fd;
-        /*(if(curproc->p_cwd->vn_refcount!=0 && curproc->p_pid!=PID_IDLE)
+        if(curproc->p_cwd->vn_refcount!=0 && curproc->p_cwd->vn_vno!=0 && curproc->p_pid!=PID_IDLE)
         {
             vput(curproc->p_cwd);
-        }*/
+        }
         for(fd=0;fd<NFILES;fd++)
         {
               if(curproc->p_files[fd]!=NULL)
