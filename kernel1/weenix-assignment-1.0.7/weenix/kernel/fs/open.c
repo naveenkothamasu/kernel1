@@ -74,24 +74,17 @@ int
 do_open(const char *filename, int oflags)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_open");*/
-	/*
-	if(!( oflags == O_RDONLY || oflags == O_RDONLY | O_CREAT || oflags == O_WRONLY || oflags == O_RDWR) ){
-		return -EINVAL;	
-	}*/
-	if(oflags == ( O_RDONLY | O_WRONLY) ){
+	if (oflags!=O_RDONLY && oflags!=O_WRONLY && oflags!=O_RDWR && oflags!=O_APPEND && oflags!= (O_RDONLY | O_CREAT))
+	{
 		return -EINVAL;
 	}
-	if(strlen(filename) > MAXPATHLEN){
-		return -ENAMETOOLONG;
-	}
-	vnode_t *pVnode;
 	int fd = get_empty_fd(curproc);
-	if( fd > NFILES){
+	if( fd == -EMFILE){
 		return -EMFILE;
 	}
 	file_t *f = fget(-1);
 	if( f == NULL){
-		return -ENOENT;
+		return -ENOMEM;
 	}
 	curproc->p_files[fd] = f;
 	/*Set file_t->f_mode to OR of FMODE_(READ|WRITE|APPEND) based on
@@ -101,29 +94,47 @@ do_open(const char *filename, int oflags)
 	/*FIXME check the logic below*/	
 	if(oflags == O_RDONLY){
 		f->f_mode = FMODE_READ;
-	}else if(oflags == O_WRONLY || oflags == (O_WRONLY | O_APPEND)){
-		f->f_mode =  FMODE_WRITE | FMODE_APPEND;
+	}else if(oflags == O_WRONLY){
+		f->f_mode =  FMODE_WRITE;
 	}else if(oflags == O_RDWR){
 		f->f_mode = FMODE_READ | FMODE_WRITE | FMODE_APPEND;
 	}else if(oflags == O_APPEND){
 		f->f_mode = FMODE_WRITE | FMODE_APPEND;
+	}else if(oflags == (O_RDONLY | O_CREAT)){
+		f->f_mode = FMODE_READ;
+		
 	}
+
+	vnode_t *pVnode;
 	int s = open_namev(filename, oflags, &pVnode, NULL);
-	if(s < 0){
+	if(s != 0){
 		curproc->p_files[fd] = NULL;	
                 fput(f);
 		return s;
 	}
         if(S_ISDIR(pVnode->vn_mode) && ((oflags & O_WRONLY) || (oflags & O_RDWR)) ){
+		curproc->p_files[fd] = NULL;
 		vput(pVnode);
                 fput(f);
 		return -EISDIR;
         }
-	
-	f->f_vnode = pVnode;
-	if(pVnode->vn_devid != NULL ){
-		pVnode->vn_mode = S_IFCHR;
+	if(S_ISBLK(pVnode->vn_mode)){
+	        if(!(pVnode->vn_bdev = blockdev_lookup(pVnode->vn_devid))){
+			curproc->p_files[fd] = NULL;
+			fput(f);
+			vput(pVnode);
+			return -ENXIO;
+		}
 	}
-	/*vput(pVnode);*/
+	if(S_ISCHR(pVnode->vn_mode)){
+	        if(!(pVnode->vn_cdev = bytedev_lookup(pVnode->vn_devid))){
+			curproc->p_files[fd] = NULL;
+			fput(f);
+			vput(pVnode);
+			return -ENXIO;
+		}
+	}
+	f->f_pos=0;
+	f->f_vnode = pVnode;
         return fd;
 }

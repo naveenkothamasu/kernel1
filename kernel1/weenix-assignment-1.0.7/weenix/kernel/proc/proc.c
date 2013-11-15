@@ -98,12 +98,7 @@ proc_create(char *name)
 	sched_queue_init(&(proc->p_wait));
 	proc->p_pid = _proc_getid();
 	pid_t pid = proc->p_pid;
-
-        proc->p_cwd = vfs_root_vn;
-        if (proc->p_cwd)
-        {
-            vref(proc->p_cwd);
-        }
+	
 	if(proc->p_pid == PID_INIT){
                 proc_initproc = proc;
         }
@@ -175,10 +170,15 @@ proc_cleanup(int status)
 	/*TODO wake up myParentProc, if it is waiting*/
 	sched_wakeup_on(&(myParentProc->p_wait));
 	int fd;
+	/*	
         if(curproc->p_cwd->vn_refcount!=0 && curproc->p_cwd->vn_vno!=0 && curproc->p_pid!=PID_IDLE)
         {
             vput(curproc->p_cwd);
         }
+	*/
+	
+	
+	
         for(fd=0;fd<NFILES;fd++)
         {
               if(curproc->p_files[fd]!=NULL)
@@ -356,7 +356,7 @@ do_waitpid(pid_t pid, int options, int *status)
 						dbg_print("GRADING1 2.c PASSED: thr points to a thread to be destroyed.\n");
 						kthread_destroy(pThread);	
 					}list_iterate_end();	
-
+				
 
 				pt_destroy_pagedir(deadChild->p_pagedir);
 				list_remove(&deadChild->p_child_link);

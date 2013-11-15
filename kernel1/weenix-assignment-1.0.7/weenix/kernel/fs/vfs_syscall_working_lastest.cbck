@@ -42,7 +42,7 @@ int
 do_read(int fd, void *buf, size_t nbytes)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_read");*/
-	if(fd<0 || fd > NFILES ) 
+	if(fd > NFILES || (curproc->p_files[fd]==NULL)) 
 	{
 		return -EBADF;
 	}
@@ -68,11 +68,11 @@ do_read(int fd, void *buf, size_t nbytes)
 	}
 	int read_bytes;
 	read_bytes=f->f_vnode->vn_ops->read(f->f_vnode,f->f_pos,buf,nbytes);
-	if(nbytes-read_bytes==0){
+	if(nbytes-read_bytes!=0){
 		/*if it cannot read nbytes, go to end else go to nbytes after the current pos*/
-		do_lseek(fd,read_bytes,SEEK_CUR);
-	}else{
 		do_lseek(fd,0,SEEK_END);
+	}else{
+		do_lseek(fd,read_bytes,SEEK_CUR);
 	}
 	fput(f);				
         return read_bytes;
@@ -90,7 +90,7 @@ int
 do_write(int fd, const void *buf, size_t nbytes)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_write");*/
-	if(fd<0 || fd > NFILES )
+	if(fd<0 || fd > NFILES || (curproc->p_files[fd]==NULL))
 	{
 		/*Bad file descriptor, either not initialized, or invalid*/
 		return -EBADF;
@@ -118,26 +118,27 @@ do_write(int fd, const void *buf, size_t nbytes)
         if(f->f_mode & FMODE_APPEND)
         {
 		/* Append the data, so seek to end and write, after write seek to end again to increment pos*/
-                write_bytes=do_lseek(fd,0,SEEK_END);
+          	KASSERT((S_ISCHR(f->f_vnode->vn_mode)) ||
+                      	(S_ISBLK(f->f_vnode->vn_mode)) ||
+                   	((S_ISREG(f->f_vnode->vn_mode)) && (f->f_pos <= f->f_vnode->vn_len)));
+                write_bytes=do_lseek(fd,NULL,SEEK_END);
 		if(write_bytes<0)
 		{
 			fput(f);
 			return write_bytes;
 		}
 		write_bytes=f->f_vnode->vn_ops->write(f->f_vnode,f->f_pos,buf,nbytes);
-		do_lseek(fd,0,SEEK_END);
+		do_lseek(fd,NULL,SEEK_END);
         }
-	else{
-        	if(f->f_mode & FMODE_WRITE){
-			write_bytes=f->f_vnode->vn_ops->write(f->f_vnode,f->f_pos,buf,nbytes);
-			do_lseek(fd,write_bytes,SEEK_CUR);
-        	}
-	}
-	fput(f);
-	KASSERT((S_ISCHR(f->f_vnode->vn_mode)) ||
+        if(f->f_mode & FMODE_WRITE)
+        {
+          	KASSERT((S_ISCHR(f->f_vnode->vn_mode)) ||
                       	(S_ISBLK(f->f_vnode->vn_mode)) ||
                    	((S_ISREG(f->f_vnode->vn_mode)) && (f->f_pos <= f->f_vnode->vn_len)));
-
+		write_bytes=f->f_vnode->vn_ops->write(f->f_vnode,f->f_pos,buf,nbytes);
+		do_lseek(fd,write_bytes,SEEK_CUR);
+        }
+	fput(f);
 	return write_bytes;
 }
 
@@ -153,7 +154,7 @@ do_close(int fd)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_close");*/
 
-	if(fd<0 || fd > NFILES){
+	if(fd<0 || fd > NFILES || (curproc->p_files[fd]==NULL)){
 		return -EBADF;
 	}
 	file_t *f=fget(fd);
@@ -186,7 +187,7 @@ int
 do_dup(int fd)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_dup");*/
-	if(fd <0 || fd > NFILES)
+	if(fd > NFILES || (curproc->p_files[fd]==NULL))
 	{
 		return -EBADF;
 	}
@@ -218,7 +219,7 @@ int
 do_dup2(int ofd, int nfd)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_dup2");*/
-        if(ofd<0 || ofd > NFILES)
+        if(ofd<0 || ofd > NFILES ||(curproc->p_files[ofd]==NULL))
         {
                 return -EBADF;       
         }
@@ -364,12 +365,13 @@ do_mkdir(const char *path)
 		return -EEXIST;
 	}
 	KASSERT(NULL != pVnode->vn_ops->mkdir);
-	dbg(DBG_PRINT, "GRADING 2A 3.c# PASSED: pointer to corresponding vnode is not null.\n");
 	if(!S_ISDIR(pVnode->vn_mode) || pVnode->vn_ops->mkdir == NULL){
 		vput(pVnode);
 		return -ENOTDIR;
 	} 
 	s = pVnode->vn_ops->mkdir(pVnode, pName, namelen);
+	KASSERT(NULL != pVnode->vn_ops->mkdir);
+	dbg(DBG_PRINT, "GRADING 2A 3.c# PASSED: pointer to corresponding vnode is not null.\n");
 	vput(pVnode);
         return s;
 }
@@ -609,7 +611,7 @@ do_chdir(const char *path)
 	}
 	vnode_t *new_vnode;
 	vnode_t *old_vnode=curproc->p_cwd;
-	/*dbg(DBG_VFS,"Entered chdir(), oldvnode=%d, oldnoderefcount=%d\n", old_vnode -> vn_vno, old_vnode -> vn_refcount);*/
+	dbg(DBG_VFS,"Entered chdir(), oldvnode=%d, oldnoderefcount=%d\n", old_vnode -> vn_vno, old_vnode -> vn_refcount);
 	size_t namelen;
 	const char *pName;
 	int s = open_namev(path,0,&new_vnode,NULL);
@@ -620,14 +622,13 @@ do_chdir(const char *path)
 		vput(new_vnode);
 		return -ENOTDIR;
 	}
-/*	dbg(DBG_VFS,"chdir():after openv, newvnode=%d, newnoderefcount=%d\n", new_vnode -> vn_vno, new_vnode -> vn_refcount);*/
-	/*if(curproc->p_cwd->vn_vno!=0)
+	dbg(DBG_VFS,"chdir():after openv, newvnode=%d, newnoderefcount=%d\n", new_vnode -> vn_vno, new_vnode -> vn_refcount);
+	if(curproc->p_cwd->vn_vno!=0)
 	{
 		vput(old_vnode);
-	}*/
-	vput(old_vnode);
+	}
 	curproc->p_cwd = new_vnode;
-/*	dbg(DBG_VFS,"leaving chdir(), oldvnode=%d, oldnoderefcount=%d\n", old_vnode -> vn_vno, old_vnode -> vn_refcount);*/
+	dbg(DBG_VFS,"leaving chdir(), oldvnode=%d, oldnoderefcount=%d\n", old_vnode -> vn_vno, old_vnode -> vn_refcount);
         return 0;
 }
 
@@ -693,7 +694,7 @@ int
 do_lseek(int fd, int offset, int whence)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_lseek");*/
-	if(fd<0 || fd>=NFILES ){
+	if(fd<0 || fd>=NFILES || (curproc->p_files[fd]==NULL)){
 		return -EBADF;
 	}
 	if((whence!=SEEK_END) && (whence!=SEEK_SET) && (whence!=SEEK_CUR)){

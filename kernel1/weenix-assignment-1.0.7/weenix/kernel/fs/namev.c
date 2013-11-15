@@ -101,6 +101,8 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
                 return -ENAMETOOLONG;
         }
         vnode_t *cur_dir;
+	const char *n = pathname;
+	int flagSlash=1;
         
         if(base==NULL){
                 cur_dir=curproc->p_cwd;
@@ -109,18 +111,54 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
                 cur_dir=base;
                 vref(cur_dir);
         }
-
-        if(pathname[0]=='/' && base!=NULL){
+        if(pathname[0]=='/'){
+		flagSlash =0;
+                vput(cur_dir);
                 cur_dir=vfs_root_vn;
                 vref(cur_dir);
                 pathname++;        
         }
         char *temppathname=(char *)pathname;
+	/*
+	if(strcmp(pathname, ".") == 0){
+                 vput(cur_dir);
+		*namelen = 1;
+        	*name=temppathname;
+        	*res_vnode=cur_dir;
+        	return 0;
+	}elsei if(strcmp(pathname, "..") == 0){
+		int ispathexist = lookup(cur_dir,temppathname,2,res_vnode);
+                  	if(ispathexist >= 0){
+                                vput(cur_dir);
+                        }else{
+                                vput(cur_dir);
+                                return ispathexist;
+                        }
+		*namelen = 2;
+        	*name=temppathname;
+        	return 0;
+	}*/
         char *slash_ptr=(char *)pathname;
         int pathlength=strlen(pathname);
         char *pathend=(char *)pathname+pathlength;
         
         slash_ptr=strchr(temppathname,'/'); /*TODO this is increasing the count for vfs_root as well*/
+	/*
+	if(slash_ptr == NULL && flagSlash ==1){
+		int ispathexist = lookup(cur_dir,n,strlen(n),res_vnode);
+                        if(ispathexist >= 0){
+                                vput(cur_dir);
+                                cur_dir=*res_vnode;
+				*namelen = strlen(n);
+        			*name=n;
+				return 0;
+
+                        }else{
+                                vput(cur_dir);
+                                return ispathexist;
+                        }
+		
+	}*/
         while(slash_ptr != pathend){
                 /*check whethre it is directory or not */
                 if(!S_ISDIR(cur_dir->vn_mode)){
@@ -173,20 +211,12 @@ open_namev(const char *pathname, int flag, vnode_t **res_vnode, vnode_t *base)
 		return -ENOTDIR;
 	}
 	int nodelookup=lookup(temp_res_vnode,retname,length,res_vnode);
-	if(nodelookup<0){
-		if(nodelookup == -ENOENT && flag == O_CREAT){
-			int returnvalue=temp_res_vnode->vn_ops->create(temp_res_vnode,retname,length,res_vnode);
-			KASSERT(NULL !=  temp_res_vnode->vn_ops->create);
-        		dbg(DBG_PRINT, "GRADING2 2.c #PASSED : vn_ops->create is not null\n");
-		
-				if(returnvalue < 0){
-					vput(temp_res_vnode);
-					return returnvalue;
-				}
-			}else{
-				vput(temp_res_vnode);
-				return nodelookup;
-			}
+	if(nodelookup == -ENOENT && flag == O_CREAT){
+		int returnvalue=temp_res_vnode->vn_ops->create(temp_res_vnode,retname,length,res_vnode);
+		KASSERT(NULL !=  temp_res_vnode->vn_ops->create);
+        	dbg(DBG_PRINT, "GRADING2 2.c #PASSED : vn_ops->create is not null\n");
+		vput(temp_res_vnode);
+		return returnvalue;
 	}
 	vput(temp_res_vnode);
 	return nodelookup;
