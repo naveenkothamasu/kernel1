@@ -104,7 +104,7 @@ do_open(const char *filename, int oflags)
 	}else if(oflags == (O_RDONLY | O_CREAT)){
 		f->f_mode = FMODE_READ;
 	}else if(oflags == (O_RDWR | O_CREAT) ){
-		f->f_mode = FMODE_WRITE;
+		f->f_mode = FMODE_READ | FMODE_WRITE;
 	}
 
 	vnode_t *pVnode;
