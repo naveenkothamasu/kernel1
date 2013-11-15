@@ -463,10 +463,12 @@ do_unlink(const char *path)
         if(s != 0){
                 return s;        
         }
+	/*
         if(S_ISDIR(pVnode->vn_mode)){
 		vput(pVnode);
                 return -EISDIR;        
         }
+	*/
 	if(strlen(pName)>NAME_LEN)
 	{
 		vput(pVnode);
