@@ -98,7 +98,7 @@ do_open(const char *filename, int oflags)
 	}else if(oflags == O_WRONLY){
 		f->f_mode =  FMODE_WRITE;
 	}else if(oflags == O_RDWR){
-		f->f_mode = FMODE_READ | FMODE_WRITE | FMODE_APPEND;
+		f->f_mode = FMODE_READ | FMODE_WRITE;
 	}else if(oflags == O_APPEND){
 		f->f_mode = FMODE_WRITE | FMODE_APPEND;
 	}else if(oflags == (O_RDONLY | O_CREAT)){
