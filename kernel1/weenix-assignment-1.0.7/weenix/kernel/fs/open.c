@@ -75,7 +75,7 @@ do_open(const char *filename, int oflags)
 {
         /*NOT_YET_IMPLEMENTED("VFS: do_open");*/
 	if (oflags!=O_RDONLY && oflags!=O_WRONLY && oflags!=O_RDWR && oflags!=O_APPEND && oflags!= (O_RDONLY | O_CREAT) 
-		&& oflags != (O_RDWR | O_CREAT))
+		&& oflags != (O_RDWR | O_CREAT) && oflags != (O_RDWR | O_APPEND))
 	{
 		return -EINVAL;
 	}
@@ -105,6 +105,8 @@ do_open(const char *filename, int oflags)
 		f->f_mode = FMODE_READ;
 	}else if(oflags == (O_RDWR | O_CREAT) ){
 		f->f_mode = FMODE_READ | FMODE_WRITE;
+	}else if(oflags == (O_RDWR | O_APPEND) ){
+		f->f_mode = FMODE_READ | FMODE_WRITE | FMODE_APPEND;
 	}
 
 	vnode_t *pVnode;

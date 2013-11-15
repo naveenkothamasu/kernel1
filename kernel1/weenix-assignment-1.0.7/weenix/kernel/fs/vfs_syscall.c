@@ -407,6 +407,7 @@ do_rmdir(const char *path)
                 }
                 return -EINVAL;
         }
+	
         if(strlen(path) > MAXPATHLEN){
                 return -ENAMETOOLONG;
         }
@@ -480,7 +481,7 @@ do_unlink(const char *path)
 		vput(pVnode);
 		return s;
 	}
-	if(S_ISDIR(pVnode->vn_mode))
+	if(S_ISDIR(pCnode->vn_mode))
 	{
 		vput(pVnode);
 		vput(pCnode);
