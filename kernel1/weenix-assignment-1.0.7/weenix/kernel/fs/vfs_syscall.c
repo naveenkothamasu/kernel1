@@ -137,7 +137,7 @@ do_write(int fd, const void *buf, size_t nbytes)
 	KASSERT((S_ISCHR(f->f_vnode->vn_mode)) ||
                       	(S_ISBLK(f->f_vnode->vn_mode)) ||
                    	((S_ISREG(f->f_vnode->vn_mode)) && (f->f_pos <= f->f_vnode->vn_len)));
-
+	dbg(DBG_PRINT, "GRADING2 3.a\n");
 	return write_bytes;
 }
 
@@ -296,6 +296,7 @@ do_mknod(const char *path, int mode, unsigned devid)
 		return -EEXIST;
 	}else{
 		KASSERT(NULL != dir_vnode->vn_ops->mknod);
+		dbg(DBG_PRINT, "GRADING2 3.b\n ");
 		if(temp_result==-ENOTDIR || dir_vnode->vn_ops->mknod==NULL || !S_ISDIR(dir_vnode->vn_mode)){
 			vput(dir_vnode);
 			return -ENOTDIR;
@@ -427,6 +428,7 @@ do_rmdir(const char *path)
 		return -ENOTDIR;
 	}
         KASSERT(NULL != pVnode->vn_ops->rmdir);
+	dbg(DBG_PRINT,"GRADING 2 3.d\n");
         s = pVnode->vn_ops->rmdir(pVnode, pName, namelen);
 	vput(pVnode);
         return s;
@@ -482,11 +484,11 @@ do_unlink(const char *path)
 		vput(pCnode);
 		return -EISDIR;
 	}
-        KASSERT(NULL != pVnode->vn_ops->rmdir);
+        KASSERT(NULL != pVnode->vn_ops->unlink);        
+	dbg(DBG_PRINT, "GRADING2 3.e pointer to unlink is not null.\n");
         s = pVnode->vn_ops->unlink(pVnode, pName, namelen);
 	vput(pVnode);
 	vput(pCnode);
-        KASSERT(NULL != pVnode->vn_ops->unlink);        
         return s;
 }
 /* To link:
@@ -557,7 +559,8 @@ do_link(const char *from, const char *to)
 		vput(res_vnode);
 		return -ENOTDIR;
 	}
-        KASSERT(res_vnode->vn_ops->link);                   
+	KASSERT(res_vnode->vn_ops->link == NULL);
+	dbg(DBG_PRINT, "GRADING 2 3.f \n");
         s=res_vnode->vn_ops->link(old_vnode,res_vnode,pName,namelen);
         vput(old_vnode);
         vput(res_vnode);

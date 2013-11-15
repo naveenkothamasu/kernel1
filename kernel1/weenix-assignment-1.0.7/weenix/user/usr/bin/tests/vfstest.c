@@ -909,7 +909,7 @@ int vfstest_main(int argc, char **argv)
 
 	
         vfstest_start();
-
+	
         syscall_success(chdir(root_dir));
 
         vfstest_stat();
@@ -917,9 +917,10 @@ int vfstest_main(int argc, char **argv)
         vfstest_chdir();
 
 
+
         vfstest_mkdir();
 	
-        vfstest_paths();
+   /*     vfstest_paths();*/
 
         vfstest_fd();
 	
