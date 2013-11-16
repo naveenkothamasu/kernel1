@@ -401,13 +401,13 @@ do_rmdir(const char *path)
 	{
 		return -EINVAL;
 	}
-        if(path[strlen(path)-1] == '.'){
+/*        if(path[strlen(path)-1] == '.'){
                 if(path[strlen(path)-2] == '.'){
                         return -ENOTEMPTY;
                 }
                 return -EINVAL;
         }
-	
+*/	
         if(strlen(path) > MAXPATHLEN){
                 return -ENAMETOOLONG;
         }
@@ -423,6 +423,13 @@ do_rmdir(const char *path)
 	{
 		return s;
 	}
+
+        if(path[strlen(path)-1] == '.'){
+                if(path[strlen(path)-2] == '.'){
+                        return -ENOTEMPTY;
+                }
+                return -EINVAL;
+        }
 	if(pVnode->vn_ops->rmdir == NULL)
 	{
 		vput(pVnode);

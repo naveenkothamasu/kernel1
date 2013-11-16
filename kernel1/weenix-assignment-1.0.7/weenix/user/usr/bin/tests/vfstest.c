@@ -236,7 +236,7 @@ vfstest_stat(void)
         struct stat s;
 
         syscall_success(mkdir("stat", 0));
-	/*
+	
         syscall_success(chdir("stat"));
 
         syscall_success(stat(".", &s));
@@ -253,7 +253,7 @@ vfstest_stat(void)
         test_assert(s.st_size == 6, "unexpected file size");
 	
         syscall_success(close(fd));
-*/
+
         /* error cases */
 #ifdef __VM__
         syscall_fail(stat(".", NULL), EFAULT);
@@ -920,7 +920,7 @@ int vfstest_main(int argc, char **argv)
 
         vfstest_mkdir();
 	
-   /*     vfstest_paths();*/
+        vfstest_paths();
 
         vfstest_fd();
 	
