@@ -183,7 +183,7 @@ proc_cleanup(int status)
         {
               if(curproc->p_files[fd]!=NULL)
               {
-                 int fd=do_close(fd);
+                 do_close(fd);
               }
         }
 	list_t *list = &(curproc->p_children);
