@@ -918,7 +918,7 @@ int vfstest_main(int argc, char **argv)
 
 
 
-        vfstest_mkdir();
+    	 vfstest_mkdir();
 	
         vfstest_paths();
 

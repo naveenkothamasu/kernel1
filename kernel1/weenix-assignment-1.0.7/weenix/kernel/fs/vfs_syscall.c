@@ -426,8 +426,10 @@ do_rmdir(const char *path)
 
         if(path[strlen(path)-1] == '.'){
                 if(path[strlen(path)-2] == '.'){
+			vput(pVnode);
                         return -ENOTEMPTY;
                 }
+		vput(pVnode);
                 return -EINVAL;
         }
 	if(pVnode->vn_ops->rmdir == NULL)

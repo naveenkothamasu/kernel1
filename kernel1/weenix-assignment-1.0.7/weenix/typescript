@@ -1,5 +1,5 @@
-Script started on Fri 15 Nov 2013 05:34:11 PM PST
-]0;gopi@gopi-VirtualBox: ~/Kernel2final/kernel1/kernel1/weenix-assignment-1.0.7/weenixgopi@gopi-VirtualBox:~/Kernel2final/kernel1/kernel1/weenix-assignment-1.0.7/weenix$ ./weenix -n
+Script started on Fri 15 Nov 2013 05:40:39 PM PST
+]0;gopi@gopi-VirtualBox: ~/Kernel2final/kernel1/kernel1/weenix-assignment-1.0.7/weenixgopi@gopi-VirtualBox:~/Kernel2final/kernel1/kernel1/weenix-assignment-1.0.7/weenix$ exit[Kvi kernel/test/vfstest/vfstest.c exit[Kvi kernel/fs/vfs_syscall.cexit[K[K[K[K[K./weenix -n
 /usr/bin/qemu-system-i386
 open /dev/kvm: No such file or directory
 Could not initialize KVM, will disable KVM support
@@ -291,12 +291,12 @@ GRADING1 3.a PASSED: should have associated process.
 [0m[0mpageoutd_init (0xc000e3b0): [0m[0msched_init [0m[0m
 [0m[0msched_init (0xc00123ea): [0m[0m
 [0m[0mfile_init (0xc0014b03): [0m[0m
-[0m[0mvfs_init (0xc0015f8f): [0m[0mvnode_init [0m[0mfile_init [0m[0m
-[0m[0mvnode_init (0xc001775f): [0m[0m
-[0m[0mbinfmt_init (0xc001a0cb): [0m[0m
-[0m[0melf32_init (0xc001c4a5): [0m[0mbinfmt_init [0m[0m
-[0m[0msyscall_init (0xc001c7e9): [0m[0m
-[0m[0mkshell_init (0xc001f200): [0m[0m
+[0m[0mvfs_init (0xc0015fbf): [0m[0mvnode_init [0m[0mfile_init [0m[0m
+[0m[0mvnode_init (0xc001778f): [0m[0m
+[0m[0mbinfmt_init (0xc001a0fb): [0m[0m
+[0m[0melf32_init (0xc001c4d5): [0m[0mbinfmt_init [0m[0m
+[0m[0msyscall_init (0xc001c819): [0m[0m
+[0m[0mkshell_init (0xc001f230): [0m[0m
 [0m[0mutil/init.c:51 _init_call(): 'pageoutd_init' depends on 'sched_init': [0m[0mcalling
 [0m[0mutil/init.c:63 _init_call(): Calling sched_init (0xc00123ea)
 [0m[0mutil/init.c:63 _init_call(): Calling pageoutd_init (0xc000e3b0)
@@ -318,7 +318,7 @@ GRADING2 2.a PASSED: pid can only be PID_INIT when creating from idle process.
 [0m[31;40m  Order:         0
 [0m[31;40m  Slab Capacity: 127
 [0m[0mutil/init.c:51 _init_call(): 'vfs_init' depends on 'vnode_init': [0m[0mcalling
-[0m[0mutil/init.c:63 _init_call(): Calling vnode_init (0xc001775f)
+[0m[0mutil/init.c:63 _init_call(): Calling vnode_init (0xc001778f)
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1efb2f8 from "slab_allocators" (0xc0046ac4), slab 0xc0046ac4, inuse 20
 [0m[31;40mmm/slab.c:139 _calc_slab_size(): calc_slab_size: minorder 0, waste 112
 [0m[31;40mmm/slab.c:150 _calc_slab_size(): calc_slab_size: replacing with order 2, waste 0
@@ -328,7 +328,7 @@ GRADING2 2.a PASSED: pid can only be PID_INIT when creating from idle process.
 [0m[31;40m  Order:         2
 [0m[31;40m  Slab Capacity: 132
 [0m[0mutil/init.c:51 _init_call(): 'vfs_init' depends on 'file_init': [0m[0malready called
-[0m[0mutil/init.c:63 _init_call(): Calling vfs_init (0xc0015f8f)
+[0m[0mutil/init.c:63 _init_call(): Calling vfs_init (0xc0015fbf)
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1edc1b0 from "size-128" (0xc1efb02c), slab 0xc1efb02c, inuse 4
 [0m[37;40mmm/page.c:174 __page_split(): split 0xc1e5c000 (6) into 0xc1e5c000 and 0xc1e7c000
 [0m[37;40mmm/page.c:174 __page_split(): split 0xc1e7c000 (5) into 0xc1e7c000 and 0xc1e8c000
@@ -343,13 +343,13 @@ GRADING2 2.a PASSED: pid can only be PID_INIT when creating from idle process.
 [0m[31;40mmm/page.c:258 _page_alloc_order(): allocating 4 pages (addr 0xc1e94000)
 [0m[31;40mmm/slab.c:253 _slab_allocator_grow(): Growing cache "vnode" (0xc1efb2fc), new slab 0xc1e97ff0 (4 pages)
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1e94000 from "vnode" (0xc1efb2fc), slab 0xc1efb2fc, inuse 1
-[0m[0mutil/init.c:63 _init_call(): Calling binfmt_init (0xc001a0cb)
+[0m[0mutil/init.c:63 _init_call(): Calling binfmt_init (0xc001a0fb)
 [0m[0mutil/init.c:51 _init_call(): 'elf32_init' depends on 'binfmt_init': [0m[0malready called
-[0m[0mutil/init.c:63 _init_call(): Calling elf32_init (0xc001c4a5)
+[0m[0mutil/init.c:63 _init_call(): Calling elf32_init (0xc001c4d5)
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1efa780 from "size-64" (0xc1efb004), slab 0xc1efb004, inuse 25
 [0m[1;31;40mapi/binfmt.c:36 binfmt_add(): Registering binary loader ELF32
-[0m[0mutil/init.c:63 _init_call(): Calling syscall_init (0xc001c7e9)
-[0m[0mutil/init.c:63 _init_call(): Calling kshell_init (0xc001f200)
+[0m[0mutil/init.c:63 _init_call(): Calling syscall_init (0xc001c819)
+[0m[0mutil/init.c:63 _init_call(): Calling kshell_init (0xc001f230)
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1edc240 from "size-128" (0xc1efb02c), slab 0xc1efb02c, inuse 5
 [0m[31;40mtest/kshell/kshell.c:64 kshell_add_command(): Added help command
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1edc2d0 from "size-128" (0xc1efb02c), slab 0xc1efb02c, inuse 6
@@ -615,7 +615,7 @@ GRADING1:5.c PASSED: curthr is NOT the mutex holder.
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1efa4b0 from "size-64" (0xc1efb004), slab 0xc1efb004, inuse 21
 [0m[31;40mmm/page.c:258 _page_alloc_order(): allocating 1 pages (addr 0xc1e90000)
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1e9407c from "vnode" (0xc1efb2fc), slab 0xc1efb2fc, inuse 4
-[0m[0mfs/namev.c:213 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
+[0m[0mfs/namev.c:220 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
 [0m[36;40mfs/vnode.c:240 vput(): vput: 0xc1e94178, 0xc1edc1b8 ino 7, down to 1, nrespages = 0
 [0m[35;40mfs/file.c:44 fref(): fref: 0xc1e93024, 0xc1edc1b8 ino 8, up to 2
 [0m[35;40mfs/file.c:85 fput(): fput: 0xc1e93024, 0xc1edc1b8 ino 8, down to 1
@@ -831,7 +831,7 @@ GRADING1:5.c PASSED: curthr is NOT the mutex holder.
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1efa3c0 from "size-64" (0xc1efb004), slab 0xc1efb004, inuse 23
 [0m[31;40mmm/page.c:258 _page_alloc_order(): allocating 1 pages (addr 0xc1e8e000)
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1e9407c from "vnode" (0xc1efb2fc), slab 0xc1efb2fc, inuse 4
-[0m[0mfs/namev.c:213 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
+[0m[0mfs/namev.c:220 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
 [0m[36;40mfs/vnode.c:240 vput(): vput: 0xc1e94178, 0xc1edc1b8 ino 9, down to 1, nrespages = 0
 [0m[35;40mfs/file.c:44 fref(): fref: 0xc1e93024, 0xc1edc1b8 ino 10, up to 2
 [0m[35;40mfs/file.c:85 fput(): fput: 0xc1e93024, 0xc1edc1b8 ino 10, down to 1
@@ -931,7 +931,7 @@ GRADING1:5.c PASSED: curthr is NOT the mutex holder.
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1efa370 from "size-64" (0xc1efb004), slab 0xc1efb004, inuse 25
 [0m[31;40mmm/page.c:258 _page_alloc_order(): allocating 1 pages (addr 0xc1e8c000)
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1e9407c from "vnode" (0xc1efb2fc), slab 0xc1efb2fc, inuse 4
-[0m[0mfs/namev.c:213 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
+[0m[0mfs/namev.c:220 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
 [0m[36;40mfs/vnode.c:240 vput(): vput: 0xc1e94178, 0xc1edc1b8 ino 11, down to 1, nrespages = 0
 [0m[35;40mfs/file.c:44 fref(): fref: 0xc1e93024, 0xc1edc1b8 ino 12, up to 2
 [0m[35;40mfs/file.c:85 fput(): fput: 0xc1e93024, 0xc1edc1b8 ino 12, down to 1
@@ -1269,7 +1269,7 @@ GRADING1:5.c PASSED: curthr is NOT the mutex holder.
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1efa820 from "size-64" (0xc1efb004), slab 0xc1efb004, inuse 27
 [0m[31;40mmm/page.c:258 _page_alloc_order(): allocating 1 pages (addr 0xc1e8a000)
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1e941f0 from "vnode" (0xc1efb2fc), slab 0xc1efb2fc, inuse 5
-[0m[0mfs/namev.c:213 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
+[0m[0mfs/namev.c:220 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
 [0m[36;40mfs/vnode.c:240 vput(): vput: 0xc1e94080, 0xc1edc1b8 ino 13, down to 4, nrespages = 0
 [0m[35;40mfs/file.c:44 fref(): fref: 0xc1e93024, 0xc1edc1b8 ino 14, up to 2
 [0m[35;40mfs/file.c:85 fput(): fput: 0xc1e93024, 0xc1edc1b8 ino 14, down to 1
@@ -3089,14 +3089,8 @@ GRADING1:5.c PASSED: curthr is NOT the mutex holder.
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1e941f0 from "vnode" (0xc1efb2fc), slab 0xc1efb2fc, inuse 7
 [0m[36;40mfs/vnode.c:240 vput(): vput: 0xc1e942ec, 0xc1edc1b8 ino 16, down to 0, nrespages = 0
 [0m[31;40mmm/slab.c:337 slab_obj_free(): Freed object 0xc1e942e8 from "vnode" (0xc1efb2fc), slab 0xc1e97ff0, inuse 6
-[0m[0mfs/namev.c:32 lookup(): GRADING2 2.a #PASSED : dir is not null
-[0m[0mfs/namev.c:34 lookup(): GRADING2 2.a #PASSED : name is not null
-[0m[0mfs/namev.c:36 lookup(): GRADING2 2.a #PASSED : result is not null
-[0m[36;40mfs/vnode.c:111 vref(): vref: 0xc1e94004, 0xc1edc1b8 ino 0 up to 3, nrespages=0
 [0m[36;40mfs/vnode.c:240 vput(): vput: 0xc1e941f4, 0xc1edc1b8 ino 17, down to 0, nrespages = 0
 [0m[31;40mmm/slab.c:337 slab_obj_free(): Freed object 0xc1e941f0 from "vnode" (0xc1efb2fc), slab 0xc1e97ff0, inuse 5
-[0m[36;40mfs/vnode.c:240 vput(): vput: 0xc1e94004, 0xc1edc1b8 ino 0, down to 2, nrespages = 0
-[0m[31;40mFAILED: test/vfstest/vfstest.c(384): __s1.st_ino == __s2.st_ino: paths_equals("1/2/3" (ino 17), "1///2///3/" (ino 0))
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1e831e0 from "size-64" (0xc1efb004), slab 0xc1efb004, inuse 7
 [0m[0mfs/namev.c:89 dir_namev(): GRADING2 2.b #PASSED : pathname is not null
 [0m[0mfs/namev.c:91 dir_namev(): GRADING2 2.b #PASSED : namelen is not null
@@ -3396,7 +3390,7 @@ GRADING1:5.c PASSED: curthr is NOT the mutex holder.
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1e83460 from "size-64" (0xc1efb004), slab 0xc1efb004, inuse 15
 [0m[31;40mmm/page.c:258 _page_alloc_order(): allocating 1 pages (addr 0xc1e7e000)
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1e942e8 from "vnode" (0xc1efb2fc), slab 0xc1efb2fc, inuse 7
-[0m[0mfs/namev.c:213 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
+[0m[0mfs/namev.c:220 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
 [0m[36;40mfs/vnode.c:240 vput(): vput: 0xc1e941f4, 0xc1edc1b8 ino 15, down to 0, nrespages = 0
 [0m[31;40mmm/slab.c:337 slab_obj_free(): Freed object 0xc1e941f0 from "vnode" (0xc1efb2fc), slab 0xc1e97ff0, inuse 6
 [0m[35;40mfs/file.c:44 fref(): fref: 0xc1e93024, 0xc1edc1b8 ino 25, up to 2
@@ -3543,7 +3537,7 @@ GRADING1:5.c PASSED: curthr is NOT the mutex holder.
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1e83500 from "size-64" (0xc1efb004), slab 0xc1efb004, inuse 17
 [0m[31;40mmm/page.c:258 _page_alloc_order(): allocating 1 pages (addr 0xc1e7c000)
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1e942e8 from "vnode" (0xc1efb2fc), slab 0xc1efb2fc, inuse 6
-[0m[0mfs/namev.c:213 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
+[0m[0mfs/namev.c:220 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
 [0m[36;40mfs/vnode.c:240 vput(): vput: 0xc1e94270, 0xc1edc1b8 ino 26, down to 1, nrespages = 0
 [0m[35;40mfs/file.c:44 fref(): fref: 0xc1e93024, 0xc1edc1b8 ino 27, up to 2
 [0m[35;40mfs/file.c:85 fput(): fput: 0xc1e93024, 0xc1edc1b8 ino 27, down to 1
@@ -3630,7 +3624,7 @@ GRADING1:5.c PASSED: curthr is NOT the mutex holder.
 [0m[37;40mmm/page.c:174 __page_split(): split 0xc1e7a000 (1) into 0xc1e7a000 and 0xc1e7b000
 [0m[31;40mmm/page.c:258 _page_alloc_order(): allocating 1 pages (addr 0xc1e7b000)
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1e942e8 from "vnode" (0xc1efb2fc), slab 0xc1efb2fc, inuse 6
-[0m[0mfs/namev.c:213 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
+[0m[0mfs/namev.c:220 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
 [0m[36;40mfs/vnode.c:240 vput(): vput: 0xc1e94270, 0xc1edc1b8 ino 26, down to 1, nrespages = 0
 [0m[35;40mfs/file.c:44 fref(): fref: 0xc1e93024, 0xc1edc1b8 ino 28, up to 2
 [0m[35;40mfs/file.c:85 fput(): fput: 0xc1e93024, 0xc1edc1b8 ino 28, down to 1
@@ -3738,7 +3732,7 @@ GRADING1:5.c PASSED: curthr is NOT the mutex holder.
 [0m[37;40mmm/page.c:174 __page_split(): split 0xc1e78000 (1) into 0xc1e78000 and 0xc1e79000
 [0m[31;40mmm/page.c:258 _page_alloc_order(): allocating 1 pages (addr 0xc1e79000)
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1e941f0 from "vnode" (0xc1efb2fc), slab 0xc1efb2fc, inuse 7
-[0m[0mfs/namev.c:213 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
+[0m[0mfs/namev.c:220 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
 [0m[36;40mfs/vnode.c:240 vput(): vput: 0xc1e94270, 0xc1edc1b8 ino 29, down to 1, nrespages = 0
 [0m[35;40mfs/file.c:44 fref(): fref: 0xc1e93044, 0xc1edc1b8 ino 30, up to 2
 [0m[35;40mfs/file.c:85 fput(): fput: 0xc1e93044, 0xc1edc1b8 ino 30, down to 1
@@ -3796,7 +3790,7 @@ GRADING1:5.c PASSED: curthr is NOT the mutex holder.
 [0m[37;40mmm/page.c:174 __page_split(): split 0xc1e78000 (1) into 0xc1e78000 and 0xc1e79000
 [0m[31;40mmm/page.c:258 _page_alloc_order(): allocating 1 pages (addr 0xc1e79000)
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1e941f0 from "vnode" (0xc1efb2fc), slab 0xc1efb2fc, inuse 7
-[0m[0mfs/namev.c:213 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
+[0m[0mfs/namev.c:220 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
 [0m[36;40mfs/vnode.c:240 vput(): vput: 0xc1e94270, 0xc1edc1b8 ino 29, down to 1, nrespages = 0
 [0m[35;40mfs/file.c:44 fref(): fref: 0xc1e93044, 0xc1edc1b8 ino 30, up to 2
 [0m[35;40mfs/file.c:85 fput(): fput: 0xc1e93044, 0xc1edc1b8 ino 30, down to 1
@@ -3901,7 +3895,7 @@ GRADING1:5.c PASSED: curthr is NOT the mutex holder.
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1e83640 from "size-64" (0xc1efb004), slab 0xc1efb004, inuse 21
 [0m[31;40mmm/page.c:258 _page_alloc_order(): allocating 1 pages (addr 0xc1e78000)
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1e941f0 from "vnode" (0xc1efb2fc), slab 0xc1efb2fc, inuse 7
-[0m[0mfs/namev.c:213 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
+[0m[0mfs/namev.c:220 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
 [0m[36;40mfs/vnode.c:240 vput(): vput: 0xc1e94270, 0xc1edc1b8 ino 29, down to 1, nrespages = 0
 [0m[35;40mfs/file.c:44 fref(): fref: 0xc1e93044, 0xc1edc1b8 ino 31, up to 2
 [0m[35;40mfs/file.c:85 fput(): fput: 0xc1e93044, 0xc1edc1b8 ino 31, down to 1
@@ -3983,7 +3977,7 @@ GRADING1:5.c PASSED: curthr is NOT the mutex holder.
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1e83640 from "size-64" (0xc1efb004), slab 0xc1efb004, inuse 21
 [0m[31;40mmm/page.c:258 _page_alloc_order(): allocating 1 pages (addr 0xc1e78000)
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1e941f0 from "vnode" (0xc1efb2fc), slab 0xc1efb2fc, inuse 7
-[0m[0mfs/namev.c:213 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
+[0m[0mfs/namev.c:220 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
 [0m[36;40mfs/vnode.c:240 vput(): vput: 0xc1e94270, 0xc1edc1b8 ino 29, down to 1, nrespages = 0
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1e93060 from "file" (0xc1efb2d4), slab 0xc1efb2d4, inuse 4
 [0m[35;40mfs/file.c:46 fref(): fref: 0xc1e93064 up to 1
@@ -4266,7 +4260,7 @@ GRADING1:5.c PASSED: curthr is NOT the mutex holder.
 [0m[37;40mmm/page.c:174 __page_split(): split 0xc1e76000 (1) into 0xc1e76000 and 0xc1e77000
 [0m[31;40mmm/page.c:258 _page_alloc_order(): allocating 1 pages (addr 0xc1e77000)
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1e941f0 from "vnode" (0xc1efb2fc), slab 0xc1efb2fc, inuse 7
-[0m[0mfs/namev.c:213 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
+[0m[0mfs/namev.c:220 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
 [0m[36;40mfs/vnode.c:240 vput(): vput: 0xc1e94270, 0xc1edc1b8 ino 31, down to 1, nrespages = 0
 [0m[35;40mfs/file.c:44 fref(): fref: 0xc1e93064, 0xc1edc1b8 ino 32, up to 2
 [0m[35;40mfs/file.c:44 fref(): fref: 0xc1e93064, 0xc1edc1b8 ino 32, up to 3
@@ -4333,7 +4327,7 @@ GRADING1:5.c PASSED: curthr is NOT the mutex holder.
 [0m[37;40mmm/page.c:174 __page_split(): split 0xc1e74000 (1) into 0xc1e74000 and 0xc1e75000
 [0m[31;40mmm/page.c:258 _page_alloc_order(): allocating 1 pages (addr 0xc1e75000)
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1e941f0 from "vnode" (0xc1efb2fc), slab 0xc1efb2fc, inuse 7
-[0m[0mfs/namev.c:213 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
+[0m[0mfs/namev.c:220 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
 [0m[36;40mfs/vnode.c:240 vput(): vput: 0xc1e94270, 0xc1edc1b8 ino 31, down to 1, nrespages = 0
 [0m[35;40mfs/file.c:44 fref(): fref: 0xc1e93064, 0xc1edc1b8 ino 34, up to 2
 [0m[35;40mfs/file.c:44 fref(): fref: 0xc1e93064, 0xc1edc1b8 ino 34, up to 3
@@ -4425,7 +4419,7 @@ GRADING1:5.c PASSED: curthr is NOT the mutex holder.
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1e83780 from "size-64" (0xc1efb004), slab 0xc1efb004, inuse 25
 [0m[31;40mmm/page.c:258 _page_alloc_order(): allocating 1 pages (addr 0xc1e74000)
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1e941f0 from "vnode" (0xc1efb2fc), slab 0xc1efb2fc, inuse 7
-[0m[0mfs/namev.c:213 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
+[0m[0mfs/namev.c:220 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
 [0m[36;40mfs/vnode.c:240 vput(): vput: 0xc1e94270, 0xc1edc1b8 ino 31, down to 1, nrespages = 0
 [0m[35;40mfs/file.c:44 fref(): fref: 0xc1e93064, 0xc1edc1b8 ino 35, up to 2
 [0m[35;40mfs/file.c:85 fput(): fput: 0xc1e93064, 0xc1edc1b8 ino 35, down to 1
@@ -4534,7 +4528,7 @@ GRADING1:5.c PASSED: curthr is NOT the mutex holder.
 [0m[37;40mmm/page.c:174 __page_split(): split 0xc1e72000 (1) into 0xc1e72000 and 0xc1e73000
 [0m[31;40mmm/page.c:258 _page_alloc_order(): allocating 1 pages (addr 0xc1e73000)
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1e941f0 from "vnode" (0xc1efb2fc), slab 0xc1efb2fc, inuse 7
-[0m[0mfs/namev.c:213 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
+[0m[0mfs/namev.c:220 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
 [0m[36;40mfs/vnode.c:240 vput(): vput: 0xc1e94270, 0xc1edc1b8 ino 31, down to 1, nrespages = 0
 [0m[35;40mfs/file.c:44 fref(): fref: 0xc1e93064, 0xc1edc1b8 ino 36, up to 2
 [0m[35;40mfs/file.c:85 fput(): fput: 0xc1e93064, 0xc1edc1b8 ino 36, down to 1
@@ -4678,7 +4672,7 @@ GRADING1:5.c PASSED: curthr is NOT the mutex holder.
 [0m[37;40mmm/page.c:174 __page_split(): split 0xc1e6e000 (1) into 0xc1e6e000 and 0xc1e6f000
 [0m[31;40mmm/page.c:258 _page_alloc_order(): allocating 1 pages (addr 0xc1e6f000)
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1e94364 from "vnode" (0xc1efb2fc), slab 0xc1efb2fc, inuse 8
-[0m[0mfs/namev.c:213 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
+[0m[0mfs/namev.c:220 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
 [0m[36;40mfs/vnode.c:240 vput(): vput: 0xc1e941f4, 0xc1edc1b8 ino 38, down to 0, nrespages = 0
 [0m[31;40mmm/slab.c:337 slab_obj_free(): Freed object 0xc1e941f0 from "vnode" (0xc1efb2fc), slab 0xc1e97ff0, inuse 7
 [0m[35;40mfs/file.c:44 fref(): fref: 0xc1e93064, 0xc1edc1b8 ino 40, up to 2
@@ -4762,7 +4756,7 @@ GRADING1:5.c PASSED: curthr is NOT the mutex holder.
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1e83960 from "size-64" (0xc1efb004), slab 0xc1efb004, inuse 31
 [0m[31;40mmm/page.c:258 _page_alloc_order(): allocating 1 pages (addr 0xc1e6e000)
 [0m[31;40mmm/slab.c:295 slab_obj_alloc(): Allocated object 0xc1e94364 from "vnode" (0xc1efb2fc), slab 0xc1efb2fc, inuse 7
-[0m[0mfs/namev.c:213 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
+[0m[0mfs/namev.c:220 open_namev(): GRADING2 2.c #PASSED : vn_ops->create is not null
 [0m[36;40mfs/vnode.c:240 vput(): vput: 0xc1e94270, 0xc1edc1b8 ino 37, down to 1, nrespages = 0
 [0m[35;40mfs/file.c:44 fref(): fref: 0xc1e93064, 0xc1edc1b8 ino 41, up to 2
 [0m[35;40mfs/file.c:85 fput(): fput: 0xc1e93064, 0xc1edc1b8 ino 41, down to 1
@@ -7873,8 +7867,8 @@ GRADING1:5.c PASSED: curthr is NOT the mutex holder.
 [0m[36;40mfs/vnode.c:240 vput(): vput: 0xc1e94004, 0xc1edc1b8 ino 0, down to 3, nrespages = 0
 [0m[31;40mtest/vfstest/vfstest.c:188 vfstest_term(): Removed test root directory: ./vfstest-505826665
 [0m[31;40mtests completed:
-[0m[31;40m		505 passed
-[0m[31;40m		1 failed
+[0m[31;40m		506 passed
+[0m[31;40m		0 failed
 [0m[35;40mfs/file.c:44 fref(): fref: 0xc1e93004, 0xc1edc1b8 ino 4, up to 2
 [0m[0mfs/vnode.c:466 special_file_write(): GRADING2A 1.b
 [0m[0mfs/vnode.c:468 special_file_write(): GRADING2A 1.b
@@ -7889,7 +7883,62 @@ GRADING1:5.c PASSED: curthr is NOT the mutex holder.
 [0m[0mfs/vnode.c:444 special_file_read(): GRADING2A 1.a
 [0mGRADING1:5.a PASSED: curthr is not null and curthr is not the mutex holder.
 [1;35;40mdrivers/tty/n_tty.c:272 n_tty_read(): Cooked buffer is empty. Sleeping
-[0m]0;gopi@gopi-VirtualBox: ~/Kernel2final/kernel1/kernel1/weenix-assignment-1.0.7/weenixgopi@gopi-VirtualBox:~/Kernel2final/kernel1/kernel1/weenix-assignment-1.0.7/weenix$ exit
+[0m[1;35;40mdrivers/tty/n_tty.c:364 n_tty_receive_char(): Receiving printable character
+[0m[1;35;40mdrivers/tty/n_tty.c:364 n_tty_receive_char(): Receiving printable character
+[0m[1;35;40mdrivers/tty/n_tty.c:364 n_tty_receive_char(): Receiving printable character
+[0m[1;35;40mdrivers/tty/n_tty.c:364 n_tty_receive_char(): Receiving printable character
+[0m[1;35;40mdrivers/tty/n_tty.c:346 n_tty_receive_char(): Received newline
+[0mGRADING1 4.a PASSED: kt_state is either KT_SLEEP or KT_SLEEP_CANCELLABLE.
+GRADING1 4.b PASSED: thread is not blocked.
+[1;35;40mdrivers/tty/n_tty.c:279 n_tty_read(): Woken up from sleep
+[0mGRADING1:5.c PASSED: curthr is not null and curthr IS the mutex holder.
+GRADING1:5.c PASSED: curthr is NOT the mutex holder.
+[35;40mfs/file.c:44 fref(): fref: 0xc1e93004, 0xc1edc1b8 ino 4, up to 3
+[0m[35;40mfs/file.c:85 fput(): fput: 0xc1e93004, 0xc1edc1b8 ino 4, down to 2
+[0m[35;40mfs/file.c:85 fput(): fput: 0xc1e93004, 0xc1edc1b8 ino 4, down to 1
+[0m[31;40mtest/kshell/kshell.c:412 kshell_execute_next(): Attempting to execute command 'exit'
+[0m[35;40mfs/file.c:44 fref(): fref: 0xc1e93004, 0xc1edc1b8 ino 4, up to 2
+[0m[0mfs/vnode.c:466 special_file_write(): GRADING2A 1.b
+[0m[0mfs/vnode.c:468 special_file_write(): GRADING2A 1.b
+[0m[0mfs/vnode.c:471 special_file_write(): GRADING2A 1.b
+[0m[35;40mfs/file.c:44 fref(): fref: 0xc1e93004, 0xc1edc1b8 ino 4, up to 3
+[0m[35;40mfs/file.c:85 fput(): fput: 0xc1e93004, 0xc1edc1b8 ino 4, down to 2
+[0m[35;40mfs/file.c:85 fput(): fput: 0xc1e93004, 0xc1edc1b8 ino 4, down to 1
+[0m[0mfs/vfs_syscall.c:140 do_write(): GRADING2 3.a
+[0m[35;40mfs/file.c:44 fref(): fref: 0xc1e93004, 0xc1edc1b8 ino 4, up to 2
+[0m[35;40mfs/file.c:85 fput(): fput: 0xc1e93004, 0xc1edc1b8 ino 4, down to 1
+[0m[35;40mfs/file.c:85 fput(): fput: 0xc1e93004, 0xc1edc1b8 ino 4, down to 0
+[0m[36;40mfs/vnode.c:240 vput(): vput: 0xc1e940fc, 0xc1edc1b8 ino 4, down to 0, nrespages = 0
+[0m[31;40mmm/slab.c:337 slab_obj_free(): Freed object 0xc1e940f8 from "vnode" (0xc1efb2fc), slab 0xc1e97ff0, inuse 4
+[0m[31;40mmm/slab.c:337 slab_obj_free(): Freed object 0xc1e93000 from "file" (0xc1efb2d4), slab 0xc1e93fe0, inuse 1
+[0m[31;40mtest/kshell/kshell.c:111 kshell_destroy(): kshell with file descriptor 0 destroyed
+[0m[31;40mmm/slab.c:337 slab_obj_free(): Freed object 0xc1efa550 from "size-64" (0xc1efb004), slab 0xc1efaff0, inuse 37
+[0m[36;40mfs/vnode.c:240 vput(): vput: 0xc1e94004, 0xc1edc1b8 ino 0, down to 2, nrespages = 0
+[0mGRADING1 3.c PASSED: queue should be empty.
+GRADING1 3.c PASSED: queue should be empty.
+GRADING1 3.c PASSED: current process and the process associated with current thread are same.
+GRADING 2.b PASSED: should have an init process.
+GRADING 2.b PASSED: this process should not be idle process.
+GRADING 2.b PASSED: this process should have parent process.
+GRADING1 4.a PASSED: kt_state is either KT_SLEEP or KT_SLEEP_CANCELLABLE.
+GRADING1 4.b PASSED: thread is not blocked.
+GRADING 2.b PASSED: this process should have parent process.
+GRADING1 2.c PASSED: this process should have pagedir.
+GRADING1 2.c PASSED: thr points to a thread to be destroyed.
+[31;40mmm/page.c:328 _page_free_order(): page_free: freed 16 pages (addr 0xc1eac000); 7747 pages currently free
+[0m[31;40mmm/slab.c:337 slab_obj_free(): Freed object 0xc1ecc054 from "kthread" (0xc1efb2ac), slab 0xc1edbff0, inuse 2
+[0m[31;40mmm/page.c:328 _page_free_order(): page_free: freed 2 pages (addr 0xc1ef0000); 7749 pages currently free
+[0m[31;40mmm/slab.c:337 slab_obj_free(): Freed object 0xc1ef41e0 from "proc" (0xc1efb284), slab 0xc1ef5fe0, inuse 2
+[0mweenix: vfs shutdown...
+[36;40mfs/vnode.c:240 vput(): vput: 0xc1e94004, 0xc1edc1b8 ino 0, down to 1, nrespages = 0
+[0m[1;37;40mfs/vnode.c:351 vfs_is_in_use(): Vnode 28 mode 800 device 0 flags 0 is still in use with refcount=1 and 0 res pages
+[0m[1;37;40mfs/vnode.c:351 vfs_is_in_use(): Vnode 13 mode 200 device 0 flags 0 is still in use with refcount=4 and 0 res pages
+[0m[1;37;40mfs/vnode.c:351 vfs_is_in_use(): Vnode 11 mode 200 device 0 flags 0 is still in use with refcount=4 and 0 res pages
+[0mpanic in fs/vfs.c:166 vfs_shutdown(): vfs_shutdown: found active vnodes in root filesystem!!! This shouldn't happen!!
+
+Kernel Halting.
+
+]0;gopi@gopi-VirtualBox: ~/Kernel2final/kernel1/kernel1/weenix-assignment-1.0.7/weenixgopi@gopi-VirtualBox:~/Kernel2final/kernel1/kernel1/weenix-assignment-1.0.7/weenix$ exit
 exit
 
-Script done on Fri 15 Nov 2013 05:34:37 PM PST
+Script done on Fri 15 Nov 2013 05:41:43 PM PST
