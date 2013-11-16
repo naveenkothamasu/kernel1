@@ -349,7 +349,7 @@ initproc_run(int arg1, void *arg2)
         kshell_add_command("sunghan", sunghan, "sunghan tests");
         kshell_add_command("deadlock", deadlock, "sunghan deadlock tests");
         
-	kshell_add_command("t", vfstest, "vfs tests");
+	kshell_add_command("vfstest", vfstest, "vfs tests");
 
         kshell_t *kshell = kshell_create(0);
         if (NULL == kshell) panic("init: Couldn't create kernel shell\n");
