@@ -30,12 +30,12 @@ do_write()	: vfstest_fd()
 do_close()	: vfstest_fd()
 do_dup()	: vfstest_fd()
 do_dup2()	: vfstest_fd()
-do_mknod()	: 
+do_mknod()	: is tested when kmain#idleproc_run is tested above.	 
 do_mkdir()	: vfstest_mkdir()
 do_rmdir()	: vfstest_open()
 do_unlink()	: vfstest_open()
-do_link()	: ****
-do_rename()****
+do_link()	: is tested by an additional test case written in kmain with rename 
+do_rename() 	: is tested by an additional test case written in kmain with rename
 do_chdir()	: vfstest_read()
 do_getdent()	: vfstest_fd()
 do_lseek()	: vfstest_read()
