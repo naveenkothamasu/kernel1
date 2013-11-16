@@ -571,7 +571,7 @@ do_link(const char *from, const char *to)
 		vput(res_vnode);
 		return -ENOTDIR;
 	}
-	KASSERT(res_vnode->vn_ops->link == NULL);
+	KASSERT(res_vnode->vn_ops->link != NULL);
 	dbg(DBG_PRINT, "GRADING 2 3.f \n");
         s=res_vnode->vn_ops->link(old_vnode,res_vnode,pName,namelen);
         vput(old_vnode);
