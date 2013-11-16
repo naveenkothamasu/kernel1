@@ -99,7 +99,7 @@ extern void *vfstest_main(int argc, void *);
 	}
 	int rename(kshell_t *kshell, int argc, char **argv){
 		KASSERT(kshell!=NULL);
-		const char *newname="dev/tty1_2";
+		const char *newname="tty0RENAMED";
 		do_rename("dev/tty0",newname);
 		return 0;	
 	}
@@ -354,7 +354,7 @@ initproc_run(int arg1, void *arg2)
         kshell_add_command("faber", faber, "faber tests");
         kshell_add_command("sunghan", sunghan, "sunghan tests");
         kshell_add_command("deadlock", deadlock, "sunghan deadlock tests");
-        kshell_add_command("rename",rename,"Rename VFS test");
+        kshell_add_command("renametest",rename,"Renames dev/tty0 to tty0RENAMED");
 	kshell_add_command("vfstest", vfstest, "vfs tests");
 
         kshell_t *kshell = kshell_create(0);

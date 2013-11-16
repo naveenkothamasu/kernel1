@@ -86,13 +86,13 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
         /*NOT_YET_IMPLEMENTED("VFS: dir_namev");*/
 
          KASSERT(NULL != pathname);
-        dbg(DBG_PRINT, "GRADING2 2.b #PASSED : pathname is not null\n");
+        dbg(DBG_PRINT, "GRADING2 A.2.b #PASSED : pathname is not null\n");
         KASSERT(NULL != namelen);
-        dbg(DBG_PRINT, "GRADING2 2.b #PASSED : namelen is not null\n");
+        dbg(DBG_PRINT, "GRADING2 A.2.b #PASSED : namelen is not null\n");
         KASSERT(NULL != name);
-        dbg(DBG_PRINT, "GRADING2 2.b #PASSED : name is not null\n");
+        dbg(DBG_PRINT, "GRADING2 A.2.b #PASSED : name is not null\n");
         KASSERT(NULL != res_vnode);
-        dbg(DBG_PRINT, "GRADING2 2.b #PASSED : res_vnode is not null\n");
+        dbg(DBG_PRINT, "GRADING2 A.2.b #PASSED : res_vnode is not null\n");
 
         if(pathname[0]=='\0'){
                 return -EINVAL;
@@ -185,7 +185,9 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
 		}
         }
         *namelen = pathend-temppathname;
-        *name=temppathname;
+        *name=temppathname;	
+	KASSERT(NULL != cur_dir );
+	dbg(DBG_PRINT, "GRADING 2 A.2.b \n");
         *res_vnode=cur_dir;
         return 0;
 }
@@ -217,7 +219,7 @@ open_namev(const char *pathname, int flag, vnode_t **res_vnode, vnode_t *base)
 	if(nodelookup == -ENOENT && (flag &  O_CREAT) != NULL){
 		int returnvalue=temp_res_vnode->vn_ops->create(temp_res_vnode,retname,length,res_vnode);
 		KASSERT(NULL !=  temp_res_vnode->vn_ops->create);
-        	dbg(DBG_PRINT, "GRADING2 2.c #PASSED : vn_ops->create is not null\n");
+        	dbg(DBG_PRINT, "GRADING2 A.2.c #PASSED : vn_ops->create is not null\n");
 		vput(temp_res_vnode);
 		return returnvalue;
 	}
