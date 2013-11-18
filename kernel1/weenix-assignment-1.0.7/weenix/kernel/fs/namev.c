@@ -85,7 +85,7 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
 {
         /*NOT_YET_IMPLEMENTED("VFS: dir_namev");*/
 
-         KASSERT(NULL != pathname);
+        KASSERT(NULL != pathname);
         dbg(DBG_PRINT, "GRADING2 A.2.b #PASSED : pathname is not null\n");
         KASSERT(NULL != namelen);
         dbg(DBG_PRINT, "GRADING2 A.2.b #PASSED : namelen is not null\n");
@@ -120,25 +120,12 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
         char *slash_ptr=(char *)pathname;
         int pathlength=strlen(pathname);
         char *pathend=(char *)pathname+pathlength;
-	if(n[pathlength-1] == '/'){
+	while(n[pathlength-1] == '/'){
 		n[pathlength-1] = '\0';
-		temppathname = n;
 		pathlength--;
-		pathend = n+pathlength;
+		pathend = n + pathlength;
 	}
-	if(n[pathlength-1] == '/'){
-		n[pathlength-1] = '\0';
-		temppathname = n;
-		pathlength--;
-		pathend = n+pathlength;
-	}
-
-	if(n[pathlength-1] == '/'){
-		n[pathlength-1] = '\0';
-		temppathname = n;
-		pathlength--;
-		pathend = n+pathlength;
-	}
+	temppathname = n;
        	int slash_count = 0;
  
         slash_ptr=strchr(temppathname,'/'); /*TODO this is increasing the count for vfs_root as well*/
