@@ -572,6 +572,7 @@ do_link(const char *from, const char *to)
 		return -ENOTDIR;
 	}
         s=res_vnode->vn_ops->link(old_vnode,res_vnode,pName,namelen);
+	dbg(DBG_PRINT, "linking %s to %s \n", from, to );
         vput(old_vnode);
         vput(res_vnode);
         return s;
@@ -594,6 +595,7 @@ do_rename(const char *oldname, const char *newname)
 		return s;
 	}
 	s = do_unlink(oldname);	
+	dbg(DBG_PRINT,"renamed %s to %s successfully\n", oldname, newname);
         return s;
 }
 

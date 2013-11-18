@@ -803,7 +803,7 @@ vfstest_s5fs_vm(void)
         syscall_fail(link("parent", "newchld"), EISDIR);
 
         /* only rename test */
-        /*syscall_success(rename("oldchld", "newchld"));*/
+        syscall_success(rename("oldchld", "newchld"));
 
         /* mmap/munmap tests */
         syscall_success(fd = open("newchld", O_RDWR, 0));
