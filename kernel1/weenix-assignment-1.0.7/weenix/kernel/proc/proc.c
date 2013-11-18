@@ -98,6 +98,7 @@ proc_create(char *name)
 	sched_queue_init(&(proc->p_wait));
 	proc->p_pid = _proc_getid();
 	pid_t pid = proc->p_pid;
+	proc->p_cwd = NULL;
 	
 	if(proc->p_pid == PID_INIT){
                 proc_initproc = proc;
@@ -170,15 +171,9 @@ proc_cleanup(int status)
 	/*TODO wake up myParentProc, if it is waiting*/
 	sched_wakeup_on(&(myParentProc->p_wait));
 	int fd;
-	/*	
-        if(curproc->p_cwd->vn_refcount!=0 && curproc->p_cwd->vn_vno!=0 && curproc->p_pid!=PID_IDLE)
-        {
-            vput(curproc->p_cwd);
-        }
-	*/
-	
-	
-	
+	if(curproc->p_cwd != NULL){
+		vput(curproc->p_cwd);
+	}		
         for(fd=0;fd<NFILES;fd++)
         {
               if(curproc->p_files[fd]!=NULL)

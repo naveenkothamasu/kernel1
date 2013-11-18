@@ -357,11 +357,12 @@ initproc_run(int arg1, void *arg2)
         kshell_destroy(kshell);
 
     #endif /* __DRIVERS__ */
-	
+/*	
 	if(curproc->p_cwd != NULL){
 		vput(curproc->p_cwd);
 
 	}
+*/
         return NULL;
 }
 

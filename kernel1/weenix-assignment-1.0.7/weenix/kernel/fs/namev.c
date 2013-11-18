@@ -29,11 +29,11 @@ lookup(vnode_t *dir, const char *name, size_t len, vnode_t **result)
 	/*NOT_YET_IMPLEMENTED("VFS: lookup");*/
 
 	KASSERT(NULL != dir);
-        dbg(DBG_PRINT, "GRADING2 2.a #PASSED : dir is not null\n");
+        dbg(DBG_PRINT, "GRADING2 A.2.a #PASSED : dir is not null\n");
         KASSERT(NULL != name);
-        dbg(DBG_PRINT, "GRADING2 2.a #PASSED : name is not null\n");
+        dbg(DBG_PRINT, "GRADING2 A.2.a #PASSED : name is not null\n");
         KASSERT(NULL != result);        
-        dbg(DBG_PRINT, "GRADING2 2.a #PASSED : result is not null\n");
+        dbg(DBG_PRINT, "GRADING2 A.2.a #PASSED : result is not null\n");
         /*TODO: handle . and .. special cases*/
 
 	if(!S_ISDIR(dir->vn_mode)){
