@@ -58,8 +58,13 @@ vmarea_free(vmarea_t *vma)
 vmmap_t *
 vmmap_create(void)
 {
-        NOT_YET_IMPLEMENTED("VM: vmmap_create");
-        return NULL;
+        /*NOT_YET_IMPLEMENTED("VM: vmmap_create");*/
+	vmmap_t *pVmmap=(vmmap_t *)slab_obj_alloc(vmmap_allocator);
+	if(pVmmap!=NULL){
+		pVmmap->vmm_proc=NULL;
+		list_init(&(pVmmap->vmm_list));
+	}
+        return pVmmap;
 }
 
 /* Removes all vmareas from the address space and frees the
@@ -67,7 +72,7 @@ vmmap_create(void)
 void
 vmmap_destroy(vmmap_t *map)
 {
-        NOT_YET_IMPLEMENTED("VM: vmmap_destroy");
+       /* NOT_YET_IMPLEMENTED("VM: vmmap_destroy");*/
 }
 
 /* Add a vmarea to an address space. Assumes (i.e. asserts to some extent)
