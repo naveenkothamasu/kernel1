@@ -113,8 +113,16 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
         if(pathname[0]=='/'){
                 vput(cur_dir);
                 cur_dir=vfs_root_vn;
+		if(strlen(pathname) == 1){
+			vref(cur_dir);
+			*namelen = 1;
+			*name = ".";
+			*res_vnode = cur_dir;
+			return 0;
+		}
                 vref(cur_dir);
-                pathname++;        
+                pathname++;   
+		n++;     
         }
         char *temppathname=(char *)pathname;
         char *slash_ptr=(char *)pathname;
@@ -124,8 +132,8 @@ dir_namev(const char *pathname, size_t *namelen, const char **name,
 		n[pathlength-1] = '\0';
 		pathlength--;
 		pathend = n + pathlength;
+		temppathname = n;
 	}
-	temppathname = n;
        	int slash_count = 0;
  
         slash_ptr=strchr(temppathname,'/'); /*TODO this is increasing the count for vfs_root as well*/

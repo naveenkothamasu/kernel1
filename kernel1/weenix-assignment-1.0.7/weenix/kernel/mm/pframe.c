@@ -298,15 +298,27 @@ int
 pframe_get(struct mmobj *o, uint32_t pagenum, pframe_t **result)
 {
         /*NOT_YET_IMPLEMENTED("VM: pframe_get");*/
-	pageframe_t * f = pframe_get_resident(o, pagenum);
+	pframe_t * f = pframe_get_resident(o, pagenum);
 	if(f == NULL){
-		//TODO: wakeup pageoutd
+		if(pageoutd_needed()){
+			/*TODO: pageoutd not sleeping?
+			if(){
+			}
+			*/
+			pageoutd_wakeup();
+			pageoutd_run(NULL, NULL);
+		}
 		f = pframe_alloc(o, pagenum);	
+		if(f == NULL){
+			return -1;
+		}
+		pframe_fill(f);	
+		*result = f;
 		return 0;
 	}else{
 		while(pframe_is_busy(f)){
 			;
-		}
+		}/*TODO is this correct way of waiting*/
 		*result = f;
 		return 0;
 	}
@@ -370,10 +382,15 @@ void
 pframe_pin(pframe_t *pf)
 {
         /*NOT_YET_IMPLEMENTED("VM: pframe_pin");*/
+	
 	if(!pframe_is_pinned(pf)){
-		list_remove(pf_link);
+		list_remove(&pf->pf_link);
+		--nallocated;
+		list_insert_tail(&pinned_list, &pf->pf_link);
 	}
-	pf_pincount;
+	++npinned;
+	++pf->pf_pincount;
+	
 }
 
 /*
@@ -389,7 +406,17 @@ pframe_pin(pframe_t *pf)
 void
 pframe_unpin(pframe_t *pf)
 {
-        NOT_YET_IMPLEMENTED("VM: pframe_unpin");
+        /*NOT_YET_IMPLEMENTED("VM: pframe_unpin");*/
+	
+	--pf->pf_pincount;
+	--npinned;
+	if(pf->pf_pincount == 0){
+		list_remove(&pf->pf_link);
+		list_insert_tail(&alloc_list, &pf->pf_link);
+		++nallocated;
+	}
+	
+			
 }
 
 /*
