@@ -75,6 +75,12 @@ vmmap_destroy(vmmap_t *map)
         /*NOT_YET_IMPLEMENTED("VM: vmmap_destroy");*/
 	KASSERT(NULL != map);	
 	dbg(DBG_PRINT, "GRADING 3.A.3.\n");
+	if(!list_empty(&map->vmm_list)){
+		list_iterate_begin( &map->vmm_list, vma, vmmap_t, vma_olink ) {
+			list_remove(vma_olink);
+			vmare_free(vma);	
+		} list_iterate_end
+	}
 	
 }
 
@@ -86,6 +92,29 @@ void
 vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_insert");*/
+	KASSERT(NULL != map && NULL != newvma);	
+	dbg(DBG_PRINT, "GRADING A.3.b\n");
+
+ 	KASSERT(NULL == newvma->vma_vmmap);
+	dbg(DBG_PRINT, "GRADING A.3.b\n");
+
+        KASSERT(newvma->vma_start < newvma->vma_end);
+	dbg(DBG_PRINT, "GRADING A.3.b\n");
+        KASSERT(ADDR_TO_PN(USER_MEM_LOW) <= newvma->vma_start && ADDR_TO_PN(USER_MEM_HIGH) >= newvma->vma_end);
+	dbg(DBG_PRINT, "GRADING A.3.b\n");
+	vmarea_t *temp = NULL;
+	if(!list_empty( &map->vmm_list)){
+		list_iterate_begin(&map->vmm_list, vma, vmmap_t, vma_olink ) {
+			if(vma->vma_start > newvma->vma_end){
+				temp = vma;
+			}	
+		} list_iterate_end
+	}
+	if(temp != NULL){
+		list_insert_before(newvma, temp);
+	}else{
+		list_insert_head(&map->vmm_list, newvma->vma_olink);
+	}
 }
 
 /* Find a contiguous range of free virtual pages of length npages in
@@ -99,6 +128,28 @@ int
 vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_find_range");*/
+ 	KASSERT(NULL != map);
+	dbg(DBG_PRINT, "GRADING 3.A.3.C \n");
+        KASSERT(0 < npages);	
+	dbg(DBG_PRINT, "GRADING 3.A.3.C \n");
+	if(!list_empty( &map->vmm_list)){
+		if(dir == VMMAP_DIR_LOHI){
+			list_iterate_begin( &map->vmm_list, vma, vmmap_t, vma_olink ) {
+				if(vma->vma_end-vma->vma_start >= npages){
+					return vma->vma_start;
+				}
+			} list_iterate_end
+		}else if(dir == VMMAP_DIR_HILO){
+	
+     			list_link_t *link;
+     			for (link = &map->vmm_list->l_prev;
+          			link != list; link = link->l_prev){
+				if( vma->vma_end-vma->vma_start >= npages){
+					return vma->vma_start;
+				}
+			}
+		}
+	}	
         return -1;
 }
 
@@ -108,7 +159,16 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
 vmarea_t *
 vmmap_lookup(vmmap_t *map, uint32_t vfn)
 {
-        NOT_YET_IMPLEMENTED("VM: vmmap_lookup");
+        /*NOT_YET_IMPLEMENTED("VM: vmmap_lookup");*/
+        KASSERT(NULL != map);
+	dbg(DBG_PRINT, "GRADING 3.A.3.d \n");
+	if(!list_empty(&map->vmm_list)){
+		list_iterate_begin( &map->vmm_list, vma, vmmap_t, vma_olink ) {
+			if( vfn <= vma->vma_end && vma->vma_start <= vfn){
+				return vma->vma_start;
+			}
+		} list_iterate_end
+	}	
         return NULL;
 }
 
@@ -119,7 +179,19 @@ vmmap_lookup(vmmap_t *map, uint32_t vfn)
 vmmap_t *
 vmmap_clone(vmmap_t *map)
 {
-        NOT_YET_IMPLEMENTED("VM: vmmap_clone");
+        /*NOT_YET_IMPLEMENTED("VM: vmmap_clone");*/
+	vmmap_t dest;
+	vmmap_t *pDest = &dest;
+	list_init(&dest);
+	list_link_t *link = pDest->l_next; 
+	if(!list_empty(&map->vmm_list)){
+		list_iterate_begin( &map->vmm_list, vma, vmmap_t, vma_olink ) {
+			list_insert_tail(dest.vm_list, link);
+			link = link->l_next;
+		} list_iterate_end
+		
+		return &dest;
+	}
         return NULL;
 }
 
@@ -152,7 +224,15 @@ int
 vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
           int prot, int flags, off_t off, int dir, vmarea_t **new)
 {
-        NOT_YET_IMPLEMENTED("VM: vmmap_map");
+        /*NOT_YET_IMPLEMENTED("VM: vmmap_map");*/
+     	KASSERT(NULL != map);
+        KASSERT(0 < npages);
+        KASSERT(!(~(PROT_NONE | PROT_READ | PROT_WRITE | PROT_EXEC) & prot));
+        KASSERT((MAP_SHARED & flags) || (MAP_PRIVATE & flags));
+        KASSERT((0 == lopage) || (ADDR_TO_PN(USER_MEM_LOW) <= lopage));
+        KASSERT((0 == lopage) || (ADDR_TO_PN(USER_MEM_HIGH) >= (lopage + npages)));
+        KASSERT(PAGE_ALIGNED(off));
+	
         return -1;
 }
 
@@ -199,7 +279,10 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 int
 vmmap_is_range_empty(vmmap_t *map, uint32_t startvfn, uint32_t npages)
 {
-        NOT_YET_IMPLEMENTED("VM: vmmap_is_range_empty");
+        /*NOT_YET_IMPLEMENTED("VM: vmmap_is_range_empty");*/
+	uint32_t endvfn = startvfn+npages
+        KASSERT((startvfn < endvfn) && (ADDR_TO_PN(USER_MEM_LOW) <= startvfn) && (ADDR_TO_PN(USER_MEM_HIGH) >= endvfn));
+	dbg(DBG_PRINT, "GRADING 3.A.3.e \n");
         return 0;
 }
 
