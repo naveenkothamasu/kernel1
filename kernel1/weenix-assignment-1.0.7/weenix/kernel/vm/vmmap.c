@@ -59,7 +59,12 @@ vmmap_t *
 vmmap_create(void)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_create");*/
-        return NULL;
+	vmmap_t *pVmmap=(vmmap_t *)slab_obj_alloc(vmmap_allocator);
+	if(pVmmap!=NULL){
+		pVmmap->vmm_proc=NULL;
+		list_init(&(pVmmap->vmm_list));
+	}
+        return pVmmap;
 }
 
 /* Removes all vmareas from the address space and frees the

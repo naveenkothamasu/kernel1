@@ -34,8 +34,33 @@ int
 do_mmap(void *addr, size_t len, int prot, int flags,
         int fd, off_t off, void **ret)
 {
-        NOT_YET_IMPLEMENTED("VM: do_mmap");
-        return -1;
+	if(sizeof(len)==NULL || sizeof(off)==NULL || PAGE_ALIGNED(addr)==0){
+		return -EINVAL;
+	}
+	if(flags != MAP_SHARED || flags != MAP_PRIVATE || flags!= MAP_FIXED || flags!= MAP_ANON){
+		return -EINVAL;
+	}
+	if( fd < 0 || fd > NFILES){
+		return -EBADF;
+	}
+	file_t *f=fget(-1);
+	if(f == NULL){
+		return -ENOMEM;
+	}
+	if(curproc->pfiles[fd]->f_mode != FMODE_READ && flags == MAP_PRIVATE){
+		return -EACCES;
+	}
+	if( flags == MAP_SHARED && prot == PROT_WRITE && curproc->pfiles[fd]->f_mode = (FMODE_WRITE || FMODE_READ) ){
+		return -EACCES;
+	}
+	if( flags == MAP_SHARED && prot == PROT_WRITE && curproc->pfiles[fd]->f_mode!= FMODE_APPEND ){
+		return -EACCES;
+	}
+	/*TODO:Handle EPERM and flush the TLB */
+	tlb_flush(addr);
+	int result=vmmap_map(curproc->p_vmmap,curproc->pfiles[fd]->f_vnode,0,0,prot,flags,off,(vmarea_t *)ret);
+        /*NOT_YET_IMPLEMENTED("VM: do_mmap");*/
+        return result;
 }
 
 
@@ -49,7 +74,12 @@ do_mmap(void *addr, size_t len, int prot, int flags,
 int
 do_munmap(void *addr, size_t len)
 {
-        NOT_YET_IMPLEMENTED("VM: do_munmap");
-        return -1;
+	if( PAGE_ALIGNED(Addr)==0 || sizeof(len)==NULL){
+		return -EINVAL;
+	}
+	tlb_flush(addr);
+	int result=vmmap_remove(curproc->p_vmvmap,0,0);
+	return result;
+       /* NOT_YET_IMPLEMENTED("VM: do_munmap");*/
 }
 
