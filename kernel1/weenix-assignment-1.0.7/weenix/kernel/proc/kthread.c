@@ -131,8 +131,8 @@ kthread_cancel(kthread_t *kthr, void *retval)
                 kthread_exit(retval);   
         }else{
 	
-        		kthr->kt_retval = retval;
-			sched_cancel(kthr);
+        	kthr->kt_retval = retval;
+		sched_cancel(kthr);
 	}
 }
 

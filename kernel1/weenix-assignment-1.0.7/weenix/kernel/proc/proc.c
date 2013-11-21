@@ -337,7 +337,9 @@ do_waitpid(pid_t pid, int options, int *status)
 				child = list_item(link, proc_t, p_child_link);
 				if(child->p_state == PROC_DEAD){
 					deadChild = child;
-					*status = deadChild->p_status;
+					if(status != NULL){
+						*status = deadChild->p_status;
+					}
 					break;
 				}
 			}
@@ -390,7 +392,9 @@ do_waitpid(pid_t pid, int options, int *status)
 					child = list_item(link, proc_t, p_child_link);
 					if(child->p_state == PROC_DEAD){
 						deadChild = child;
-						*status = deadChild->p_status;
+						if(status != NULL){
+							*status = deadChild->p_status;
+						}
 						break;
 					}
 				}
