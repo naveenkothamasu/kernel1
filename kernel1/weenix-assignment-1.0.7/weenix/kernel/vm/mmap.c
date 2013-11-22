@@ -59,8 +59,8 @@ do_mmap(void *addr, size_t len, int prot, int flags,
 	/*TODO*/
 	int dir = 0;
 	/*TODO:Handle EPERM and flush the TLB */
-	tlb_flush((uintptr_t) addr);
-	int result=vmmap_map(curproc->p_vmmap,curproc->p_files[fd]->f_vnode,0,0,prot,flags,off,dir, (vmarea_t **)ret);
+	tlb_flush((uintptr_t)addr);
+	int result=vmmap_map(curproc->p_vmmap,curproc->p_files[fd]->f_vnode,0,0,prot,flags,off,NULL,(vmarea_t **)ret);
         /*NOT_YET_IMPLEMENTED("VM: do_mmap");*/
         return result;
 }
