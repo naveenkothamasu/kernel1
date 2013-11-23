@@ -78,7 +78,7 @@ vmmap_destroy(vmmap_t *map)
 	vmarea_t *vma;
 	if(!list_empty(&map->vmm_list)){
 		list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink ) {
-			list_remove(vma->vma_plink);
+			list_remove( &vma->vma_plink);
 			vmarea_free(vma);	
 		} list_iterate_end
 	}
@@ -104,6 +104,8 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
         KASSERT(ADDR_TO_PN(USER_MEM_LOW) <= newvma->vma_start && ADDR_TO_PN(USER_MEM_HIGH) >= newvma->vma_end);
 	dbg(DBG_PRINT, "GRADING A.3.b\n");
 	vmarea_t *temp = NULL;
+
+	newvma->vma_vmmap = map;
 	if(!list_empty( &map->vmm_list)){
 		list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink ) {
 			if(vma->vma_start > newvma->vma_end){
@@ -114,7 +116,7 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 	if(temp != NULL){
 		list_insert_before(newvma, temp);
 	}else{
-		list_insert_head(&map->vmm_list, newvma->vma_plink);
+		list_insert_head(&map->vmm_list, &newvma->vma_plink);
 	}
 }
 
@@ -137,7 +139,7 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
 	if(!list_empty( &map->vmm_list)){
 		if(dir == VMMAP_DIR_LOHI){
 			list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink ) {
-				if(vma->vma_end-vma->vma_start >= npages){
+				if( (vma->vma_end-vma->vma_start) >= npages){
 					return vma->vma_start;
 				}
 			} list_iterate_end
@@ -145,7 +147,7 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
 	
      			for (link = &map->vmm_list->l_prev;
           			link != list; link = link->l_prev){
-				if( vma->vma_end-vma->vma_start >= npages){
+				if( (vma->vma_end-vma->vma_start) >= npages){
 					return vma->vma_start;
 				}
 			}
@@ -166,7 +168,7 @@ vmmap_lookup(vmmap_t *map, uint32_t vfn)
 	if(!list_empty(&map->vmm_list)){
 		list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink ) {
 			if( vfn <= vma->vma_end && vma->vma_start <= vfn){
-				return vma->vma_start;
+				return vma;
 			}
 		} list_iterate_end
 	}	
@@ -187,16 +189,15 @@ vmmap_clone(vmmap_t *map)
 	list_init(&dest);
 	if(!list_empty(&map->vmm_list)){
 		list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink ) {
-			newivma = vmarea_alloc();
+			newvma = vmarea_alloc();
 			if(newvma == NULL){
 				return NULL;
 			}
-			list_insert_tail(&pDest->vm_list, newvma->vma_plink);
+			list_insert_tail(&pDest->vm_list, &newvma->vma_plink);
 		} list_iterate_end
 		
-		return &dest;
 	}
-        return NULL;
+	return &dest;
 }
 
 /* Insert a mapping into the map starting at lopage for npages pages.
@@ -244,22 +245,49 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
         KASSERT(PAGE_ALIGNED(off));
 	dbg(DBG_PRINT, "GRADING 3.A.3.f \n");
 	int s;
+	struct mmobj *memobj;
 	if (lopage == 0){
 		s = vmmap_find_range(map, npages, dir);
 		if(s < 0){
 			return s;
 		}
 	}else{
-		/*contains another mapping*/
+		/*FIXME:another mapping ?*/
 		do_munmap(lopage, npages);
+		vmarea_t *newvma = vmarea_alloc();
+		if(newvma == NULL){
+			return -1;
+		}
+		newvma->vma_start = lopage;
+		newvma->vma_end = lopage + npages;
+		newvma->vma_off = off;
+		newvma->vma_prot = prot;
+		newvma->vma_flags = flags;
+		newvma->vma_vmmap = map;
+		/*
+		newvma->vma_plink = 
+		newvma->vma_olink = 
+		*/
+		if( new != NULL){
+			*new = newvma;
+		}
 		if(file == NULL){
 			
-			/*1. use anon mmobj to create a mapping of 0's*/
+			/*anonymous obj case */
+			memobj = anon_create();
+			if(anon == NULL){
+				return -1;
+			}
 			anon_fillpage(mmobj, pf);
+			newvma->vma_obj = mmobj;
+			vmmap_insert(map, newvma);
 		}else{
-			file->vn_mmobj
-			do_mmap(lopage, npages, prot, flags, fd, off, new/*NULL check TODO:*/);
-			/*
+		/*disk file case*/
+			s = file->mmap(file, *newvma, &memobj);
+			if(s < 0){
+				return s;
+			}
+			/*TODO
 			if MAP_PRIVATE 
 				set up a shadow obj for mmobj
 			*/
@@ -304,10 +332,20 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 	if(!list_empty(&map->vmm_list)){
         	list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink) {
 			if(vma->vm_start < lopage && lopage + npages < vma->vm_end){
+				vma->vm_end = lopage;
+				vmarea_t *newvma = vmarea_alloc();	
+				newvma->vma_start = lopage +1; /*FIXME:*/
+				newvma->vma_end = vma->vma_end;
+				int s = vmmap_insert(map, newvma);	
+				if(s < 0){
+					return s;
+				}
 			}
-			if( vma->vm_start < lopage && lopage + npages < vma->vm_end){
+			if( vma->vm_start < lopage && vma->vm_end < lopage + npages){
+				vma->vma_end = lopage;
 			}
 			if(lopages < vma->vm_start && vma->vm_end < lopage + npages){
+				vma->vm_start = lopage + npages; /*FIXME vma_off?*/
 			}
 			if(lopages < vma->vm_start && vma->vm_end < lopage + npages ){
 				vmarea_free(vma);	
