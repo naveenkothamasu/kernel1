@@ -51,5 +51,35 @@
 void
 handle_pagefault(uintptr_t vaddr, uint32_t cause)
 {
-        NOT_YET_IMPLEMENTED("VM: handle_pagefault");
+        /*NOT_YET_IMPLEMENTED("VM: handle_pagefault");*/
+	vmmap_t *map = curproc->p_vmmap;
+	vmarea_t vma;
+	pframe_t *pf = NULL;
+	if(!list_empty(&map->vmm_list)){
+		list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink){
+			/*  	5 #define FAULT_PRESENT  0x01
+				  6 #define FAULT_WRITE    0x02
+				  7 #define FAULT_USER     0x04
+				  8 #define FAULT_RESERVED 0x08
+				  9 #define FAULT_EXEC     0x10
+			*/	
+			list_iterate_begin( &vma->vma_obj->mmo_respages, pf, pframe_t, pf_olink){
+				if(pf->pf_addr <= vaddr){
+					break;
+				}	
+			}list_iterate_end();
+		}list_iterate_end();
+	}
+	if( pf != NULL){
+		if( cause ){
+			/*XXX permission checks*/
+		}
+		/*XXX handle shadow objects*/		
+		uintptr_t paddr = pt_virt_phys(vaddr);
+		uintptr_t pdflags;
+		uintptr_t ptflags;
+		/*XXX tlb flush?*/
+		pt_map(curproc->p_pagedir, vaddr, paddr, pdflags, ptflags)
+
+	}
 }

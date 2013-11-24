@@ -201,7 +201,6 @@ vmmap_clone(vmmap_t *map)
 			}
 			list_insert_tail(&pDest->vmm_list, &newvma->vma_plink);
 		} list_iterate_end();
-		
 	}
 	return pDest;
 }
@@ -271,7 +270,6 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 		newvma->vma_flags = flags;
 		newvma->vma_vmmap = map;
 		/*
-		newvma->vma_plink = 
 		newvma->vma_olink = 
 		*/
 		if( new != NULL){
@@ -288,15 +286,16 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 			newvma->vma_obj = memobj;
 			vmmap_insert(map, newvma);
 		}else{
-		/*disk file case*/
+			/*disk file case*/
 			s = file->vn_ops->mmap(file, newvma, &memobj);
 			if(s < 0){
 				return s;
 			}
-			/*TODO
-			if MAP_PRIVATE 
-				set up a shadow obj for mmobj
-			*/
+			
+			if (flags == MAP_PRIVATE ){
+				memobj->mmo_shadowed = shadow_create();
+			}
+			
 		}
 	}	
         return -1;
@@ -397,12 +396,14 @@ vmmap_read(vmmap_t *map, const void *vaddr, void *buf, size_t count)
 	vmarea_t *vma;
 	if(!list_empty(&map->vmm_list)){
         	list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink) {
-			/*vaddr <= vma->vma_start */
-			/*
-				select vma's between vaddr and count
-				obtain pframe from vma
-				
-			*/
+			if(!list_empty(&vma->vma_obj->mmo_respages)){	
+
+				list_iterate_begin( &vma->vma_obj->mmo_respages, pf, pframe_t, pf_olink) {
+					if(pf->pf_addr == vaddr){
+							
+					}
+				} list_iterate_end();
+			}
 		} list_iterate_end();
 	}
         return 0;
@@ -423,12 +424,14 @@ vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
 	vmarea_t *vma;
 	if(!list_empty(&map->vmm_list)){
         	list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink) {
-			/*vaddr <= vma->vma_start */
-			/*
-				select vma's between vaddr and count
-				obtain pframe from vma
-				
-			*/
+			if(!list_empty(&vma->vma_obj->mmo_respages)){	
+
+				list_iterate_begin( &vma->vma_obj->mmo_respages, pf, pframe_t, pf_olink) {
+					if(pf->pf_addr == vaddr){
+							
+					}
+				} list_iterate_end();
+			}
 		} list_iterate_end();
 	}
         return 0;
