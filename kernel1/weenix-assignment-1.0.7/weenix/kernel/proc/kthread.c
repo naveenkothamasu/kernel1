@@ -192,7 +192,7 @@ kthread_clone(kthread_t *thr)
         list_link_init(&newthr->kt_qlink);
         /*list_insert_tail(&(p->p_threads), &(newthr->kt_plink));*//*TODO?insert it to the child process*/
 
-        context_setup(&(newthr->kt_ctx), func, arg1, arg2, newthr->kt_kstack, DEFAULT_STACK_SIZE, thr->kt_proc->p_pagedir);
+        context_setup(&(newthr->kt_ctx), NULL, NULL, NULL, newthr->kt_kstack, DEFAULT_STACK_SIZE, thr->kt_proc->p_pagedir);
         return newthr;
 }
 

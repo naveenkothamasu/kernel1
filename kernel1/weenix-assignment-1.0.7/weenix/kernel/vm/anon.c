@@ -155,10 +155,9 @@ static int
 anon_dirtypage(mmobj_t *o, pframe_t *pf)
 {
        /* NOT_YET_IMPLEMENTED("VM: anon_dirtypage");*/
-	if(pframe_is_dirty(pf))
-		return 0;
-	else
-		return -1;
+	if(!(pframe_is_dirty(pf)))
+		pframe_set_dirty(pf);
+	return 0;
 }
 
 static int

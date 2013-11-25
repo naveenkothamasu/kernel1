@@ -75,7 +75,7 @@ do_fork(struct regs *regs)
 		if(vmareaParent->vma_flags == MAP_SHARED){
 			/*TODO:*/
 		}
-	}
+	}list_iterate_end();
 /*TODO? Is this the correct way to do the mapping after fork! We called vmmap_clone above so that both the curproc and childproc will have the same values */
 	list_iterate_begin(&(child->p_vmmap->vmm_list), vmareaChild, vmarea_t, vma_plink){
 		if(vmareaChild->vma_flags == MAP_PRIVATE){
@@ -86,7 +86,7 @@ do_fork(struct regs *regs)
 		if(vmareaChild->vma_flags == MAP_SHARED){
 			/*TODO:*/
 		}
-	}
+	}list_iterate_end();
 
 	kthread_t *childthread=kthread_clone(curthr);
 	childthread->kt_proc=child;
