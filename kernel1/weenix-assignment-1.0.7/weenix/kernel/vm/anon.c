@@ -39,6 +39,8 @@ static mmobj_ops_t anon_mmobj_ops = {
 void
 anon_init()
 {
+        KASSERT(anon_allocator);
+	dbg(DBG_PRINT, "GRADING 3.A.4.a \n");
 	anon_allocator = slab_allocator_create("anonobject",sizeof(mmobj_t));
         /*NOT_YET_IMPLEMENTED("VM: anon_init");*/
 }
@@ -57,6 +59,8 @@ anon_create()
 	if(p_anonobj!=NULL){
 		mmobj_init(p_anonobj,&anon_mmobj_ops);
 		p_anonobj->mmo_refcount++;/*TODO? Is this the way to make sure the reference count?*/
+		
+		return p_anonobj;
 	}
         return NULL;
 }
@@ -70,6 +74,8 @@ static void
 anon_ref(mmobj_t *o)
 {
        /* NOT_YET_IMPLEMENTED("VM: anon_ref");*/
+	KASSERT(o && (0 < o->mmo_refcount) && (&anon_mmobj_ops == o->mmo_ops));	
+	dbg_print(DBG_PRINT, "GRADING 3.A.4.b \n");
 	o->mmo_refcount++;
 }
 
@@ -85,6 +91,8 @@ static void
 anon_put(mmobj_t *o)
 {
         /*NOT_YET_IMPLEMENTED("VM: anon_put");*/
+	KASSERT(o && (0 < o->mmo_refcount) && (&anon_mmobj_ops == o->mmo_ops)); 
+	dbg(DBG_PRINT, "GRADING 3.A.4.c \n");
 	if(o->mmo_refcount-o->mmo_nrespages==1){
 		if(!list_empty(&(o->mmo_respages))){
 			pframe_t *pageframe;
@@ -125,10 +133,14 @@ anon_lookuppage(mmobj_t *o, uint32_t pagenum, int forwrite, pframe_t **pf)
 
 /* The following three functions should not be difficult. */
 
-static int
+GeRADING 3.A.4.c \nstati c int
 anon_fillpage(mmobj_t *o, pframe_t *pf)
 {
-        NOT_YET_IMPLEMENTED("VM: anon_fillpage");
+        /*NOT_YET_IMPLEMENTED("VM: anon_fillpage");*/
+	KASSERT(pframe_is_busy(pf));
+	dbg(DBG_PRINT, "GRADING 3.A.4.d \n");
+        KASSERT(!pframe_is_pinned(pf));
+	dbg(DBG_PRINT, "GRADING 3.A.4.d \n");
 
 	pframe_t *pageframe=pframe_get_resident(pf->pf_obj,pf->pf_pagenum);
 	if(pageframe == NULL){
