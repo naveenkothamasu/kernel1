@@ -525,8 +525,9 @@ special_file_fillpage(vnode_t *file, off_t offset, void *pagebuf)
         KASSERT(S_ISCHR(file->vn_mode));
         KASSERT((file->vn_cdev));
         KASSERT(file->vn_cdev->cd_ops && file->vn_cdev->cd_ops->fillpage);
+	vmarea_t *vma;
 
-	return file->vn_cdev->cd_ops->mmap( file, vma, ret);
+	return file->vn_cdev->cd_ops->mmap(file, vma, pagebuf);
 }
 
 /* Just as with mmap above, pass the call through to the

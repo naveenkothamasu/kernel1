@@ -57,12 +57,6 @@ handle_pagefault(uintptr_t vaddr, uint32_t cause)
 	pframe_t *pf = NULL;
 	if(!list_empty(&map->vmm_list)){
 		list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink){
-			/*  	5 #define FAULT_PRESENT  0x01
-				  6 #define FAULT_WRITE    0x02
-				  7 #define FAULT_USER     0x04
-				  8 #define FAULT_RESERVED 0x08
-				  9 #define FAULT_EXEC     0x10
-			*/	
 			list_iterate_begin( &vma->vma_obj->mmo_respages, pf, pframe_t, pf_olink){
 				if(pf->pf_addr <= vaddr){
 					break;
@@ -71,8 +65,9 @@ handle_pagefault(uintptr_t vaddr, uint32_t cause)
 		}list_iterate_end();
 	}
 	if( pf != NULL){
-		if( cause ){
+		if( !cause & FAULT_USER){
 			/*XXX permission checks*/
+			proc_kill(curproc, NULL);
 		}
 		/*XXX handle shadow objects*/		
 		uintptr_t paddr = pt_virt_phys(vaddr);
