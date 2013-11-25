@@ -350,16 +350,19 @@ initproc_run(int arg1, void *arg2)
 
 
     #ifdef __DRIVERS__
-
+	/*
         kshell_add_command("faber", faber, "faber tests");
         kshell_add_command("sunghan", sunghan, "sunghan tests");
         kshell_add_command("deadlock", deadlock, "sunghan deadlock tests");
         kshell_add_command("renametest",rename,"Renames dev/tty0 to tty0RENAMED");
 	kshell_add_command("vfstest", vfstest, "vfs tests");
-
+	*/
         kshell_t *kshell = kshell_create(0);
         if (NULL == kshell) panic("init: Couldn't create kernel shell\n");
-        while(kshell_execute_next(kshell));	
+        while(kshell_execute_next(kshell));
+	/*kernel_execve(const char *filename, char *const *argv, char *const *envp);*/
+
+	kernel_execve("/bin/uname", NULL, NULL);
         kshell_destroy(kshell);
 
     #endif /* __DRIVERS__ */
