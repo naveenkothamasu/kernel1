@@ -57,15 +57,18 @@ int
 do_brk(void *addr, void **ret)
 {
         /*NOT_YET_IMPLEMENTED("VM: do_brk");*/
-	void *start_brk = curproc->p_start_brk;
+	uint32_t *start_brk = curproc->p_start_brk;
 	void *old = curproc->p_brk;
-	void *next_map_addr;
+	uint32_t *next_map_addr;
 	vmmap_t *map = curproc->p_vmmap;
 	if(addr == NULL){
 		*ret = old;
 		return 0;
 	}
-	if(addr < start_brk || addr > ( next_map_addr > USER_MEM_HIGH ? :USER_MEM_HIGH)){
+	if(*next_map_addr < USER_MEM_HIGH){
+		*next_map_addr = USER_MEM_HIGH;
+	}
+	if(*(uint32_t *)addr < *start_brk || *(uint32_t *)addr > *next_map_addr){
 		return -1;
 	}
 

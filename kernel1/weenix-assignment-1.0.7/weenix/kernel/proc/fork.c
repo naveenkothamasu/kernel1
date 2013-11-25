@@ -52,6 +52,14 @@ fork_setup_stack(const regs_t *regs, void *kstack)
 int
 do_fork(struct regs *regs)
 {
-        NOT_YET_IMPLEMENTED("VM: do_fork");
+        /*NOT_YET_IMPLEMENTED("VM: do_fork");*/
+	proc_t child = proc_create();
+	if(child == NULL){
+		return -1;
+	}
+	child->p_pproc = curproc->p_pproc;
+	child->p_files = curproc->p_files;	
+	child->p_threads = curproc->p_threads;
+	
         return 0;
 }
