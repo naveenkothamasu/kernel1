@@ -57,7 +57,7 @@ static int
 sys_read(read_args_t *arg)
 {
         /*NOT_YET_IMPLEMENTED("VM: sys_read");*/
-	read_args_t *readkaddr;
+	read_args_t readkaddr;
 	int readbytes=0;
 	readbytes = copy_from_user(&readkaddr, arg, sizeof(read_args_t));
 	if(readbytes < 0){
@@ -86,7 +86,7 @@ sys_write(write_args_t *arg)
 {
         /*NOT_YET_IMPLEMENTED("VM: sys_write");*/
 
-	write_args_t *writekaddr;
+	write_args_t writekaddr;
 	int writebytes=0;
 	writebytes = copy_from_user(&writekaddr, arg, sizeof(write_args_t));
 	if(writebytes < 0){
