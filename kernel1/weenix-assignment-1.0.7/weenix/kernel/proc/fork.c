@@ -53,13 +53,19 @@ int
 do_fork(struct regs *regs)
 {
         /*NOT_YET_IMPLEMENTED("VM: do_fork");*/
-	proc_t child = proc_create();
+	proc_t *child = proc_create("child");
 	if(child == NULL){
 		return -1;
 	}
 	child->p_pproc = curproc->p_pproc;
-	child->p_files = curproc->p_files;	
+	/*child->p_files = curproc->p_files;*/
 	child->p_threads = curproc->p_threads;
-	
+	child->p_vmmap=vmmap_clone(curproc->p_vmmap);
+	child->p_cwd=curproc->p_cwd;
+	/* TODO? Shadow objects creation and check for the rules to create*/	
+	kthread_t *childthread=kthread_create(child,NULL,0,NULL);
+	childthread=kthread_clone(curthr);
+	childthread->kt_proc=child;
+	(childthread->kt_ctx).c_esp = fork_setup_stack(regs, childthread->kt_kstack);
         return 0;
 }

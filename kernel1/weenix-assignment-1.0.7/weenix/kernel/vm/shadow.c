@@ -72,7 +72,7 @@ shadow_create()
 	if(shadowobj){
 		mmobj_init(shadowobj,&shadow_mmobj_ops);
 		shadowobj->mmo_refcount++;
-		shadowobj->mmo_un->mmo_bottom_obj=NULL;
+		shadowobj->mmo_un.mmo_bottom_obj=NULL;
 	}
         return shadowobj;
 }
@@ -122,7 +122,7 @@ shadow_put(mmobj_t *o)
         }
         o->mmo_refcount--;
         if(o->mmo_refcount==0 && o->mmo_nrespages==0){
-                slab_obj_free(anon_allocator,o);
+                slab_obj_free(shadow_allocator,o);
         }
 }
 
@@ -192,6 +192,6 @@ shadow_cleanpage(mmobj_t *o, pframe_t *pf)
 	while(pframe_is_pinned(pageframe))
 		pframe_unpin(pageframe);
 	memcpy(pageframe->pf_addr,pf->pf_addr,PAGE_SIZE);
-	pframe_free(fp);
+	pframe_free(pf);
         return 0;
 }
