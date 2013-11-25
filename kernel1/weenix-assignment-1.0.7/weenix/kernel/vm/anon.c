@@ -75,7 +75,7 @@ anon_ref(mmobj_t *o)
 {
        /* NOT_YET_IMPLEMENTED("VM: anon_ref");*/
 	KASSERT(o && (0 < o->mmo_refcount) && (&anon_mmobj_ops == o->mmo_ops));	
-	dbg_print(DBG_PRINT, "GRADING 3.A.4.b \n");
+	dbg(DBG_PRINT, "GRADING 3.A.4.b \n");
 	o->mmo_refcount++;
 }
 
@@ -132,8 +132,7 @@ anon_lookuppage(mmobj_t *o, uint32_t pagenum, int forwrite, pframe_t **pf)
 }
 
 /* The following three functions should not be difficult. */
-
-GeRADING 3.A.4.c \nstati c int
+static int
 anon_fillpage(mmobj_t *o, pframe_t *pf)
 {
         /*NOT_YET_IMPLEMENTED("VM: anon_fillpage");*/

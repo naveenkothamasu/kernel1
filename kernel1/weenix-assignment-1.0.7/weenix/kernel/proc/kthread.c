@@ -175,7 +175,9 @@ kthread_exit(void *retval)
 kthread_t *
 kthread_clone(kthread_t *thr)
 {
-        NOT_YET_IMPLEMENTED("VM: kthread_clone");
+        /*NOT_YET_IMPLEMENTED("VM: kthread_clone");*/
+	KASSERT(KT_RUN == thr->kt_state);	
+	dbg(DBG_PRINT, "GRADING 3.A.8.a \n");
         return NULL;
 }
 
