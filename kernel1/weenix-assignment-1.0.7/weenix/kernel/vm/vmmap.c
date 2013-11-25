@@ -134,8 +134,10 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
 	dbg(DBG_PRINT, "GRADING 3.A.3.C \n");
      	list_link_t *link = &map->vmm_list;
 	vmarea_t *vma;
+	pframe_t *pf;
 	uint32_t start = -1;
 	int count = npages;
+	list_link_t *list = &map->vmm_list;
 	if(!list_empty( &map->vmm_list)){
 		if(dir == VMMAP_DIR_LOHI){
 			list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink ) {
@@ -152,7 +154,7 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
 			} list_iterate_end();
 		}else if(dir == VMMAP_DIR_HILO){
 	
-     			for (link = map->vmm_list->l_prev;
+     			for (link = list->l_prev;
           			link != &map->vmm_list; link = link->l_prev){
 				start = vma->vma_start;
 				list_iterate_begin( &vma->vma_obj->mmo_respages, pf, pframe_t, pf_olink){
@@ -208,6 +210,10 @@ vmmap_clone(vmmap_t *map)
 		if(newvma == NULL){
 			return NULL;
 		}
+		/*XXX newvma initialization*/
+		newvma->vma_flags = vma->vma_flags;
+		newvma->vma_prot = vma->vma_prot;
+		newvma->vma_vmmap = pDest;
 		list_insert_tail(&pDest->vmm_list, &newvma->vma_plink);
 	} list_iterate_end();
 	return pDest;
@@ -359,7 +365,7 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 			}
 			if(lopage < vma->vma_start && vma->vma_end < lopage + npages){
 				vma->vma_start = lopage + npages; /*FIXME vma_off?*/
-				vma->vma_off = vma->vma_stat;
+				vma->vma_off = vma->vma_start;
 			}
 			if(lopage < vma->vma_start && vma->vma_end < lopage + npages ){
 				vmarea_free(vma);	
@@ -382,6 +388,7 @@ vmmap_is_range_empty(vmmap_t *map, uint32_t startvfn, uint32_t npages)
 	dbg(DBG_PRINT, "GRADING 3.A.3.e \n");
 	vmarea_t *vma;
 	int count = npages;
+	pframe_t *pf;
         list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink) {
 		if(startvfn == vma->vma_start){
 			list_iterate_begin( &vma->vma_obj->mmo_respages, pf, pframe_t, pf_olink){
@@ -409,6 +416,7 @@ vmmap_read(vmmap_t *map, const void *vaddr, void *buf, size_t count)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_read");*/
 	vmarea_t *vma;
+	pframe_t *pf;
 	if(!list_empty(&map->vmm_list)){
         	list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink) {
 			if(!list_empty(&vma->vma_obj->mmo_respages)){	
@@ -438,13 +446,14 @@ vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_write");*/
 	vmarea_t *vma;
+	pframe_t *pf;
 	if(!list_empty(&map->vmm_list)){
         	list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink) {
 			if(!list_empty(&vma->vma_obj->mmo_respages)){	
 
 				list_iterate_begin( &vma->vma_obj->mmo_respages, pf, pframe_t, pf_olink) {
 					if(pf->pf_addr == vaddr){
-						memset(buf, vaddr, count);		
+						memcpy(vaddr, buf, count);		
 					}
 				} list_iterate_end();
 			}

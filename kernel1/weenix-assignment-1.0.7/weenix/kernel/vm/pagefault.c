@@ -53,28 +53,28 @@ handle_pagefault(uintptr_t vaddr, uint32_t cause)
 {
         /*NOT_YET_IMPLEMENTED("VM: handle_pagefault");*/
 	vmmap_t *map = curproc->p_vmmap;
-	vmarea_t vma;
+	vmarea_t *vma;
 	pframe_t *pf = NULL;
 	if(!list_empty(&map->vmm_list)){
 		list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink){
 			list_iterate_begin( &vma->vma_obj->mmo_respages, pf, pframe_t, pf_olink){
-				if(pf->pf_addr <= vaddr){
+				if(*(uintptr_t *)(pf->pf_addr) <= vaddr){
 					break;
 				}	
 			}list_iterate_end();
 		}list_iterate_end();
 	}
 	if( pf != NULL){
-		if( !cause & FAULT_USER){
+		if( !(cause & FAULT_USER)){
 			/*XXX permission checks*/
 			proc_kill(curproc, NULL);
 		}
 		/*XXX handle shadow objects*/		
-		uintptr_t paddr = pt_virt_phys(vaddr);
+		uintptr_t paddr = pt_virt_to_phys(vaddr);
 		uintptr_t pdflags = PD_PRESENT | PD_WRITE | PD_USER;
 		uintptr_t ptflags = PT_PRESENT | PT_WRITE | PT_USER;
 		/*XXX tlb flush?*/
-		pt_map(curproc->p_pagedir, vaddr, paddr, pdflags, ptflags)
+		pt_map(curproc->p_pagedir, vaddr, paddr, pdflags, ptflags);
 
 	}
 }

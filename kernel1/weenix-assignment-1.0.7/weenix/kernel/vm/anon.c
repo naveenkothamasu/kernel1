@@ -90,7 +90,7 @@ anon_put(mmobj_t *o)
 			pframe_t *pageframe;
 			list_iterate_begin(&(o->mmo_respages),pageframe,pframe_t,pf_olink){
 				while(pframe_is_pinned(pageframe))
-					pframe_unping(pageframe);
+					pframe_unpin(pageframe);
 				if(pframe_is_busy(pageframe))
 					sched_sleep_on(&pageframe->pf_waitq);
 				if(pframe_is_dirty(pageframe))
