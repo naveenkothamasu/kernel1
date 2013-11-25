@@ -90,6 +90,7 @@ do_fork(struct regs *regs)
 
 	kthread_t *childthread=kthread_clone(curthr);
 	childthread->kt_proc=child;
+	list_insert_tail(&(child->p_threads), &(childthread->kt_plink));
 	(childthread->kt_ctx).c_esp = fork_setup_stack(regs, childthread->kt_kstack);
         return 0;
 }

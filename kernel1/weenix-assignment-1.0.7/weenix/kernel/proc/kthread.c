@@ -178,7 +178,22 @@ kthread_clone(kthread_t *thr)
         /*NOT_YET_IMPLEMENTED("VM: kthread_clone");*/
 	KASSERT(KT_RUN == thr->kt_state);	
 	dbg(DBG_PRINT, "GRADING 3.A.8.a \n");
-        return NULL;
+        context_t context; /*FIXME local variable fine?*/
+
+        kthread_t *newthr = (kthread_t *)slab_obj_alloc(kthread_allocator);
+        newthr->kt_retval = thr->kt_retval;
+        newthr->kt_errno = thr->kt_errno;
+        newthr->kt_cancelled = thr->kt_cancelled;
+        newthr->kt_kstack = alloc_stack();
+        newthr->kt_proc = thr->kt_proc;/*TODO:change this to the child process later at some point of code*/
+        newthr->kt_state = thr->kt_state; /* TODO: currently running or on runq */
+        newthr->kt_wchan = NULL;
+        list_link_init(&newthr->kt_plink);
+        list_link_init(&newthr->kt_qlink);
+        /*list_insert_tail(&(p->p_threads), &(newthr->kt_plink));*//*TODO?insert it to the child process*/
+
+        context_setup(&(newthr->kt_ctx), func, arg1, arg2, newthr->kt_kstack, DEFAULT_STACK_SIZE, thr->kt_proc->p_pagedir);
+        return newthr;
 }
 
 /*
