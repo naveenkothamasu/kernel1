@@ -76,12 +76,10 @@ vmmap_destroy(vmmap_t *map)
 	KASSERT(NULL != map);	
 	dbg(DBG_PRINT, "GRADING 3.A.3.\n");
 	vmarea_t *vma;
-	if(!list_empty(&map->vmm_list)){
-		list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink ) {
-			list_remove( &vma->vma_plink);
-			vmarea_free(vma);	
-		} list_iterate_end();
-	}
+	list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink ) {
+		list_remove( &vma->vma_plink);
+		vmarea_free(vma);	
+	} list_iterate_end();
 	
 }
 
@@ -107,13 +105,11 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 
 	newvma->vma_vmmap = map;
 	vmarea_t *vma;
-	if(!list_empty( &map->vmm_list)){
-		list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink ) {
-			if(vma->vma_start > newvma->vma_end){
-				temp = vma;
-			}	
-		} list_iterate_end();
-	}
+	list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink ) {
+		if(vma->vma_start > newvma->vma_end){
+			temp = vma;
+		}	
+	} list_iterate_end();
 	if(temp != NULL){
 		list_insert_before( &newvma->vma_plink, &temp->vma_plink);
 	}else{
@@ -138,20 +134,36 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
 	dbg(DBG_PRINT, "GRADING 3.A.3.C \n");
      	list_link_t *link = &map->vmm_list;
 	vmarea_t *vma;
+	uint32_t start = -1;
+	int count = npages;
 	if(!list_empty( &map->vmm_list)){
 		if(dir == VMMAP_DIR_LOHI){
 			list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink ) {
-				if( (vma->vma_end-vma->vma_start) >= npages){
-					return vma->vma_start;
+				start = vma->vma_start;
+				list_iterate_begin( &vma->vma_obj->mmo_respages, pf, pframe_t, pf_olink) {
+					if (pframe_is_free(pf)){
+						--count;
+					}
+				} list_iterate_end();
+				if(count == 0){
+					return start;
 				}
+				count = npages;	
 			} list_iterate_end();
 		}else if(dir == VMMAP_DIR_HILO){
 	
-     			for (link = link->l_prev;
+     			for (link = map->vmm_list->l_prev;
           			link != &map->vmm_list; link = link->l_prev){
-				if( (vma->vma_end-vma->vma_start) >= npages){
-					return vma->vma_start;
+				start = vma->vma_start;
+				list_iterate_begin( &vma->vma_obj->mmo_respages, pf, pframe_t, pf_olink){
+					if(pframe_is_free(pf)){
+						--count;
+					}
+				} list_iterate_end();
+				if(count == 0){
+					return start;
 				}
+				count = npages;
 			}
 		}
 	}	
@@ -168,13 +180,11 @@ vmmap_lookup(vmmap_t *map, uint32_t vfn)
         KASSERT(NULL != map);
 	dbg(DBG_PRINT, "GRADING 3.A.3.d \n");
 	vmarea_t *vma;
-	if(!list_empty(&map->vmm_list)){
-		list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink ) {
-			if( vfn <= vma->vma_end && vma->vma_start <= vfn){
-				return vma;
-			}
-		} list_iterate_end();
-	}	
+	list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink ) {
+		if( vfn <= vma->vma_end && vma->vma_start <= vfn){
+			return vma;
+		}
+	} list_iterate_end();
         return NULL;
 }
 
@@ -193,15 +203,13 @@ vmmap_clone(vmmap_t *map)
 	vmarea_t *newvma;
 	vmarea_t *vma;
 	list_init(&pDest->vmm_list);
-	if(!list_empty(&map->vmm_list)){
-		list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink ) {
-			newvma = vmarea_alloc();
-			if(newvma == NULL){
-				return NULL;
-			}
-			list_insert_tail(&pDest->vmm_list, &newvma->vma_plink);
-		} list_iterate_end();
-	}
+	list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink ) {
+		newvma = vmarea_alloc();
+		if(newvma == NULL){
+			return NULL;
+		}
+		list_insert_tail(&pDest->vmm_list, &newvma->vma_plink);
+	} list_iterate_end();
 	return pDest;
 }
 
@@ -282,7 +290,6 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 			if(memobj == NULL){
 				return -1;
 			}
-			anon_fillpage(memobj, pf);
 			newvma->vma_obj = memobj;
 			vmmap_insert(map, newvma);
 		}else{
@@ -352,6 +359,7 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 			}
 			if(lopage < vma->vma_start && vma->vma_end < lopage + npages){
 				vma->vma_start = lopage + npages; /*FIXME vma_off?*/
+				vma->vma_off = vma->vma_stat;
 			}
 			if(lopage < vma->vma_start && vma->vma_end < lopage + npages ){
 				vmarea_free(vma);	
@@ -369,15 +377,22 @@ int
 vmmap_is_range_empty(vmmap_t *map, uint32_t startvfn, uint32_t npages)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_is_range_empty");*/
-	vmarea_t *vma;
 	uint32_t endvfn = startvfn+npages;
         KASSERT((startvfn < endvfn) && (ADDR_TO_PN(USER_MEM_LOW) <= startvfn) && (ADDR_TO_PN(USER_MEM_HIGH) >= endvfn));
 	dbg(DBG_PRINT, "GRADING 3.A.3.e \n");
-	if(!list_empty(&map->vmm_list)){
-        	list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink) {
-			/*TODO any mappings for the range*/
-		} list_iterate_end();
-	}	
+	vmarea_t *vma;
+	int count = npages;
+        list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink) {
+		if(startvfn == vma->vma_start){
+			list_iterate_begin( &vma->vma_obj->mmo_respages, pf, pframe_t, pf_olink){
+				--count;
+			}list_iterate_end();
+			if(count == 0){
+				return 1;
+			}
+			count = npages;
+		}
+	} list_iterate_end();
         return 0;
 }
 
@@ -400,13 +415,14 @@ vmmap_read(vmmap_t *map, const void *vaddr, void *buf, size_t count)
 
 				list_iterate_begin( &vma->vma_obj->mmo_respages, pf, pframe_t, pf_olink) {
 					if(pf->pf_addr == vaddr){
-							
+						memcpy(buf, pf->pf_addr, count);		
+						return 0;
 					}
 				} list_iterate_end();
 			}
 		} list_iterate_end();
 	}
-        return 0;
+        return -1;
 }
 
 /* Write from 'buf' into the virtual address space of 'map' starting at
@@ -428,7 +444,7 @@ vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
 
 				list_iterate_begin( &vma->vma_obj->mmo_respages, pf, pframe_t, pf_olink) {
 					if(pf->pf_addr == vaddr){
-							
+						memset(buf, vaddr, count);		
 					}
 				} list_iterate_end();
 			}

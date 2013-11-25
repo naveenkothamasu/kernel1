@@ -76,8 +76,8 @@ handle_pagefault(uintptr_t vaddr, uint32_t cause)
 		}
 		/*XXX handle shadow objects*/		
 		uintptr_t paddr = pt_virt_phys(vaddr);
-		uintptr_t pdflags;
-		uintptr_t ptflags;
+		uintptr_t pdflags = PD_PRESENT | PD_WRITE | PD_USER;
+		uintptr_t ptflags = PT_PRESENT | PT_WRITE | PT_USER;
 		/*XXX tlb flush?*/
 		pt_map(curproc->p_pagedir, vaddr, paddr, pdflags, ptflags)
 
