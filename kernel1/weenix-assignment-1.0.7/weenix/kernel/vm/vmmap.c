@@ -156,6 +156,7 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
 	
      			for (link = list->l_prev;
           			link != &map->vmm_list; link = link->l_prev){
+				vma = list_item( link, vmarea_t, vma_plink);
 				start = vma->vma_start;
 				list_iterate_begin( &vma->vma_obj->mmo_respages, pf, pframe_t, pf_olink){
 					if(pframe_is_free(pf)){
@@ -272,18 +273,17 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 		}
 	}else{
 		/*FIXME:another mapping ?*/
-		/*do_munmap(lopage, npages);*/
 		vmarea_t *vma;
 		pframe_t *pf;
+		vmmap_t *old_map = NULL;
 		list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink){
 			if(vma->vma_start == lopage){
-				list_iterate_begin(&vma->vm_obj->mmo_respages, pf, pframe_t, pf_link){
-					if(!pframe_busy(pf)){
-						pframe_setbusy(pf);
-					}
-				} list_iterate_end();
+				old_map = vma->vma_vmmap;	
 			}
 		} list_iterate_end();
+		if(old_map != NULL){
+			vmmap_remove(old_map, lopage, npages);
+		}
 		vmarea_t *newvma = vmarea_alloc();
 		if(newvma == NULL){
 			return -1;
@@ -319,7 +319,6 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 			if (flags == MAP_PRIVATE ){
 				memobj->mmo_shadowed = shadow_create();
 			}
-			
 		}
 	}	
         return -1;
@@ -401,17 +400,11 @@ vmmap_is_range_empty(vmmap_t *map, uint32_t startvfn, uint32_t npages)
         KASSERT((startvfn < endvfn) && (ADDR_TO_PN(USER_MEM_LOW) <= startvfn) && (ADDR_TO_PN(USER_MEM_HIGH) >= endvfn));
 	dbg(DBG_PRINT, "GRADING3.A.3.e \n");
 	vmarea_t *vma;
-	int count = npages;
-	pframe_t *pf;
         list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink) {
-		if(startvfn == vma->vma_start){
-			list_iterate_begin( &vma->vma_obj->mmo_respages, pf, pframe_t, pf_olink){
-				--count;
-			}list_iterate_end();
-			if(count == 0){
-				return 1;
-			}
-			count = npages;
+		/*(startvfn doesnt lie) && (endvfn doesnt lie)*/
+		if( !(vma->vma_start <= startvfn && startvfn <= vma->vma_end) && 
+			!(vma->vma_start <= endvfn && endvfn <= vma->vma_end)){
+			return 1;
 		}
 	} list_iterate_end();
         return 0;
