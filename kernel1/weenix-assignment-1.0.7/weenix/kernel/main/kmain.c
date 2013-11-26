@@ -361,8 +361,9 @@ initproc_run(int arg1, void *arg2)
         if (NULL == kshell) panic("init: Couldn't create kernel shell\n");
         while(kshell_execute_next(kshell));
 	/*kernel_execve(const char *filename, char *const *argv, char *const *envp);*/
-
-	kernel_execve("/bin/uname", NULL, NULL);
+	char *argv[] = { NULL };
+    	char *envp[] = { NULL };
+	kernel_execve("/hello", argv, envp);
         kshell_destroy(kshell);
 
     #endif /* __DRIVERS__ */

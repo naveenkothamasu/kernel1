@@ -67,7 +67,7 @@ shadow_init()
 mmobj_t *
 shadow_create()
 {
-        NOT_YET_IMPLEMENTED("VM: shadow_create");
+        /*NOT_YET_IMPLEMENTED("VM: shadow_create");*/
 	mmobj_t *shadowobj = (mmobj_t*)slab_obj_alloc(shadow_allocator);
 	if(shadowobj){
 		mmobj_init(shadowobj,&shadow_mmobj_ops);
@@ -105,24 +105,24 @@ shadow_put(mmobj_t *o)
         /*NOT_YET_IMPLEMENTED("VM: shadow_put");*/
         KASSERT(o && (0 < o->mmo_refcount) && (&shadow_mmobj_ops == o->mmo_ops));
         dbg(DBG_PRINT, "GRADING 3.A.6.c \n");
-        if(o->mmo_refcount-o->mmo_nrespages==1){
+        o->mmo_refcount--;
+        if(o->mmo_refcount == o->mmo_nrespages){
                 if(!list_empty(&(o->mmo_respages))){
                         pframe_t *pageframe;
                         list_iterate_begin(&(o->mmo_respages),pageframe,pframe_t,pf_olink){
                                 while(pframe_is_pinned(pageframe))
                                         pframe_unpin(pageframe);
-                                if(pframe_is_busy(pageframe))
+                                if(pframe_is_busy(pageframe)){
+					pframe_clear_busy(pageframe);
                                         sched_sleep_on(&pageframe->pf_waitq);
+				}
                                 if(pframe_is_dirty(pageframe))
                                         pframe_clean(pageframe);
                                 else
                                         pframe_free(pageframe);
                         }list_iterate_end();
+                	slab_obj_free(shadow_allocator,o);
                 }
-        }
-        o->mmo_refcount--;
-        if(o->mmo_refcount==0 && o->mmo_nrespages==0){
-                slab_obj_free(shadow_allocator,o);
         }
 }
 
@@ -136,7 +136,12 @@ shadow_put(mmobj_t *o)
 static int
 shadow_lookuppage(mmobj_t *o, uint32_t pagenum, int forwrite, pframe_t **pf)
 {
-        NOT_YET_IMPLEMENTED("VM: shadow_lookuppage");
+        /*NOT_YET_IMPLEMENTED("VM: shadow_lookuppage");*/
+	/*
+	if(forwrite){
+		
+	}
+	*/
         return 0;
 }
 
@@ -151,7 +156,12 @@ shadow_lookuppage(mmobj_t *o, uint32_t pagenum, int forwrite, pframe_t **pf)
 static int
 shadow_fillpage(mmobj_t *o, pframe_t *pf)
 {
-        NOT_YET_IMPLEMENTED("VM: shadow_fillpage");
+        /*NOT_YET_IMPLEMENTED("VM: shadow_fillpage");*/
+	KASSERT(pframe_is_busy(pf));
+	dbg(DBG_PRINT, "GRADING3.A.6.d \n");
+        KASSERT(!pframe_is_pinned(pf));
+	dbg(DBG_PRINT, "GRADING3.A.6.d \n");
+
 	pframe_t *pageframe;
 	pframe_set_dirty(pf);
 	shadow_lookuppage(o->mmo_shadowed,pf->pf_pagenum,0,&pageframe);
@@ -168,12 +178,12 @@ static int
 shadow_dirtypage(mmobj_t *o, pframe_t *pf)
 {
         /*NOT_YET_IMPLEMENTED("VM: shadow_dirtypage");*/
-	if(!(pframe_is_dirty(pf)))
+	if(!(pframe_is_dirty(pf))){
 		pframe_set_dirty(pf);
-	if(!(pframe_is_dirty(pf)))
 		return 0;
-	else
-	        return -1;
+	}else{
+		return -1;
+	}
 }
 
 static int

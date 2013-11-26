@@ -123,8 +123,10 @@ sys_getdents(getdents_args_t *arg)
 		curthr->kt_errno=result;
 		return -1;
 	}
-	int i=0, loopcount=0;
-	loopcount=tempgetdent.count>sizeof(getdents_args_t)?tempgetdent.count:sizeof(getdents_args_t);
+	int i=0, loopcount = tempgetdent.count;
+	if(sizeof(dirent_t) > (unsigned) loopcount){
+		loopcount = sizeof(dirent_t);
+	}
 	while(i<loopcount){
 		result=do_getdent(tempgetdent.fd,tempgetdent.dirp);
 		if(result<0){

@@ -71,6 +71,9 @@ do_fork(struct regs *regs)
 			mmobj_t *Parent_shadowobj = shadow_create();
 			Parent_shadowobj = vmareaParent->vma_obj;
 			vmareaParent->vma_obj=Parent_shadowobj;
+			
+			pt_unmap_range(curproc->p_pagedir,vmareaParent->vma_start, vmareaParent->vma_end);
+			tlb_flush_all();
 		}
 		if(vmareaParent->vma_flags == MAP_SHARED){
 			/*TODO:*/
