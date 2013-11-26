@@ -279,7 +279,7 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 		list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink){
 			if(vma->vma_start == lopage){
 				old_map = vma->vma_vmmap;	
-			}
+		}
 		} list_iterate_end();
 		if(old_map != NULL){
 			vmmap_remove(old_map, lopage, npages);
