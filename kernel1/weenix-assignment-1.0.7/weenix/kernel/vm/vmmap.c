@@ -272,7 +272,18 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 		}
 	}else{
 		/*FIXME:another mapping ?*/
-		do_munmap(lopage, npages);
+		/*do_munmap(lopage, npages);*/
+		vmarea_t *vma;
+		pframe_t *pf;
+		list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink){
+			if(vma->vma_start == lopage){
+				list_iterate_begin(&vma->vm_obj->mmo_respages, pf, pframe_t, pf_link){
+					if(!pframe_busy(pf)){
+						pframe_setbusy(pf);
+					}
+				} list_iterate_end();
+			}
+		} list_iterate_end();
 		vmarea_t *newvma = vmarea_alloc();
 		if(newvma == NULL){
 			return -1;
@@ -356,8 +367,10 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 				if(newvma == NULL){
 					return NULL;
 				}
-				newvma->vma_start = lopage +1; /*FIXME:*/
+				newvma->vma_start = lopage +npages; /*FIXME:*/
 				newvma->vma_end = vma->vma_end;
+				pframe_t *pf = list_item(newvma->vma_obj->mmo_respages.l_next, pframe_t, pf_link);
+				vma->vma_off = pf->pf_pagenum;
 				vmmap_insert(map, newvma);	
 			}
 			if( vma->vma_start < lopage && vma->vma_end < lopage + npages){
@@ -365,9 +378,10 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 			}
 			if(lopage < vma->vma_start && vma->vma_end < lopage + npages){
 				vma->vma_start = lopage + npages; /*FIXME vma_off?*/
-				vma->vma_off = vma->vma_start;
+				pframe_t *pf = list_item(vma->vma_obj->mmo_respages.l_next, pframe_t, pf_link);
+				vma->vma_off = pf->pf_pagenum;
 			}
-			if(lopage < vma->vma_start && vma->vma_end < lopage + npages ){
+			if(lopage <= vma->vma_start && vma->vma_end <= lopage + npages ){
 				vmarea_free(vma);	
 			}
 		} list_iterate_end();
@@ -385,7 +399,7 @@ vmmap_is_range_empty(vmmap_t *map, uint32_t startvfn, uint32_t npages)
         /*NOT_YET_IMPLEMENTED("VM: vmmap_is_range_empty");*/
 	uint32_t endvfn = startvfn+npages;
         KASSERT((startvfn < endvfn) && (ADDR_TO_PN(USER_MEM_LOW) <= startvfn) && (ADDR_TO_PN(USER_MEM_HIGH) >= endvfn));
-	dbg(DBG_PRINT, "GRADING 3.A.3.e \n");
+	dbg(DBG_PRINT, "GRADING3.A.3.e \n");
 	vmarea_t *vma;
 	int count = npages;
 	pframe_t *pf;
