@@ -277,9 +277,9 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 		pframe_t *pf;
 		list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink){
 			if(vma->vma_start == lopage){
-				list_iterate_begin(&vma->vm_obj->mmo_respages, pf, pframe_t, pf_link){
-					if(!pframe_busy(pf)){
-						pframe_setbusy(pf);
+				list_iterate_begin(&vma->vma_obj->mmo_respages, pf, pframe_t, pf_link){
+					if(!pframe_is_busy(pf)){
+						pframe_set_busy(pf);
 					}
 				} list_iterate_end();
 			}
