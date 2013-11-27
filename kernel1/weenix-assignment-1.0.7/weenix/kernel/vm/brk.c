@@ -59,22 +59,31 @@ do_brk(void *addr, void **ret)
         /*NOT_YET_IMPLEMENTED("VM: do_brk");*/
 	uint32_t *start_brk = curproc->p_start_brk;
 	void *old = curproc->p_brk;
-	uint32_t *next_map_addr;
+	uint32_t next_map_addr;
 	vmmap_t *map = curproc->p_vmmap;
+	vmarea_t *vma;
 	if(addr == NULL){
 		*ret = old;
 		return 0;
 	}
-	if(*next_map_addr < USER_MEM_HIGH){
-		*next_map_addr = USER_MEM_HIGH;
+	list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink){
+		if(vma->vma_start > *(uint32_t *)addr){
+			next_map_addr = vma->vma_start;
+			break;
+		}	
+	}list_iterate_end();
+	if(next_map_addr < USER_MEM_HIGH){
+		next_map_addr = USER_MEM_HIGH;
 	}
-	if(*(uint32_t *)addr < *start_brk || *(uint32_t *)addr > *next_map_addr){
+	if(*(uint32_t *)addr < *start_brk || *(uint32_t *)addr > next_map_addr){
 		return -1;
 	}
-
-	if(!PAGE_ALIGNED(start_brk)){
-		
-	}
 	
+	if(!PAGE_ALIGNED(start_brk)){
+		if(*(uint32_t *)addr-*start_brk < PAGE_SIZE){
+			addr = start_brk + PAGE_SIZE;
+		}
+	}
+	curproc->p_brk = addr;	
         return 0;
 }
