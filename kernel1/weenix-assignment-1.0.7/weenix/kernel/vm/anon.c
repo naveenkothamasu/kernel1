@@ -39,9 +39,9 @@ static mmobj_ops_t anon_mmobj_ops = {
 void
 anon_init()
 {
+	anon_allocator = slab_allocator_create("anonobject",sizeof(mmobj_t));
         KASSERT(anon_allocator);
 	dbg(DBG_PRINT, "GRADING 3.A.4.a \n");
-	anon_allocator = slab_allocator_create("anonobject",sizeof(mmobj_t));
         /*NOT_YET_IMPLEMENTED("VM: anon_init");*/
 }
 
