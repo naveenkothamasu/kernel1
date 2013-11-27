@@ -137,12 +137,27 @@ static int
 shadow_lookuppage(mmobj_t *o, uint32_t pagenum, int forwrite, pframe_t **pf)
 {
         /*NOT_YET_IMPLEMENTED("VM: shadow_lookuppage");*/
-	/*
-	if(forwrite){
-		
+
+	pframe_t *local_pf = pframe_get_resident( o, pagenum);	
+	if(local_pf == NULL){
+		return -1;
 	}
-	*/
-        return 0;
+	*pf = local_pf;
+	mmobj_t *shadow_obj = o->mmo_shadowed;	
+	mmobj_t *bottom_obj = o->mmo_un.mmo_bottom_obj;
+	pframe_t *pf2;
+	if(!forwrite){
+		while(shadow_obj != bottom_obj){
+			list_iterate_begin( &o->mmo_respages, pf2, pframe_t, pf_link){
+				if(pf2->pf_pagenum == local_pf->pf_pagenum){
+					return 0;
+				}	
+			}list_iterate_end();
+			shadow_obj = shadow_obj->mmo_shadowed;
+		}
+	}
+	
+        return -1;
 }
 
 /* As per the specification in mmobj.h, fill the page frame starting
@@ -163,13 +178,33 @@ shadow_fillpage(mmobj_t *o, pframe_t *pf)
 	dbg(DBG_PRINT, "GRADING3.A.6.d \n");
 
 	pframe_t *pageframe;
+	mmobj_t *shadow_obj = o->mmo_shadowed;
+	mmobj_t *bottom_obj = o->mmo_un.mmo_bottom_obj;
 	pframe_set_dirty(pf);
-	shadow_lookuppage(o->mmo_shadowed,pf->pf_pagenum,0,&pageframe);
-	if(pageframe!=NULL){
-		memcpy(pf->pf_addr,pageframe->pf_addr,PAGE_SIZE);
-	}
+	/*shadow_lookuppage(o->mmo_shadowed,pf->pf_pagenum,0,&pageframe);*/
+	
 	/*TODO? Navigate to the bottom of the shadow objects*/
-        return 0;
+	if(shadow_obj == NULL){
+		return -1; /*XXX check the return val*/
+	}
+	while(shadow_obj != bottom_obj){
+		list_iterate_begin( &o->mmo_respages, pageframe, pframe_t, pf_link){
+			if(pageframe->pf_pagenum == pf->pf_pagenum){
+				memcpy(pf->pf_addr,pageframe->pf_addr,PAGE_SIZE);
+				return 0;
+		}	
+		}list_iterate_end();
+		shadow_obj = shadow_obj->mmo_shadowed;
+	}
+	/*reached the bottom obj*/
+	list_iterate_begin( &shadow_obj->mmo_respages, pageframe, pframe_t, pf_link){
+		if(pageframe->pf_pagenum == pf->pf_pagenum){
+			memcpy(pf->pf_addr,pageframe->pf_addr,PAGE_SIZE);
+			return 0;
+		}	
+	}list_iterate_end();
+	
+        return -1;
 }
 
 /* These next two functions are not difficult. */
