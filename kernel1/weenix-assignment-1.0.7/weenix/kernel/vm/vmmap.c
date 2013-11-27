@@ -321,7 +321,7 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 			}
 		}
 	}	
-        return -1;
+        return 0;
 }
 
 /*
@@ -400,6 +400,9 @@ vmmap_is_range_empty(vmmap_t *map, uint32_t startvfn, uint32_t npages)
         KASSERT((startvfn < endvfn) && (ADDR_TO_PN(USER_MEM_LOW) <= startvfn) && (ADDR_TO_PN(USER_MEM_HIGH) >= endvfn));
 	dbg(DBG_PRINT, "GRADING3.A.3.e \n");
 	vmarea_t *vma;
+	if(list_empty(&map->vmm_list)){
+		return 1;
+	}
         list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink) {
 		/*(startvfn doesnt lie) && (endvfn doesnt lie)*/
 		if( !(vma->vma_start <= startvfn && startvfn <= vma->vma_end) && 
