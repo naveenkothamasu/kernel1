@@ -92,15 +92,15 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_insert");*/
 	KASSERT(NULL != map && NULL != newvma);	
-	dbg(DBG_PRINT, "GRADING A.3.b\n");
+	dbg(DBG_PRINT, "GRADING 3.A.3.b\n");
 
  	KASSERT(NULL == newvma->vma_vmmap);
-	dbg(DBG_PRINT, "GRADING A.3.b\n");
+	dbg(DBG_PRINT, "GRADING 3.A.3.b\n");
 
         KASSERT(newvma->vma_start < newvma->vma_end);
-	dbg(DBG_PRINT, "GRADING A.3.b\n");
+	dbg(DBG_PRINT, "GRADING 3.A.3.b\n");
         KASSERT(ADDR_TO_PN(USER_MEM_LOW) <= newvma->vma_start && ADDR_TO_PN(USER_MEM_HIGH) >= newvma->vma_end);
-	dbg(DBG_PRINT, "GRADING A.3.b\n");
+	dbg(DBG_PRINT, "GRADING 3.A.3.b\n");
 	vmarea_t *temp = NULL;
 
 	newvma->vma_vmmap = map;
@@ -111,7 +111,7 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 		}	
 	} list_iterate_end();
 	if(temp != NULL){
-		list_insert_before( &newvma->vma_plink, &temp->vma_plink);
+		list_insert_before(&temp->vma_plink, &newvma->vma_plink );
 	}else{
 		list_insert_head(&map->vmm_list, &newvma->vma_plink);
 	}
@@ -293,7 +293,7 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 		newvma->vma_off = off;
 		newvma->vma_prot = prot;
 		newvma->vma_flags = flags;
-		newvma->vma_vmmap = map;
+		/*XXX newvma->vma_vmmap = map;*/
 		/*
 		newvma->vma_olink = 
 		*/
