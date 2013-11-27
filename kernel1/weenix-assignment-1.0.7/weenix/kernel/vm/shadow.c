@@ -53,9 +53,9 @@ void
 shadow_init()
 {
         /*NOT_YET_IMPLEMENTED("VM: shadow_init");*/
-        KASSERT(shadow_allocator);
-        dbg(DBG_PRINT, "GRADING 3.A.6.a \n");
 	shadow_allocator = slab_allocator_create("sahdowobject", sizeof(mmobj_t));
+	KASSERT(shadow_allocator);
+        dbg(DBG_PRINT, "GRADING 3.A.6.a \n");
 }
 
 /*
