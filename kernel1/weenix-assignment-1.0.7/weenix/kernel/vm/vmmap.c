@@ -77,7 +77,7 @@ vmmap_destroy(vmmap_t *map)
 	dbg(DBG_PRINT, "GRADING 3.A.3.\n");
 	vmarea_t *vma;
 	list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink ) {
-		vma->vma_obj->mmo_ops->put(vma->vma_obj);
+		/*vma->vma_obj->mmo_ops->put(vma->vma_obj);*/
 		list_remove( &vma->vma_plink);
 		vmarea_free(vma);	
 	} list_iterate_end();
@@ -108,16 +108,17 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 	newvma->vma_vmmap = map;
 	vmarea_t *vma;
 	if(!list_empty(&(map->vmm_list))){
-	list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink ) {
-		if(vma->vma_start > newvma->vma_start){
-			temp = vma;
+		list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink ) {
+			if(vma->vma_start > newvma->vma_start){
+				temp = vma;
+			}	
+		} list_iterate_end();
+		
+		if(temp != NULL){
+			list_insert_before(&temp->vma_plink, &newvma->vma_plink );
+		}else{
+			list_insert_tail(&map->vmm_list, &newvma->vma_plink);
 		}	
-	} list_iterate_end();
-	if(temp != NULL){
-		list_insert_before(&temp->vma_plink, &newvma->vma_plink );
-	}else{
-		list_insert_tail(&map->vmm_list, &newvma->vma_plink);
-	}
 	}else{
 		list_insert_head(&map->vmm_list, &newvma->vma_plink);
 	}
@@ -148,15 +149,9 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
 		if(dir == VMMAP_DIR_LOHI){
 			list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink ) {
 				start = vma->vma_start;
-				list_iterate_begin( &vma->vma_obj->mmo_respages, pf, pframe_t, pf_olink) {
-					if (pframe_is_free(pf)){
-						--count;
-					}
-				} list_iterate_end();
-				if(count == 0){
+				if(vmmap_is_range_empty(map, start, npages)){
 					return start;
-				}
-				count = npages;	
+				}	
 			} list_iterate_end();
 		}else if(dir == VMMAP_DIR_HILO){
 	
@@ -164,17 +159,11 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
           			link != &map->vmm_list; link = link->l_prev){
 				vma = list_item( link, vmarea_t, vma_plink);
 				start = vma->vma_start;
-				list_iterate_begin( &vma->vma_obj->mmo_respages, pf, pframe_t, pf_olink){
-					if(pframe_is_free(pf)){
-						--count;
-					}
-				} list_iterate_end();
-				if(count == 0){
-					return start;
-				}
-				count = npages;
+					if(vmmap_is_range_empty(map, start, npages)){
+						return start;
+					}	
+				} 
 			}
-		}
 	}	
         return -1;
 }
@@ -281,14 +270,8 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 		/*FIXME:another mapping ?*/
 		vmarea_t *vma;
 		pframe_t *pf;
-		vmmap_t *old_map = NULL;
-		list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink){
-			if(vma->vma_start <= lopage || vma->vma_end >= lopage ){
-				old_map = vma->vma_vmmap;	
-			}
-		} list_iterate_end();
-		if(old_map != NULL){
-			vmmap_remove(old_map, lopage, npages);
+		if(!vmmap_is_range_empty(map, lopage, npages)){
+			vmmap_remove(map, lopage, npages);
 		}
 		
 		vmarea_t *newvma = vmarea_alloc();
@@ -306,7 +289,6 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 		newvma->vma_plink = 
 
 		*/
-		vmmap_insert(map, newvma);
 		if( new != NULL){
 			*new = newvma;
 		}
@@ -318,6 +300,7 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 				return -1;
 			}
 			newvma->vma_obj = memobj;
+			vmmap_insert(map, newvma);
 		}else{
 			/*disk file case*/
 			/*newvma->vma_vmmap = map;*/
@@ -326,8 +309,8 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 			if(s < 0){
 				return s;
 			}
-			
-			if (flags == MAP_PRIVATE ){
+			newvma->vma_obj = memobj;	
+			if (flags == MAP_PRIVATE ){ /*XXX this shold be outside*/
 				memobj->mmo_shadowed = shadow_create();
 			}
 		}
@@ -416,12 +399,12 @@ vmmap_is_range_empty(vmmap_t *map, uint32_t startvfn, uint32_t npages)
 	}
         list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink) {
 		/*(startvfn doesnt lie) && (endvfn doesnt lie)*/
-		if( !(vma->vma_start <= startvfn && startvfn <= vma->vma_end) && 
-			!(vma->vma_start <= endvfn && endvfn <= vma->vma_end)){
-			return 1;
+		if( (vma->vma_start <= startvfn && startvfn < vma->vma_end) || 
+			(vma->vma_start <= endvfn && endvfn < vma->vma_end)){
+			return 0;
 		}
 	} list_iterate_end();
-        return 0;
+        return 1;
 }
 
 /* Read into 'buf' from the virtual address space of 'map' starting at
@@ -466,22 +449,33 @@ int
 vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_write");*/
-	vmarea_t *vma;
 	pframe_t *pf;
-	if(!list_empty(&map->vmm_list)){
-        	list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink) {
-			if(!list_empty(&vma->vma_obj->mmo_respages)){	
-
-				list_iterate_begin( &vma->vma_obj->mmo_respages, pf, pframe_t, pf_olink) {
-					if(pf->pf_addr == vaddr){
-						memcpy(vaddr, buf, count);		
-						pframe_set_dirty(pf);
-						return 0;
-					}
-				} list_iterate_end();
-			}
-		} list_iterate_end();
+	uint32_t temp = *(uint32_t *)vaddr;
+	vmarea_t *vma = vmmap_lookup(map, temp);
+	if(vma == NULL){
+		return -1;
 	}
+
+	/*
+		1. Find the first pframe from where we need to proceed
+		2. write page after page till count goes zero
+	*/
+	list_link_t *list = &vma->vma_obj->mmo_respages;
+	list_link_t *link;
+	for(link = list->l_next ; list != link; link = link->l_next){
+		pf = list_item(link, pframe_t, pf_olink);
+		if(pf->pf_addr <= vaddr){
+			break;
+		}
+	}
+	/*got the link to pframe from where we need to write*/
+	for(; (int)count >=0 && list != link; link = link->l_next, count -= PAGE_SIZE){
+		pf = list_item(link, pframe_t, pf_olink);
+		memcpy( (uint32_t *)pf->pf_addr+vma->vma_off, buf, PAGE_SIZE);	
+		count -= PAGE_SIZE;
+		pframe_set_dirty(pf);
+	}
+
         return 0;
 }
 
