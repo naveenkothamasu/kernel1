@@ -99,6 +99,9 @@ proc_create(char *name)
 	proc->p_pid = _proc_getid();
 	pid_t pid = proc->p_pid;
 	proc->p_cwd = NULL;
+	vmmap_t *map = vmmap_create();
+	map->vmm_proc = proc;
+	proc->p_vmmap = map;
 	
 	if(proc->p_pid == PID_INIT){
                 proc_initproc = proc;
