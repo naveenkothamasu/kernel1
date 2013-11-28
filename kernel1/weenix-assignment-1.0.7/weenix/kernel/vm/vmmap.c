@@ -77,10 +77,12 @@ vmmap_destroy(vmmap_t *map)
 	dbg(DBG_PRINT, "GRADING 3.A.3.\n");
 	vmarea_t *vma;
 	list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink ) {
+		vma->vma_obj->mmo_ops->put(vma->vma_obj);
 		list_remove( &vma->vma_plink);
 		vmarea_free(vma);	
 	} list_iterate_end();
-	
+	map->vmm_proc = NULL;
+	slab_obj_free(vmmap_allocator,map);	
 }
 
 /* Add a vmarea to an address space. Assumes (i.e. asserts to some extent)
@@ -105,13 +107,17 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 
 	newvma->vma_vmmap = map;
 	vmarea_t *vma;
+	if(!list_empty(&(map->vmm_list))){
 	list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink ) {
-		if(vma->vma_start > newvma->vma_end){
+		if(vma->vma_start > newvma->vma_start){
 			temp = vma;
 		}	
 	} list_iterate_end();
 	if(temp != NULL){
 		list_insert_before(&temp->vma_plink, &newvma->vma_plink );
+	}else{
+		list_insert_tail(&map->vmm_list, &newvma->vma_plink);
+	}
 	}else{
 		list_insert_head(&map->vmm_list, &newvma->vma_plink);
 	}
@@ -297,6 +303,7 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 		/*
 		newvma->vma_olink = 
 		*/
+		vmmap_insert(map, newvma);
 		if( new != NULL){
 			*new = newvma;
 		}
@@ -308,7 +315,6 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 				return -1;
 			}
 			newvma->vma_obj = memobj;
-			vmmap_insert(map, newvma);
 		}else{
 			/*disk file case*/
 			s = file->vn_ops->mmap(file, newvma, &memobj);
