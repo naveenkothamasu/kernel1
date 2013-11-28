@@ -363,7 +363,7 @@ initproc_run(int arg1, void *arg2)
 	/*kernel_execve(const char *filename, char *const *argv, char *const *envp);*/
 	char *argv[] = { NULL };
     	char *envp[] = { NULL };
-	kernel_execve("/usr/bin/hello", argv, envp);
+	kernel_execve("/usr/bin/segfault", argv, envp);
         kshell_destroy(kshell);
 
     #endif /* __DRIVERS__ */
