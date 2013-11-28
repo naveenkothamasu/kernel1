@@ -277,13 +277,14 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 		pframe_t *pf;
 		vmmap_t *old_map = NULL;
 		list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink){
-			if(vma->vma_start == lopage){
+			if(vma->vma_start <= lopage || vma->vma_end >= lopage ){
 				old_map = vma->vma_vmmap;	
-		}
+			}
 		} list_iterate_end();
 		if(old_map != NULL){
 			vmmap_remove(old_map, lopage, npages);
 		}
+		
 		vmarea_t *newvma = vmarea_alloc();
 		if(newvma == NULL){
 			return -1;
@@ -293,9 +294,11 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 		newvma->vma_off = off;
 		newvma->vma_prot = prot;
 		newvma->vma_flags = flags;
-		/*XXX newvma->vma_vmmap = map;*/
+		
 		/*
 		newvma->vma_olink = 
+		newvma->vma_plink = 
+
 		*/
 		if( new != NULL){
 			*new = newvma;
@@ -311,6 +314,8 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 			vmmap_insert(map, newvma);
 		}else{
 			/*disk file case*/
+			/*newvma->vma_vmmap = map;*/
+			vmmap_insert(map, newvma);
 			s = file->vn_ops->mmap(file, newvma, &memobj);
 			if(s < 0){
 				return s;
@@ -464,6 +469,8 @@ vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
 				list_iterate_begin( &vma->vma_obj->mmo_respages, pf, pframe_t, pf_olink) {
 					if(pf->pf_addr == vaddr){
 						memcpy(vaddr, buf, count);		
+						pframe_set_dirty(pf);
+						return 0;
 					}
 				} list_iterate_end();
 			}
