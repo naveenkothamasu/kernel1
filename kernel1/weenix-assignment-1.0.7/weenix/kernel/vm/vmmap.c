@@ -464,6 +464,7 @@ vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
 	if(vma == NULL){
 		return -1;
 	}
+	dbginfo(DBG_VMMAP, vmmap_mapping_info, map);
 
 	/*
 		1. Find the first pframe from where we need to proceed
@@ -471,18 +472,25 @@ vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
 	*/
 	list_link_t *list = &vma->vma_obj->mmo_respages;
 	list_link_t *link;
+	/*
 	for(link = list->l_next ; list != link; link = link->l_next){
 		pf = list_item(link, pframe_t, pf_olink);
 		if(pf->pf_addr <= vaddr){
 			break;
 		}
 	}
+	*/
 	/*got the link to pframe from where we need to write*/
+	
 	for(; (int)count >=0 && list != link; link = link->l_next, count -= PAGE_SIZE){
 		pf = list_item(link, pframe_t, pf_olink);
-		memcpy( (uint32_t *)pf->pf_addr+vma->vma_off, buf, PAGE_SIZE);	
+		memcpy(vaddr , buf, PAGE_SIZE);	
 		count -= PAGE_SIZE;
+		vaddr += PAGE_SIZE;
 		pframe_set_dirty(pf);
+	}
+	if(count < 0){
+		memcpy(pf->pf_addr, buf, count + PAGE_SIZE);	
 	}
 
         return 0;
