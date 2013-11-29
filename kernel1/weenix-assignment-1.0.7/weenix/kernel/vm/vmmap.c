@@ -184,7 +184,7 @@ vmmap_lookup(vmmap_t *map, uint32_t vfn)
 	dbg(DBG_PRINT, "GRADING 3.A.3.d \n");
 	vmarea_t *vma;
 	list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink ) {
-		if( vfn <= (vma->vma_end << PAGE_SHIFT) && (vma->vma_start << PAGE_SHIFT) <= vfn){
+		if( vfn < (vma->vma_end << PAGE_SHIFT) && (vma->vma_start << PAGE_SHIFT) <= vfn){
 			return vma;
 		}
 	} list_iterate_end();
@@ -304,6 +304,12 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 			if(memobj == NULL){
 				return -1;
 			}
+			/*
+			pframe_t *pf = pframe_alloc(memobj, 0);
+			if(pf == NULL){
+				return -1;
+			}
+			*/
 			newvma->vma_obj = memobj;
 			vmmap_insert(map, newvma);
 		}else{
@@ -472,16 +478,19 @@ vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
 	*/
 	list_link_t *list = &vma->vma_obj->mmo_respages;
 	list_link_t *link;
-	/*
+	uintptr_t  off = PAGE_OFFSET(vaddr);
+	
 	for(link = list->l_next ; list != link; link = link->l_next){
 		pf = list_item(link, pframe_t, pf_olink);
-		if(pf->pf_addr <= vaddr){
-			break;
-		}
+		break;
 	}
-	*/
-	/*got the link to pframe from where we need to write*/
+	if(vma->vma_obj->mmo_nrespages == 0){
+		return 0;
+	}
+	memcpy(pf->pf_addr + off, buf, count);
 	
+	/*got the link to pframe from where we need to write*/
+	/*	
 	for(; (int)count >=0 && list != link; link = link->l_next, count -= PAGE_SIZE){
 		pf = list_item(link, pframe_t, pf_olink);
 		memcpy(vaddr , buf, PAGE_SIZE);	
@@ -492,7 +501,7 @@ vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
 	if(count < 0){
 		memcpy(pf->pf_addr, buf, count + PAGE_SIZE);	
 	}
-
+	*/
         return 0;
 }
 

@@ -53,17 +53,10 @@ handle_pagefault(uintptr_t vaddr, uint32_t cause)
 {
         /*NOT_YET_IMPLEMENTED("VM: handle_pagefault");*/
 	vmmap_t *map = curproc->p_vmmap;
-	vmarea_t *vma;
-	pframe_t *pf = NULL;
-	if(!list_empty(&map->vmm_list)){
-		list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink){
-			list_iterate_begin( &vma->vma_obj->mmo_respages, pf, pframe_t, pf_olink){
-				if(*(uintptr_t *)(pf->pf_addr) <= vaddr){
-					break;
-				}	
-			}list_iterate_end();
-		}list_iterate_end();
-	}
+	
+	vmarea_t *vma =	vmmap_lookup(vaddr);
+	pframe_t *pf = list_item(vma->vma_obj->mmo_respages->l_next, pframe_t, pf_link);
+	/*pf->pf_addr + PAGE_OFFSET(vaddr);*/
 	if( pf != NULL){
 		if( !(cause & FAULT_USER)){
 			/*XXX permission checks*/
