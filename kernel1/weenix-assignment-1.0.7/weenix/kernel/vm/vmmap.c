@@ -107,12 +107,15 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 
 	newvma->vma_vmmap = map;
 	vmarea_t *vma;
+	dbginfo(DBG_VMMAP, vmmap_mapping_info, map);
 	if(!list_empty(&(map->vmm_list))){
 		list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink ) {
 			if(vma->vma_start > newvma->vma_start){
 				temp = vma;
 			}	
 		} list_iterate_end();
+		
+		dbginfo(DBG_VMMAP, vmmap_mapping_info, map);
 		
 		if(temp != NULL){
 			list_insert_before(&temp->vma_plink, &newvma->vma_plink );
@@ -122,6 +125,8 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 	}else{
 		list_insert_head(&map->vmm_list, &newvma->vma_plink);
 	}
+	char buf[1000];
+	dbginfo(DBG_VMMAP, vmmap_mapping_info, map);
 }
 
 /* Find a contiguous range of free virtual pages of length npages in
@@ -366,20 +371,25 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 				vma->vma_off = pf->pf_pagenum;
 				vmmap_insert(map, newvma);	
 			}
-			if( vma->vma_start < lopage && vma->vma_end < lopage + npages){
+			if( vma->vma_start < lopage && vma->vma_end < lopage + npages 
+				&& vma->vma_end > lopage){
 				vma->vma_end = lopage;
 			}
-			if(lopage < vma->vma_start && vma->vma_end < lopage + npages){
+			if(lopage < vma->vma_start && vma->vma_end < lopage + npages 
+				&& lopage + npages > vma->vma_start){
 				vma->vma_start = lopage + npages; /*FIXME vma_off?*/
 				pframe_t *pf = list_item(vma->vma_obj->mmo_respages.l_next, pframe_t, pf_link);
 				vma->vma_off = pf->pf_pagenum;
 			}
 			if(lopage <= vma->vma_start && vma->vma_end <= lopage + npages ){
+				list_remove( &vma->vma_plink);
 				vmarea_free(vma);	
 			}
 		} list_iterate_end();
+		
 	}
-        return -1;
+	dbginfo(DBG_VMMAP, vmmap_mapping_info, map);
+        return 0;
 }
 
 /*
@@ -450,8 +460,7 @@ vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_write");*/
 	pframe_t *pf;
-	uint32_t temp = *(uint32_t *)vaddr;
-	vmarea_t *vma = vmmap_lookup(map, temp);
+	vmarea_t *vma = vmmap_lookup(map, vaddr);
 	if(vma == NULL){
 		return -1;
 	}
