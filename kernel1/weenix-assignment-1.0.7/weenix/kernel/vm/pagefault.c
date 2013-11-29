@@ -54,20 +54,22 @@ handle_pagefault(uintptr_t vaddr, uint32_t cause)
         /*NOT_YET_IMPLEMENTED("VM: handle_pagefault");*/
 	vmmap_t *map = curproc->p_vmmap;
 	
-	vmarea_t *vma =	vmmap_lookup(map, vaddr);
-	pframe_t *pf = list_item(vma->vma_obj->mmo_respages.l_next, pframe_t, pf_link);
-	/*pf->pf_addr + PAGE_OFFSET(vaddr);*/
+	vmarea_t *vma =	vmmap_lookup(map, ADDR_TO_PN(vaddr));
+	pframe_t *pf;
+	uintptr_t pagenum =  ADDR_TO_PN(vaddr) - vma->vma_start+vma->vma_off;
+	/*uintptr_t pagenum = PAGE_OFFSET(vaddr);*/
+	pframe_get(vma->vma_obj, pagenum, &pf);
 	if( pf != NULL){
 		if( !(cause & FAULT_USER)){
 			/*XXX permission checks*/
 			proc_kill(curproc, NULL);
 		}
 		/*XXX handle shadow objects*/		
-		uintptr_t paddr = pt_virt_to_phys(vaddr);
+		uintptr_t paddr = pt_virt_to_phys((uintptr_t)pf->pf_addr);
 		uintptr_t pdflags = PD_PRESENT | PD_WRITE | PD_USER;
 		uintptr_t ptflags = PT_PRESENT | PT_WRITE | PT_USER;
 		/*XXX tlb flush?*/
-		pt_map(curproc->p_pagedir, vaddr, paddr, pdflags, ptflags);
+		pt_map(curproc->p_pagedir,(uintptr_t)(PN_TO_ADDR(ADDR_TO_PN( vaddr))), paddr, pdflags, ptflags);
 
 	}
 }

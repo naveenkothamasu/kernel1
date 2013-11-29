@@ -109,11 +109,16 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 	vmarea_t *vma;
 	dbginfo(DBG_VMMAP, vmmap_mapping_info, map);
 	if(!list_empty(&(map->vmm_list))){
-		list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink ) {
-			if(vma->vma_start > newvma->vma_start){
+		list_link_t *list = &map->vmm_list;
+		list_link_t *link;
+		vmarea_t * vma;
+		for(link = list->l_next; list != link; link = link->l_next){
+			vma = list_item(link, vmarea_t, vma_plink);
+			if(vma->vma_start > newvma->vma_start && newvma->vma_end <= vma->vma_start){
 				temp = vma;
+				break;
 			}	
-		} list_iterate_end();
+		}
 		
 		dbginfo(DBG_VMMAP, vmmap_mapping_info, map);
 		
@@ -184,7 +189,7 @@ vmmap_lookup(vmmap_t *map, uint32_t vfn)
 	dbg(DBG_PRINT, "GRADING 3.A.3.d \n");
 	vmarea_t *vma;
 	list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink ) {
-		if( vfn < (vma->vma_end << PAGE_SHIFT) && (vma->vma_start << PAGE_SHIFT) <= vfn){
+		if( vfn < vma->vma_end && vma->vma_start <= vfn){
 			return vma;
 		}
 	} list_iterate_end();
@@ -466,7 +471,7 @@ vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_write");*/
 	pframe_t *pf;
-	vmarea_t *vma = vmmap_lookup(map, vaddr);
+	vmarea_t *vma = vmmap_lookup(map, ADDR_TO_PN(vaddr));
 	if(vma == NULL){
 		return -1;
 	}
@@ -487,7 +492,7 @@ vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
 	if(vma->vma_obj->mmo_nrespages == 0){
 		return 0;
 	}
-	memcpy(pf->pf_addr + off, buf, count);
+	memcpy((uint32_t *)pf->pf_addr + off, buf, count);
 	
 	/*got the link to pframe from where we need to write*/
 	/*	
@@ -529,9 +534,9 @@ vmmap_mapping_info(const void *vmmap, char *buf, size_t osize)
                 }
 
                 len = snprintf(buf, size,
-                               "%#.8x-%#.8x  %c%c%c  %7s 0x%p %#.5x %#.5x-%#.5x\n",
-                               vma->vma_start << PAGE_SHIFT,
-                               vma->vma_end << PAGE_SHIFT,
+                               "%#.8d-%#.8d  %c%c%c  %7s 0x%p %#.5x %#.5x-%#.5x\n",
+                               vma->vma_start ,
+                               vma->vma_end ,
                                (vma->vma_prot & PROT_READ ? 'r' : '-'),
                                (vma->vma_prot & PROT_WRITE ? 'w' : '-'),
                                (vma->vma_prot & PROT_EXEC ? 'x' : '-'),
