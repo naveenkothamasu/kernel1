@@ -184,7 +184,7 @@ vmmap_lookup(vmmap_t *map, uint32_t vfn)
 	dbg(DBG_PRINT, "GRADING 3.A.3.d \n");
 	vmarea_t *vma;
 	list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink ) {
-		if( vfn <= vma->vma_end && vma->vma_start <= vfn){
+		if( vfn <= (vma->vma_end << PAGE_SHIFT) && (vma->vma_start << PAGE_SHIFT) <= vfn){
 			return vma;
 		}
 	} list_iterate_end();
