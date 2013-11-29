@@ -54,8 +54,8 @@ handle_pagefault(uintptr_t vaddr, uint32_t cause)
         /*NOT_YET_IMPLEMENTED("VM: handle_pagefault");*/
 	vmmap_t *map = curproc->p_vmmap;
 	
-	vmarea_t *vma =	vmmap_lookup(vaddr);
-	pframe_t *pf = list_item(vma->vma_obj->mmo_respages->l_next, pframe_t, pf_link);
+	vmarea_t *vma =	vmmap_lookup(map, vaddr);
+	pframe_t *pf = list_item(vma->vma_obj->mmo_respages.l_next, pframe_t, pf_link);
 	/*pf->pf_addr + PAGE_OFFSET(vaddr);*/
 	if( pf != NULL){
 		if( !(cause & FAULT_USER)){
