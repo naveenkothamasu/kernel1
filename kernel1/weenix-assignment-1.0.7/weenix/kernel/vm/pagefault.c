@@ -53,10 +53,14 @@ handle_pagefault(uintptr_t vaddr, uint32_t cause)
 {
         /*NOT_YET_IMPLEMENTED("VM: handle_pagefault");*/
 	vmmap_t *map = curproc->p_vmmap;
-	
+	dbginfo(DBG_ERROR, proc_info, curproc);
+	dbginfo(DBG_ERROR, proc_list_info, NULL);
+	if(vaddr == NULL){
+	}	
 	vmarea_t *vma =	vmmap_lookup(map, ADDR_TO_PN(vaddr));
 	pframe_t *pf;
 	uintptr_t pagenum =  ADDR_TO_PN(vaddr) - vma->vma_start+vma->vma_off;
+	
 	/*uintptr_t pagenum = PAGE_OFFSET(vaddr);*/
 	pframe_get(vma->vma_obj, pagenum, &pf);
 	if( pf != NULL){

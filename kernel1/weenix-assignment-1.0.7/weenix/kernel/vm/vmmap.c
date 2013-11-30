@@ -77,7 +77,7 @@ vmmap_destroy(vmmap_t *map)
 	dbg(DBG_PRINT, "GRADING 3.A.3.\n");
 	vmarea_t *vma;
 	list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink ) {
-		/*vma->vma_obj->mmo_ops->put(vma->vma_obj);*/
+		vma->vma_obj->mmo_ops->put(vma->vma_obj);
 		list_remove( &vma->vma_plink);
 		vmarea_free(vma);	
 	} list_iterate_end();
@@ -490,6 +490,9 @@ vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
 		break;
 	}
 	if(vma->vma_obj->mmo_nrespages == 0){
+		uintptr_t pagenum =  ADDR_TO_PN(vaddr) - vma->vma_start+vma->vma_off;
+		pframe_get(vma->vma_obj, pagenum, &pf);	
+		memcpy((uint32_t *)pf->pf_addr + off, buf, count);
 		return 0;
 	}
 	memcpy((uint32_t *)pf->pf_addr + off, buf, count);

@@ -137,6 +137,7 @@ pt_map(pagedir_t *pd, uintptr_t vaddr, uintptr_t paddr, uint32_t pdflags, uint32
         KASSERT((ptflags & ~PAGE_MASK) == ptflags);
         pt[index] = paddr | ptflags;
 
+	/*dbginfo(DBG_ERROR, pt_mapping_info, pt);*/
         return 0;
 }
 
@@ -231,7 +232,6 @@ _pt_fault_handler(regs_t *regs)
         /* Get the address where the fault occurred */
         __asm__ volatile("movl %%cr2, %0" : "=r"(vaddr));
         uint32_t cause = regs->r_err;
-
         /* Check if pagefault was in user space (otherwise, BAD!) */
         if (cause & FAULT_USER) {
                 handle_pagefault(vaddr, cause);

@@ -145,7 +145,8 @@ anon_fillpage(mmobj_t *o, pframe_t *pf)
 	if(pageframe == NULL){
 		return -EFAULT;
 	}
-	memcpy(pageframe->pf_addr,pf->pf_addr,PAGE_SIZE);
+	/*memcpy(pageframe->pf_addr,pf->pf_addr,PAGE_SIZE);*/
+	memset(pf->pf_addr, 0, PAGE_SIZE);
 	if(!pframe_is_pinned(pageframe))
 		pframe_pin(pageframe);
         return 0;

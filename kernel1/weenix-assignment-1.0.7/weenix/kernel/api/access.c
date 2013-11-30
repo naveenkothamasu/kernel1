@@ -127,7 +127,8 @@ int addr_perm(struct proc *p, const void *vaddr, int perm)
 	int access=0;
         if(Pmap==NULL)
 		return access;
-	vmarea_t *Pvmarea=vmmap_lookup(Pmap,*((uint32_t*)vaddr));
+	
+	vmarea_t *Pvmarea=vmmap_lookup(Pmap,ADDR_TO_PN(vaddr));
 	if(Pvmarea==NULL)
 		return access;
 	int permissions= Pvmarea->vma_prot;
