@@ -350,7 +350,7 @@ initproc_run(int arg1, void *arg2)
 
 
     #ifdef __DRIVERS__
-	/*
+	
         kshell_add_command("faber", faber, "faber tests");
         kshell_add_command("sunghan", sunghan, "sunghan tests");
         kshell_add_command("deadlock", deadlock, "sunghan deadlock tests");
@@ -363,8 +363,7 @@ initproc_run(int arg1, void *arg2)
 	char *argv[] = { NULL };
     	char *envp[] = { NULL };
 	kernel_execve("/usr/bin/hello", argv, envp);
-        kshell_destroy(kshell);*/
-	kernel_execve("/usr/bin/hello", NULL, NULL);
+        kshell_destroy(kshell);
 
     #endif /* __DRIVERS__ */
 /*	

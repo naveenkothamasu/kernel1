@@ -393,6 +393,7 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 				vma->vma_off = pf->pf_pagenum;
 			}
 			if(lopage <= vma->vma_start && vma->vma_end <= lopage + npages ){
+				vma->vma_obj->mmo_ops->put(vma->vma_obj);
 				list_remove( &vma->vma_plink);
 				vmarea_free(vma);	
 			}
