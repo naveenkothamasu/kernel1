@@ -486,17 +486,17 @@ vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
 	list_link_t *link;
 	uintptr_t  off = PAGE_OFFSET(vaddr);
 	
-	for(link = list->l_next ; list != link; link = link->l_next){
-		pf = list_item(link, pframe_t, pf_olink);
-		break;
-	}
-	if(vma->vma_obj->mmo_nrespages == 0){
-		uintptr_t pagenum =  ADDR_TO_PN(vaddr) - vma->vma_start+vma->vma_off;
+	uintptr_t pagenum =  ADDR_TO_PN(vaddr) - vma->vma_start+vma->vma_off;
+	int32_t temp = count;
+	while(temp > 0){
+
 		pframe_get(vma->vma_obj, pagenum, &pf);	
-		memcpy((uint32_t *)pf->pf_addr + off, buf, count);
-		return 0;
-	}
-	memcpy((uint32_t *)pf->pf_addr + off, buf, count);
+		pframe_set_dirty(pf);
+		memcpy((uint32_t *)pf->pf_addr + off, buf, temp);
+		temp -= PAGE_SIZE;
+		pagenum++;
+	}	
+	
 	
 	/*got the link to pframe from where we need to write*/
 	/*	

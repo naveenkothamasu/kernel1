@@ -359,11 +359,11 @@ initproc_run(int arg1, void *arg2)
 	
         kshell_t *kshell = kshell_create(0);
         if (NULL == kshell) panic("init: Couldn't create kernel shell\n");
-        while(kshell_execute_next(kshell));
+        /*while(kshell_execute_next(kshell));*/
 	char *argv[] = { NULL };
     	char *envp[] = { NULL };
 	kernel_execve("/usr/bin/hello", argv, envp);
-        kshell_destroy(kshell);
+        /*kshell_destroy(kshell);*/
 
     #endif /* __DRIVERS__ */
 /*	
