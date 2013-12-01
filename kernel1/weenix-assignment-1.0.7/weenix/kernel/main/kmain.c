@@ -356,11 +356,10 @@ initproc_run(int arg1, void *arg2)
         kshell_add_command("deadlock", deadlock, "sunghan deadlock tests");
         kshell_add_command("renametest",rename,"Renames dev/tty0 to tty0RENAMED");
 	kshell_add_command("vfstest", vfstest, "vfs tests");
-	
+	*/	
         kshell_t *kshell = kshell_create(0);
         if (NULL == kshell) panic("init: Couldn't create kernel shell\n");
-        while(kshell_execute_next(kshell));*/
-        kshell_t *kshell = kshell_create(0);
+        while(kshell_execute_next(kshell));
 	char *argv[] = { NULL };
     	char *envp[] = { NULL };
 	kernel_execve("/usr/bin/hello", argv, envp);

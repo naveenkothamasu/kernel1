@@ -130,7 +130,6 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 	}else{
 		list_insert_head(&map->vmm_list, &newvma->vma_plink);
 	}
-	char buf[1000];
 	dbginfo(DBG_VMMAP, vmmap_mapping_info, map);
 }
 
@@ -169,11 +168,11 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
           			link != &map->vmm_list; link = link->l_prev){
 				vma = list_item( link, vmarea_t, vma_plink);
 				start = vma->vma_start;
-					if(vmmap_is_range_empty(map, start, npages)){
-						return start;
-					}	
-				} 
-			}
+				if(vmmap_is_range_empty(map, start, npages)){
+					return start;
+				}	
+			} 
+		}
 	}	
         return -1;
 }
@@ -310,6 +309,15 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 				return -1;
 			}
 			/*
+			unsigned int i=0;
+			for(; i<(npages-lopage); i++){
+				pf = pframe_get_resident(memobj, i);
+				if(pf == NULL){
+					return -1;
+				}
+			}
+			*/
+			/*
 			pframe_t *pf = pframe_alloc(memobj, 0);
 			if(pf == NULL){
 				return -1;
@@ -330,6 +338,7 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 				memobj->mmo_shadowed = shadow_create();
 			}
 		}
+		/*XXX add it to list of all vmareas as well mmobj.mmo_vmas */
 	}	
         return 0;
 }
@@ -492,7 +501,11 @@ vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
 
 		pframe_get(vma->vma_obj, pagenum, &pf);	
 		pframe_set_dirty(pf);
-		memcpy((uint32_t *)pf->pf_addr + off, buf, PAGE_SIZE);
+		if(count < PAGE_SIZE){
+			memcpy((uint32_t *)pf->pf_addr + off, buf, count);
+		}else{
+			memcpy((uint32_t *)pf->pf_addr + off, buf, PAGE_SIZE);
+		}
 		temp -= PAGE_SIZE;
 		pagenum++;
 	}	
@@ -538,9 +551,9 @@ vmmap_mapping_info(const void *vmmap, char *buf, size_t osize)
                 }
 
                 len = snprintf(buf, size,
-                               "%#.8d-%#.8d  %c%c%c  %7s 0x%p %#.5x %#.5x-%#.5x\n",
-                               vma->vma_start ,
-                               vma->vma_end ,
+                               "%#.8x-%#.8x  %c%c%c  %7s 0x%p %#.5x %#.5x-%#.5x\n",
+                               vma->vma_start << PAGE_SHIFT,
+                               vma->vma_end << PAGE_SHIFT,
                                (vma->vma_prot & PROT_READ ? 'r' : '-'),
                                (vma->vma_prot & PROT_WRITE ? 'w' : '-'),
                                (vma->vma_prot & PROT_EXEC ? 'x' : '-'),

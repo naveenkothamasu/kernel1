@@ -316,8 +316,8 @@ pframe_get(struct mmobj *o, uint32_t pagenum, pframe_t **result)
 		*result = f;
 		return 0;
 	}else{
-		while(pframe_is_busy(f)){
-			;
+		if(pframe_is_busy(f)){
+                        sched_sleep_on(&f->pf_waitq);
 		}/*TODO is this correct way of waiting*/
 		*result = f;
 		return 0;
