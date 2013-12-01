@@ -350,7 +350,7 @@ initproc_run(int arg1, void *arg2)
 
 
     #ifdef __DRIVERS__
-	
+/*	
         kshell_add_command("faber", faber, "faber tests");
         kshell_add_command("sunghan", sunghan, "sunghan tests");
         kshell_add_command("deadlock", deadlock, "sunghan deadlock tests");
@@ -359,7 +359,8 @@ initproc_run(int arg1, void *arg2)
 	
         kshell_t *kshell = kshell_create(0);
         if (NULL == kshell) panic("init: Couldn't create kernel shell\n");
-        /*while(kshell_execute_next(kshell));*/
+        while(kshell_execute_next(kshell));*/
+        kshell_t *kshell = kshell_create(0);
 	char *argv[] = { NULL };
     	char *envp[] = { NULL };
 	kernel_execve("/usr/bin/hello", argv, envp);

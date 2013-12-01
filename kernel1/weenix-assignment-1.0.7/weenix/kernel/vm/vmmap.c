@@ -492,7 +492,7 @@ vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
 
 		pframe_get(vma->vma_obj, pagenum, &pf);	
 		pframe_set_dirty(pf);
-		memcpy((uint32_t *)pf->pf_addr + off, buf, temp);
+		memcpy((uint32_t *)pf->pf_addr + off, buf, PAGE_SIZE);
 		temp -= PAGE_SIZE;
 		pagenum++;
 	}	

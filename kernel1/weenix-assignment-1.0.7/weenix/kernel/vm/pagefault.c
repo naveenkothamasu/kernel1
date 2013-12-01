@@ -58,22 +58,21 @@ handle_pagefault(uintptr_t vaddr, uint32_t cause)
 	if(vaddr == NULL){
 	}	
 	vmarea_t *vma =	vmmap_lookup(map, ADDR_TO_PN(vaddr));
-	pframe_t *pf;
-	uintptr_t pagenum =  ADDR_TO_PN(vaddr) - vma->vma_start+vma->vma_off;
 	
 	/*uintptr_t pagenum = PAGE_OFFSET(vaddr);*/
-	pframe_get(vma->vma_obj, pagenum, &pf);
-	if( pf != NULL){
-		if( !(cause & FAULT_USER)){
-			/*XXX permission checks*/
-			proc_kill(curproc, NULL);
-		}
-		/*XXX handle shadow objects*/		
-		uintptr_t paddr = pt_virt_to_phys((uintptr_t)pf->pf_addr);
-		uintptr_t pdflags = PD_PRESENT | PD_WRITE | PD_USER;
-		uintptr_t ptflags = PT_PRESENT | PT_WRITE | PT_USER;
-		/*XXX tlb flush?*/
-		pt_map(curproc->p_pagedir,(uintptr_t)(PN_TO_ADDR(ADDR_TO_PN( vaddr))), paddr, pdflags, ptflags);
-
+	if(vma == NULL ||  !(cause & FAULT_USER)){
+		/*XXX permission checks*/
+		curproc->p_status = EFAULT;
+		proc_kill(curproc, NULL);
 	}
+	pframe_t *pf;
+	uintptr_t pagenum =  ADDR_TO_PN(vaddr) - vma->vma_start+vma->vma_off;
+	pframe_get(vma->vma_obj, pagenum, &pf);
+	/*XXX handle shadow objects*/		
+	uintptr_t paddr = pt_virt_to_phys((uintptr_t)pf->pf_addr);
+	uintptr_t pdflags = PD_PRESENT | PD_WRITE | PD_USER;
+	uintptr_t ptflags = PT_PRESENT | PT_WRITE | PT_USER;
+	/*XXX tlb flush?*/
+	pt_map(curproc->p_pagedir,PAGE_ALIGN_DOWN(vaddr), paddr, pdflags, ptflags);
+
 }
