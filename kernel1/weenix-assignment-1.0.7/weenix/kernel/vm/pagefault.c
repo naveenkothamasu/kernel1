@@ -73,6 +73,6 @@ handle_pagefault(uintptr_t vaddr, uint32_t cause)
 	uintptr_t pdflags = PD_PRESENT | PD_WRITE | PD_USER;
 	uintptr_t ptflags = PT_PRESENT | PT_WRITE | PT_USER;
 	/*XXX tlb flush?*/
-	pt_map(curproc->p_pagedir,PAGE_ALIGN_DOWN(vaddr), paddr, pdflags, ptflags);
+	pt_map(curproc->p_pagedir,(uintptr_t)PAGE_ALIGN_DOWN(vaddr), paddr, pdflags, ptflags);
 
 }
