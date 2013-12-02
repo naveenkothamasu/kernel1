@@ -53,13 +53,12 @@ int
 do_fork(struct regs *regs)
 {
         /*NOT_YET_IMPLEMENTED("VM: do_fork");*/
+	int i = 0;
 	proc_t *child = proc_create("child");
 	if(child == NULL){
 		return -1;
 	}
-	/*child->p_files = curproc->p_files;*/
 	child->p_vmmap=vmmap_clone(curproc->p_vmmap);
-	child->p_cwd=curproc->p_cwd;
 	list_link_t *pList = &(curproc->p_vmmap->vmm_list);
 	list_link_t *cList = &(child->p_vmmap->vmm_list);
 	list_link_t *pLink;
@@ -72,7 +71,16 @@ do_fork(struct regs *regs)
 		aParent = list_item(&pList, vmarea_t, vma_plink);
 		aChild = list_item(&cList, vmarea_t, vma_plink);
 		aChild->vma_obj = aParent->vma_obj;
+		aChild->vma_obj->mmo_ops->ref(aChild->vma_obj);
+		pt_unmap_range(curproc->p_pagedir,aParent->vma_start, aParent->vma_end);
+		tlb_flush_all();
 	}
+	for(; i < NFILES; i++){
+		fref(child->p_files[i]);
+		child->p_files[i] = curproc->p_files[i];
+	}
+	child->p_cwd=curproc->p_cwd;
+	vref(child->p_cwd);
 	/* TODO? Shadow objects creation and check for the rules to create*/
 	/*FIXME:From the help session : If mapping is private create a shadow object for both the parent and child and map them to the underlying
 	memory object*/
@@ -108,11 +116,17 @@ do_fork(struct regs *regs)
 	childthread->kt_proc=child;
 	list_insert_tail(&(child->p_threads), &(childthread->kt_plink));
 	(childthread->kt_ctx).c_eip = (uint32_t)userland_entry;
+	regs->r_eax = 0;
 	(childthread->kt_ctx).c_esp = fork_setup_stack(regs, childthread->kt_kstack);
 	context_setup(&(childthread->kt_ctx), NULL, NULL, NULL, childthread->kt_kstack, DEFAULT_STACK_SIZE, childthread->kt_proc->p_pagedir);
+
 	sched_make_runnable(childthread);
+	regs->r_eax = child->p_pid;
+	/*
 	if(curproc == child)
        		 return 0;
 	else
 		return child->p_pid;
+	*/
+	return 0;
 }
