@@ -450,22 +450,27 @@ int
 vmmap_read(vmmap_t *map, const void *vaddr, void *buf, size_t count)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_read");*/
-	vmarea_t *vma;
 	pframe_t *pf;
-	if(!list_empty(&map->vmm_list)){
-        	list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink) {
-			if(!list_empty(&vma->vma_obj->mmo_respages)){	
-
-				list_iterate_begin( &vma->vma_obj->mmo_respages, pf, pframe_t, pf_olink) {
-					if(pf->pf_addr == vaddr){
-						memcpy(buf, pf->pf_addr, count);		
-						return 0;
-					}
-				} list_iterate_end();
-			}
-		} list_iterate_end();
+	vmarea_t *vma = vmmap_lookup(map, ADDR_TO_PN(vaddr));
+	if(vma == NULL){
+		return -1;
 	}
-        return -1;
+	int32_t temp = count;
+	uintptr_t  off = PAGE_OFFSET(vaddr);
+	uintptr_t pagenum =  ADDR_TO_PN(vaddr) - vma->vma_start+vma->vma_off;
+	while(temp > 0){
+
+		pframe_get(vma->vma_obj, pagenum, &pf);	
+		pframe_set_dirty(pf);
+		if(count < PAGE_SIZE){
+			memcpy(buf, (uint32_t *)pf->pf_addr + off, count);
+		}else{
+			memcpy(buf, (uint32_t *)pf->pf_addr + off, PAGE_SIZE);
+		}
+		temp -= PAGE_SIZE;
+		pagenum++;
+	}
+       return 0;
 }
 
 /* Write from 'buf' into the virtual address space of 'map' starting at

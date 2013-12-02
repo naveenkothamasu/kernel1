@@ -103,7 +103,12 @@ extern void *vfstest_main(int argc, void *);
 		do_rename("dev/tty0",newname);
 		return 0;	
 	}
-
+	
+	int hello(kshell_t *kshell, int argc, char **argv){
+		char *a[] = { NULL };
+    		char *e[] = { NULL };
+		kernel_execve("/usr/bin/hello", a, e);
+	}
     #endif /* __DRIVERS__ */
 /**
  * This is the first real C function ever called. It performs a lot of
@@ -343,6 +348,7 @@ initproc_create(void)
  * @param arg1 the first argument (unused)
  * @param arg2 the second argument (unused)
  */
+
 static void *
 initproc_run(int arg1, void *arg2)
 {
@@ -359,7 +365,10 @@ initproc_run(int arg1, void *arg2)
 	*/	
         kshell_t *kshell = kshell_create(0);
         if (NULL == kshell) panic("init: Couldn't create kernel shell\n");
+	/*
+	kshell_add_command("hello", hello, "vfs tests");
         while(kshell_execute_next(kshell));
+	*/
 	char *argv[] = { NULL };
     	char *envp[] = { NULL };
 	kernel_execve("/usr/bin/hello", argv, envp);
