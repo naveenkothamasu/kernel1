@@ -430,8 +430,9 @@ vmmap_is_range_empty(vmmap_t *map, uint32_t startvfn, uint32_t npages)
 	}
         list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink) {
 		/*(startvfn doesnt lie) && (endvfn doesnt lie)*/
-		if( (vma->vma_start <= startvfn && startvfn < vma->vma_end) || 
-			(vma->vma_start <= endvfn && endvfn < vma->vma_end)){
+		if( (vma->vma_start < startvfn && startvfn < vma->vma_end) || 
+			(vma->vma_start < endvfn && endvfn < vma->vma_end) ||
+				(vma->vma_start == startvfn)){
 			return 0;
 		}
 	} list_iterate_end();
@@ -461,9 +462,9 @@ vmmap_read(vmmap_t *map, const void *vaddr, void *buf, size_t count)
 	while(temp > 0){
 
 		pframe_get(vma->vma_obj, pagenum, &pf);	
-		pframe_set_dirty(pf);
 		if(count < PAGE_SIZE){
-			memcpy(buf, (uint32_t *)pf->pf_addr + off, count);
+			memcpy(buf, (void *)((uint32_t *)pf->pf_addr + off), count);
+			/*strncpy(buf,  (uint32_t *)pf->pf_addr + off, count);*/
 		}else{
 			memcpy(buf, (uint32_t *)pf->pf_addr + off, PAGE_SIZE);
 		}
