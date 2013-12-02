@@ -105,9 +105,16 @@ extern void *vfstest_main(int argc, void *);
 	}
 	
 	int hello(kshell_t *kshell, int argc, char **argv){
-		char *a[] = { NULL };
+		/*
+		char *a = "ab cde fghi j";
     		char *e[] = { NULL };
-		kernel_execve("/usr/bin/hello", a, e);
+		kernel_execve("/usr/bin/args", &a, e);
+		*/
+		char *a[] = {NULL};
+		char *e[] = {NULL};
+		kernel_execve("/usr/bin/fork-and-wait", a, e);
+			
+		return 0;
 	}
     #endif /* __DRIVERS__ */
 /**

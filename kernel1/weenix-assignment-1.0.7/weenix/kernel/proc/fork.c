@@ -57,14 +57,27 @@ do_fork(struct regs *regs)
 	if(child == NULL){
 		return -1;
 	}
-	child->p_pproc = curproc->p_pproc;
 	/*child->p_files = curproc->p_files;*/
 	child->p_threads = curproc->p_threads;
 	child->p_vmmap=vmmap_clone(curproc->p_vmmap);
 	child->p_cwd=curproc->p_cwd;
+	list_link_t *pList = &(curproc->p_vmmap->vmm_list);
+	list_link_t *cList = &(child->p_vmmap->vmm_list);
+	list_link_t *pLink;
+	list_link_t *cLink;
+	vmarea_t *aParent;
+	vmarea_t *aChild;	
+	for(pLink = pList->l_next, cLink = cList->l_next;
+		pList != pLink; pLink = pLink->l_next, cLink = cLink->l_next){
+		
+		aParent = list_item(&pList, vmarea_t, vma_plink);
+		aChild = list_item(&cList, vmarea_t, vma_plink);
+		aChild->vma_obj = aParent->vma_obj;
+	}
 	/* TODO? Shadow objects creation and check for the rules to create*/
 	/*FIXME:From the help session : If mapping is private create a shadow object for both the parent and child and map them to the underlying
 	memory object*/
+	/*
 	vmarea_t *vmareaParent,*vmareaChild;
 	list_iterate_begin(&(curproc->p_vmmap->vmm_list), vmareaParent, vmarea_t, vma_plink){
 		if(vmareaParent->vma_flags == MAP_PRIVATE){
@@ -76,10 +89,11 @@ do_fork(struct regs *regs)
 			tlb_flush_all();
 		}
 		if(vmareaParent->vma_flags == MAP_SHARED){
-			/*TODO:*/
 		}
 	}list_iterate_end();
+	*/
 /*TODO? Is this the correct way to do the mapping after fork! We called vmmap_clone above so that both the curproc and childproc will have the same values */
+	/*
 	list_iterate_begin(&(child->p_vmmap->vmm_list), vmareaChild, vmarea_t, vma_plink){
 		if(vmareaChild->vma_flags == MAP_PRIVATE){
 			mmobj_t *Child_shadowobj = shadow_create();
@@ -87,10 +101,10 @@ do_fork(struct regs *regs)
 			vmareaChild->vma_obj=Child_shadowobj;
 		}
 		if(vmareaChild->vma_flags == MAP_SHARED){
-			/*TODO:*/
 		}
 	}list_iterate_end();
-
+	*/
+	
 	kthread_t *childthread=kthread_clone(curthr);
 	childthread->kt_proc=child;
 	list_insert_tail(&(child->p_threads), &(childthread->kt_plink));
