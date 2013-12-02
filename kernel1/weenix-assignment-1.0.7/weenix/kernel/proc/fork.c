@@ -58,7 +58,6 @@ do_fork(struct regs *regs)
 		return -1;
 	}
 	/*child->p_files = curproc->p_files;*/
-	child->p_threads = curproc->p_threads;
 	child->p_vmmap=vmmap_clone(curproc->p_vmmap);
 	child->p_cwd=curproc->p_cwd;
 	list_link_t *pList = &(curproc->p_vmmap->vmm_list);
@@ -104,10 +103,16 @@ do_fork(struct regs *regs)
 		}
 	}list_iterate_end();
 	*/
-	
+	/*TODO? How does fork know which one to return?return parent pid or zero*/
 	kthread_t *childthread=kthread_clone(curthr);
 	childthread->kt_proc=child;
 	list_insert_tail(&(child->p_threads), &(childthread->kt_plink));
+	(childthread->kt_ctx).c_eip = (uint32_t)userland_entry;
 	(childthread->kt_ctx).c_esp = fork_setup_stack(regs, childthread->kt_kstack);
-        return 0;
+	context_setup(&(childthread->kt_ctx), NULL, NULL, NULL, childthread->kt_kstack, DEFAULT_STACK_SIZE, childthread->kt_proc->p_pagedir);
+	sched_make_runnable(childthread);
+	if(curproc == child)
+       		 return 0;
+	else
+		return child->p_pid;
 }
