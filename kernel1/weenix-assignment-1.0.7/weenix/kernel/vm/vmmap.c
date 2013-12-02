@@ -463,7 +463,7 @@ vmmap_read(vmmap_t *map, const void *vaddr, void *buf, size_t count)
 
 		pframe_get(vma->vma_obj, pagenum, &pf);	
 		if(count < PAGE_SIZE){
-			memcpy(buf, (void *)((uint32_t *)pf->pf_addr + off), count);
+			memcpy(buf, (void *)(pf->pf_addr + off), count);
 			/*strncpy(buf,  (uint32_t *)pf->pf_addr + off, count);*/
 		}else{
 			memcpy(buf, (uint32_t *)pf->pf_addr + off, PAGE_SIZE);
