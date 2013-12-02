@@ -94,9 +94,13 @@ sys_write(write_args_t *arg)
 		return -1;
 	}
 	void *buff=page_alloc();
-	writebytes = do_write(writekaddr.fd,buff,writekaddr.nbytes);
+	writebytes = do_write(writekaddr.fd,writekaddr.buf,writekaddr.nbytes);
 	if(writebytes<0){
 		curthr->kt_errno = writebytes;
+		return -1;
+	}
+	if (copy_to_user(arg->buf,buff,writebytes) < 0){
+		curthr->kt_errno=EFAULT;
 		return -1;
 	}
         page_free(buff);
