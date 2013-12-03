@@ -71,12 +71,14 @@ handle_pagefault(uintptr_t vaddr, uint32_t cause)
 	int forWrite = 0; 
 	if(cause & FAULT_WRITE){
 		forWrite = 1;
-	}	
+	}		
+	/*
 	if(vma->vma_obj->mmo_shadowed != NULL){
 		shadow_lookuppage(vma->vma_obj->mmo_shadowed, pagenum, forWrite,&pf);
 	}else{
+	*/
 		pframe_get(vma->vma_obj, pagenum, &pf);
-	}
+	/*}*/
 	uintptr_t paddr = pt_virt_to_phys((uintptr_t)pf->pf_addr);
 	uintptr_t pdflags = PD_PRESENT | PD_WRITE | PD_USER;
 	uintptr_t ptflags = PT_PRESENT | PT_WRITE | PT_USER;
