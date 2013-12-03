@@ -73,7 +73,7 @@ do_fork(struct regs *regs)
 		aChild = list_item(cLink, vmarea_t, vma_plink);
 		aChild->vma_obj = aParent->vma_obj;
 		/*aChild->vma_obj->mmo_ops->ref(aChild->vma_obj);*/
-		/*pt_unmap_range(curproc->p_pagedir, PN_TO_ADDR(aParent->vma_start), PN_TO_ADDR(aParent->vma_end));*/
+		/*pt_unmap_range(child->p_pagedir, PN_TO_ADDR(aChild->vma_start), PN_TO_ADDR(aChild->vma_end));*/
 		tlb_flush_all();
 	}
 	dbginfo(DBG_VMMAP, vmmap_mapping_info, child->p_vmmap);
@@ -121,13 +121,17 @@ do_fork(struct regs *regs)
 	list_insert_tail(&(child->p_threads), &(childthread->kt_plink));
 	(childthread->kt_ctx).c_eip = (uint32_t)userland_entry;
 	regs->r_eax = 0;
+	/*
+	uint32_t temp = regs->r_eip;
+	regs->r_eip = (uint32_t) userland_entry;
+	*/
 	(childthread->kt_ctx).c_esp = fork_setup_stack(regs, childthread->kt_kstack); 
 	(childthread->kt_ctx).c_pdptr = childthread->kt_proc->p_pagedir;
         (childthread->kt_ctx).c_kstack = (uintptr_t)childthread->kt_kstack;
  	(childthread->kt_ctx).c_kstacksz = DEFAULT_STACK_SIZE;
 
         /*context_setup(&childthread->kt_ctx, , 0, NULL, childthread->kt_kstack, DEFAULT_STACK_SIZE, childthread->kt_proc->p_pagedir);*/
-
+	/*regs->r_eip = temp;*/
 	sched_make_runnable(childthread);
 	
 	return child->p_pid;
