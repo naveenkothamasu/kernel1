@@ -337,11 +337,12 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 				return s;
 			}
 			newvma->vma_obj = memobj;	
-			if (flags == MAP_PRIVATE ){ /*XXX this shold be outside*/
-				memobj->mmo_shadowed = shadow_create();
-			}
+			
 		}
 		/*XXX add it to list of all vmareas as well mmobj.mmo_vmas */
+	}
+	if (flags == MAP_PRIVATE ){ /*XXX this shold be outside*/
+		memobj->mmo_shadowed = shadow_create();
 	}	
         return 0;
 }

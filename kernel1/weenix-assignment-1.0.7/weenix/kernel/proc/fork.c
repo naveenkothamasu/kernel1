@@ -68,13 +68,20 @@ do_fork(struct regs *regs)
 	vmarea_t *aChild;	
 	for(pLink = pList->l_next, cLink = cList->l_next;
 		pList != pLink; pLink = pLink->l_next, cLink = cLink->l_next){
-		
+			
 		aParent = list_item(pLink, vmarea_t, vma_plink);
 		aChild = list_item(cLink, vmarea_t, vma_plink);
-		aChild->vma_obj = aParent->vma_obj;
+		
+		if(aParent->vma_flags == MAP_PRIVATE){
+			mmobj_t *Child_shadowobj = shadow_create();
+			Child_shadowobj = aChild->vma_obj;
+			aChild->vma_obj = Child_shadowobj;
+			pt_unmap_range(child->p_pagedir, PN_TO_ADDR(aChild->vma_start), PN_TO_ADDR(aChild->vma_end));
+			tlb_flush_all();
+		}else if(aParent->vma_flags == MAP_SHARED){
+			aChild->vma_obj = aParent->vma_obj;
+		}
 		/*aChild->vma_obj->mmo_ops->ref(aChild->vma_obj);*/
-		/*pt_unmap_range(child->p_pagedir, PN_TO_ADDR(aChild->vma_start), PN_TO_ADDR(aChild->vma_end));*/
-		tlb_flush_all();
 	}
 	dbginfo(DBG_VMMAP, vmmap_mapping_info, child->p_vmmap);
 	child->p_start_brk = curproc->p_start_brk;
