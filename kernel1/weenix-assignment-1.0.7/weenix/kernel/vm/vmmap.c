@@ -216,6 +216,9 @@ vmmap_clone(vmmap_t *map)
 			return NULL;
 		}
 		/*XXX newvma initialization*/
+		newvma->vma_start = vma->vma_start;
+		newvma->vma_end = vma->vma_end;
+		newvma->vma_off = vma->vma_off;
 		newvma->vma_flags = vma->vma_flags;
 		newvma->vma_prot = vma->vma_prot;
 		newvma->vma_vmmap = pDest;

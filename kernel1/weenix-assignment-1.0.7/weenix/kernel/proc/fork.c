@@ -76,6 +76,9 @@ do_fork(struct regs *regs)
 		/*pt_unmap_range(curproc->p_pagedir, PN_TO_ADDR(aParent->vma_start), PN_TO_ADDR(aParent->vma_end));*/
 		tlb_flush_all();
 	}
+	dbginfo(DBG_VMMAP, vmmap_mapping_info, child->p_vmmap);
+	child->p_start_brk = curproc->p_start_brk;
+	child->p_brk = curproc->p_brk;
 	for(; i < NFILES; i++){
 		/*fref(child->p_files[i]);*/
 		child->p_files[i] = curproc->p_files[i];
@@ -125,7 +128,6 @@ do_fork(struct regs *regs)
 
         /*context_setup(&childthread->kt_ctx, , 0, NULL, childthread->kt_kstack, DEFAULT_STACK_SIZE, childthread->kt_proc->p_pagedir);*/
 
-	regs->r_eax = child->p_pid;
 	sched_make_runnable(childthread);
 	
 	return child->p_pid;
