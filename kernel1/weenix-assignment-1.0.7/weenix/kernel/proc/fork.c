@@ -59,6 +59,7 @@ do_fork(struct regs *regs)
 		return -1;
 	}
 	child->p_vmmap=vmmap_clone(curproc->p_vmmap);
+	dbginfo(DBG_VMMAP, vmmap_mapping_info, curproc->p_vmmap);
 	list_link_t *pList = &(curproc->p_vmmap->vmm_list);
 	list_link_t *cList = &(child->p_vmmap->vmm_list);
 	list_link_t *pLink;
@@ -68,10 +69,10 @@ do_fork(struct regs *regs)
 	for(pLink = pList->l_next, cLink = cList->l_next;
 		pList != pLink; pLink = pLink->l_next, cLink = cLink->l_next){
 		
-		aParent = list_item(&pList, vmarea_t, vma_plink);
-		aChild = list_item(&cList, vmarea_t, vma_plink);
+		aParent = list_item(pLink, vmarea_t, vma_plink);
+		aChild = list_item(cLink, vmarea_t, vma_plink);
 		aChild->vma_obj = aParent->vma_obj;
-		aChild->vma_obj->mmo_ops->ref(aChild->vma_obj);
+		/*aChild->vma_obj->mmo_ops->ref(aChild->vma_obj);*/
 		pt_unmap_range(curproc->p_pagedir,aParent->vma_start, aParent->vma_end);
 		tlb_flush_all();
 	}
