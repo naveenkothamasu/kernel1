@@ -73,15 +73,15 @@ do_fork(struct regs *regs)
 		aChild = list_item(cLink, vmarea_t, vma_plink);
 		aChild->vma_obj = aParent->vma_obj;
 		/*aChild->vma_obj->mmo_ops->ref(aChild->vma_obj);*/
-		pt_unmap_range(curproc->p_pagedir,aParent->vma_start, aParent->vma_end);
+		pt_unmap_range(curproc->p_pagedir, PN_TO_ADDR(aParent->vma_start), PN_TO_ADDR(aParent->vma_end));
 		tlb_flush_all();
 	}
 	for(; i < NFILES; i++){
-		fref(child->p_files[i]);
+		/*fref(child->p_files[i]);*/
 		child->p_files[i] = curproc->p_files[i];
 	}
 	child->p_cwd=curproc->p_cwd;
-	vref(child->p_cwd);
+	/*vref(child->p_cwd);*/
 	/* TODO? Shadow objects creation and check for the rules to create*/
 	/*FIXME:From the help session : If mapping is private create a shadow object for both the parent and child and map them to the underlying
 	memory object*/
