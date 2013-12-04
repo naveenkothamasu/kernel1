@@ -294,7 +294,10 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 		newvma->vma_end = lopage + npages;
 		newvma->vma_off = off;
 		newvma->vma_prot = prot;
-		newvma->vma_flags = flags;
+		newvma->vma_flags = MAP_SHARED;
+		if(flags & MAP_PRIVATE){
+			newvma->vma_flags = MAP_PRIVATE;
+		}
 		
 		/*
 		newvma->vma_olink = 
