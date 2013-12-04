@@ -68,10 +68,12 @@ handle_pagefault(uintptr_t vaddr, uint32_t cause)
 	pframe_t *pf;
 	uintptr_t pagenum =  ADDR_TO_PN(vaddr) - vma->vma_start+vma->vma_off;
 	/*XXX handle shadow objects*/	
-	int forWrite = 0; 
+	/*
+	int forWrite = 0;
 	if(cause & FAULT_WRITE){
 		forWrite = 1;
-	}		
+	}
+	*/		
 	/*
 	if(vma->vma_obj->mmo_shadowed != NULL){
 		shadow_lookuppage(vma->vma_obj->mmo_shadowed, pagenum, forWrite,&pf);
