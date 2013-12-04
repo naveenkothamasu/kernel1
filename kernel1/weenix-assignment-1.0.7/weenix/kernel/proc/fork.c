@@ -73,10 +73,15 @@ do_fork(struct regs *regs)
 		aChild = list_item(cLink, vmarea_t, vma_plink);
 		
 		if(aParent->vma_flags == MAP_PRIVATE){
+	
 			mmobj_t *Child_shadowobj = shadow_create();
-			Child_shadowobj = aChild->vma_obj;
+			mmobj_t *Parent_shadowobj = shadow_create();
+			Child_shadowobj->mmo_shadowed = aParent->vma_obj;
+			Parent_shadowobj->mmo_shadowed = aParent->vma_obj;
 			aChild->vma_obj = Child_shadowobj;
-			pt_unmap_range(child->p_pagedir,(uintptr_t) PN_TO_ADDR(aChild->vma_start),(uintptr_t) PN_TO_ADDR(aChild->vma_end));
+			aParent->vma_obj = Child_shadowobj;
+
+			pt_unmap_range(curproc->p_pagedir,(uintptr_t) PN_TO_ADDR(aParent->vma_start),(uintptr_t) PN_TO_ADDR(aParent->vma_end));
 			tlb_flush_all();
 		}else if(aParent->vma_flags == MAP_SHARED){
 			aChild->vma_obj = aParent->vma_obj;
@@ -92,37 +97,6 @@ do_fork(struct regs *regs)
 	}
 	child->p_cwd=curproc->p_cwd;
 	/*vref(child->p_cwd);*/
-	/* TODO? Shadow objects creation and check for the rules to create*/
-	/*FIXME:From the help session : If mapping is private create a shadow object for both the parent and child and map them to the underlying
-	memory object*/
-	/*
-	vmarea_t *vmareaParent,*vmareaChild;
-	list_iterate_begin(&(curproc->p_vmmap->vmm_list), vmareaParent, vmarea_t, vma_plink){
-		if(vmareaParent->vma_flags == MAP_PRIVATE){
-			mmobj_t *Parent_shadowobj = shadow_create();
-			Parent_shadowobj = vmareaParent->vma_obj;
-			vmareaParent->vma_obj=Parent_shadowobj;
-			
-			pt_unmap_range(curproc->p_pagedir,vmareaParent->vma_start, vmareaParent->vma_end);
-			tlb_flush_all();
-		}
-		if(vmareaParent->vma_flags == MAP_SHARED){
-		}
-	}list_iterate_end();
-	*/
-/*TODO? Is this the correct way to do the mapping after fork! We called vmmap_clone above so that both the curproc and childproc will have the same values */
-	/*
-	list_iterate_begin(&(child->p_vmmap->vmm_list), vmareaChild, vmarea_t, vma_plink){
-		if(vmareaChild->vma_flags == MAP_PRIVATE){
-			mmobj_t *Child_shadowobj = shadow_create();
-			Child_shadowobj = vmareaChild->vma_obj;
-			vmareaChild->vma_obj=Child_shadowobj;
-		}
-		if(vmareaChild->vma_flags == MAP_SHARED){
-		}
-	}list_iterate_end();
-	*/
-	/*TODO? How does fork know which one to return?return parent pid or zero*/
 	kthread_t *childthread=kthread_clone(curthr);
 	childthread->kt_proc=child;
 	list_insert_tail(&(child->p_threads), &(childthread->kt_plink));
@@ -137,7 +111,6 @@ do_fork(struct regs *regs)
         (childthread->kt_ctx).c_kstack = (uintptr_t)childthread->kt_kstack;
  	(childthread->kt_ctx).c_kstacksz = DEFAULT_STACK_SIZE;
 
-        /*context_setup(&childthread->kt_ctx, , 0, NULL, childthread->kt_kstack, DEFAULT_STACK_SIZE, childthread->kt_proc->p_pagedir);*/
 	/*regs->r_eip = temp;*/
 	sched_make_runnable(childthread);
 	

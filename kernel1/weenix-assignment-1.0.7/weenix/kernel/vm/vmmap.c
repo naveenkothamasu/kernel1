@@ -318,7 +318,11 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 			newvma->vma_obj = memobj;			
 		}
 	if (flags &  MAP_PRIVATE ){ /*XXX this shold be outside*/
-		memobj->mmo_shadowed = shadow_create();
+		mmobj_t *shadowObj = shadow_create();
+		shadowObj->mmo_shadowed = memobj;
+		memobj->mmo_shadowed = NULL;
+		shadowObj->mmo_un.mmo_bottom_obj = memobj;
+		newvma->vma_obj =  shadowObj;
 	}	
         return 0;
 }
@@ -442,10 +446,9 @@ vmmap_read(vmmap_t *map, const void *vaddr, void *buf, size_t count)
 
 		pframe_get(vma->vma_obj, pagenum, &pf);	
 		if(count < PAGE_SIZE){
-			memcpy(buf, (void *)(pf->pf_addr + off), count);
-			/*strncpy(buf,  (uint32_t *)pf->pf_addr + off, count);*/
+			memcpy(buf, (void *)((char *)pf->pf_addr + off), count);
 		}else{
-			memcpy(buf, (uint32_t *)pf->pf_addr + off, PAGE_SIZE);
+			memcpy(buf, (void *)((char *)pf->pf_addr + off), PAGE_SIZE);
 		}
 		temp -= PAGE_SIZE;
 		pagenum++;
