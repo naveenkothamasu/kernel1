@@ -76,7 +76,7 @@ do_fork(struct regs *regs)
 			mmobj_t *Child_shadowobj = shadow_create();
 			Child_shadowobj = aChild->vma_obj;
 			aChild->vma_obj = Child_shadowobj;
-			pt_unmap_range(child->p_pagedir, PN_TO_ADDR(aChild->vma_start), PN_TO_ADDR(aChild->vma_end));
+			pt_unmap_range(child->p_pagedir,(uintptr_t) PN_TO_ADDR(aChild->vma_start),(uintptr_t) PN_TO_ADDR(aChild->vma_end));
 			tlb_flush_all();
 		}else if(aParent->vma_flags == MAP_SHARED){
 			aChild->vma_obj = aParent->vma_obj;

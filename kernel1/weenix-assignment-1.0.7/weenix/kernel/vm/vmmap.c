@@ -285,6 +285,7 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 		if(!vmmap_is_range_empty(map, lopage, npages)){
 			vmmap_remove(map, lopage, npages);
 		}
+	}
 		
 		vmarea_t *newvma = vmarea_alloc();
 		if(newvma == NULL){
@@ -298,58 +299,29 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 		if(flags & MAP_PRIVATE){
 			newvma->vma_flags = MAP_PRIVATE;
 		}
-		
-		/*
-		newvma->vma_olink = 
-		newvma->vma_plink = 
-
-		*/
 		if( new != NULL){
 			*new = newvma;
 		}
 		if(file == NULL){
-			
-			/*anonymous obj case */
 			memobj = anon_create();
 			if(memobj == NULL){
 				return -1;
 			}
-			/*
-			unsigned int i=0;
-			for(; i<(npages-lopage); i++){
-				pf = pframe_get_resident(memobj, i);
-				if(pf == NULL){
-					return -1;
-				}
-			}
-			*/
-			/*
-			pframe_t *pf = pframe_alloc(memobj, 0);
-			if(pf == NULL){
-				return -1;
-			}
-			*/
 			newvma->vma_obj = memobj;
 			vmmap_insert(map, newvma);
 		}else{
-			/*disk file case*/
-			/*newvma->vma_vmmap = map;*/
 			vmmap_insert(map, newvma);
 			s = file->vn_ops->mmap(file, newvma, &memobj);
 			if(s < 0){
 				return s;
 			}
-			newvma->vma_obj = memobj;	
-			
+			newvma->vma_obj = memobj;			
 		}
-		/*XXX add it to list of all vmareas as well mmobj.mmo_vmas */
-	}
-	if (flags == MAP_PRIVATE ){ /*XXX this shold be outside*/
+	if (flags &  MAP_PRIVATE ){ /*XXX this shold be outside*/
 		memobj->mmo_shadowed = shadow_create();
 	}	
         return 0;
 }
-
 /*
  * We have no guarantee that the region of the address space being
  * unmapped will play nicely with our list of vmareas.
