@@ -316,14 +316,15 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 				return s;
 			}
 			newvma->vma_obj = memobj;			
-		}
-	if (flags &  MAP_PRIVATE ){ /*XXX this shold be outside*/
+		}		
+	if (flags &  MAP_PRIVATE ){ /*&& (prot & PROT_WRITE) ){ */
 		mmobj_t *shadowObj = shadow_create();
 		shadowObj->mmo_shadowed = memobj;
 		memobj->mmo_shadowed = NULL;
 		shadowObj->mmo_un.mmo_bottom_obj = memobj;
 		newvma->vma_obj =  shadowObj;
-	}	
+	}
+	
         return 0;
 }
 /*

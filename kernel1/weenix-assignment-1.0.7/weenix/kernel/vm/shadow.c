@@ -178,13 +178,30 @@ shadow_fillpage(mmobj_t *o, pframe_t *pf)
         KASSERT(!pframe_is_pinned(pf));
 	dbg(DBG_PRINT, "GRADING3.A.6.d \n");
 
-	pframe_t *src;
+	pframe_t *src=NULL;
 	
-	int s = shadow_lookuppage(o->mmo_shadowed, pf->pf_pagenum, 0, &src);	
-	if(s < 0){
-		return s;
+	mmobj_t *shadow_obj = o->mmo_shadowed;
+	mmobj_t *temp=NULL;
+	mmobj_t *bottom_obj = o->mmo_un.mmo_bottom_obj;
+		while(shadow_obj != NULL){
+			src = pframe_get_resident(shadow_obj, pf->pf_pagenum);	
+			if(src != NULL){
+				break;
+			}
+			temp=shadow_obj;
+			shadow_obj = shadow_obj->mmo_shadowed;
+		}
+		/*	
+		*pf = pframe_get_resident(bottom_obj, pagenum);
+		if(*pf == NULL){
+			return -1;
+		}else{
+			return 1;
+		}	
+		*/	
+	if(src==NULL){
+		pframe_get(temp,pf->pf_pagenum,&src);
 	}
-	
 	memcpy(pf->pf_addr, src->pf_addr, PAGE_SIZE);
 	
 	return 0;

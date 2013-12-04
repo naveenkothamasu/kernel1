@@ -107,10 +107,7 @@ pt_get(void)
 int
 pt_map(pagedir_t *pd, uintptr_t vaddr, uintptr_t paddr, uint32_t pdflags, uint32_t ptflags)
 {
-        if(!PAGE_ALIGNED(vaddr) 
-		|| !PAGE_ALIGNED(paddr)){
-		dbg(DBG_PRINT, "sasad\n");
-	}
+        
 	KASSERT(PAGE_ALIGNED(vaddr) && PAGE_ALIGNED(paddr));
         KASSERT(USER_MEM_LOW <= vaddr && USER_MEM_HIGH > vaddr);
 

@@ -25,7 +25,7 @@ Disassembly of section .text:
  80480dc:	00 
  80480dd:	c7 44 24 04 5e be 04 	movl   $0x804be5e,0x4(%esp)
  80480e4:	08 
- 80480e5:	c7 04 24 01 00 00 00 	movl   $0x1,(%esp)
+ 80480e5:	c7 04 24 02 00 00 00 	movl   $0x2,(%esp)
  80480ec:	e8 dd 07 00 00       	call   80488ce <write>
  80480f1:	e8 56 02 00 00       	call   804834c <fork>
  80480f6:	89 44 24 1c          	mov    %eax,0x1c(%esp)
@@ -35,7 +35,7 @@ Disassembly of section .text:
  8048108:	00 
  8048109:	c7 44 24 04 72 be 04 	movl   $0x804be72,0x4(%esp)
  8048110:	08 
- 8048111:	c7 04 24 01 00 00 00 	movl   $0x1,(%esp)
+ 8048111:	c7 04 24 02 00 00 00 	movl   $0x2,(%esp)
  8048118:	e8 b1 07 00 00       	call   80488ce <write>
  804811d:	c7 04 24 00 00 00 00 	movl   $0x0,(%esp)
  8048124:	e8 ff 02 00 00       	call   8048428 <exit>
@@ -46,14 +46,14 @@ Disassembly of section .text:
  8048139:	00 
  804813a:	c7 44 24 04 89 be 04 	movl   $0x804be89,0x4(%esp)
  8048141:	08 
- 8048142:	c7 04 24 01 00 00 00 	movl   $0x1,(%esp)
+ 8048142:	c7 04 24 02 00 00 00 	movl   $0x2,(%esp)
  8048149:	e8 80 07 00 00       	call   80488ce <write>
  804814e:	eb 54                	jmp    80481a4 <main+0x110>
  8048150:	c7 44 24 08 1e 00 00 	movl   $0x1e,0x8(%esp)
  8048157:	00 
  8048158:	c7 44 24 04 9c be 04 	movl   $0x804be9c,0x4(%esp)
  804815f:	08 
- 8048160:	c7 04 24 01 00 00 00 	movl   $0x1,(%esp)
+ 8048160:	c7 04 24 02 00 00 00 	movl   $0x2,(%esp)
  8048167:	e8 62 07 00 00       	call   80488ce <write>
  804816c:	c7 44 24 08 00 00 00 	movl   $0x0,0x8(%esp)
  8048173:	00 
@@ -66,7 +66,7 @@ Disassembly of section .text:
  804818f:	00 
  8048190:	c7 44 24 04 bc be 04 	movl   $0x804bebc,0x4(%esp)
  8048197:	08 
- 8048198:	c7 04 24 01 00 00 00 	movl   $0x1,(%esp)
+ 8048198:	c7 04 24 02 00 00 00 	movl   $0x2,(%esp)
  804819f:	e8 2a 07 00 00       	call   80488ce <write>
  80481a4:	b8 00 00 00 00       	mov    $0x0,%eax
  80481a9:	c9                   	leave  
