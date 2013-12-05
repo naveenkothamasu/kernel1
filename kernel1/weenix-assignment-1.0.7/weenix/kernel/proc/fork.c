@@ -81,13 +81,14 @@ do_fork(struct regs *regs)
 			aChild->vma_obj = Child_shadowobj;
 			aParent->vma_obj = Child_shadowobj;
 
-			pt_unmap_range(curproc->p_pagedir,(uintptr_t) PN_TO_ADDR(aParent->vma_start),(uintptr_t) PN_TO_ADDR(aParent->vma_end));
-			tlb_flush_all();
 		}else if(aParent->vma_flags == MAP_SHARED){
 			aChild->vma_obj = aParent->vma_obj;
 		}
 		/*aChild->vma_obj->mmo_ops->ref(aChild->vma_obj);*/
 	}
+	pt_unmap_range(curproc->p_pagedir, USER_MEM_LOW, USER_MEM_HIGH); /*XXX conditional */
+	tlb_flush_all();
+
 	dbginfo(DBG_VMMAP, vmmap_mapping_info, child->p_vmmap);
 	child->p_start_brk = curproc->p_start_brk;
 	child->p_brk = curproc->p_brk;
