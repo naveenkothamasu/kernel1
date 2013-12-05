@@ -308,6 +308,7 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 				return -1;
 			}
 			newvma->vma_obj = memobj;
+			newvma->vma_obj->mmo_ops->ref(newvma->vma_obj);
 			vmmap_insert(map, newvma);
 		}else{
 			vmmap_insert(map, newvma);
@@ -319,6 +320,7 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 		}		
 	if (flags &  MAP_PRIVATE ){ /*&& (prot & PROT_WRITE) ){ */
 		mmobj_t *shadowObj = shadow_create();
+		shadowObj->mmo_ops->ref(shadowObj);
 		shadowObj->mmo_shadowed = memobj;
 		memobj->mmo_shadowed = NULL;
 		shadowObj->mmo_un.mmo_bottom_obj = memobj;
@@ -369,7 +371,7 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 				if(newvma == NULL){
 					return NULL;
 				}
-				newvma->vma_start = lopage +npages; /*FIXME:*/
+				newvma->vma_start = lopage +npages; 
 				newvma->vma_end = vma->vma_end;
 				pframe_t *pf = list_item(newvma->vma_obj->mmo_respages.l_next, pframe_t, pf_link);
 				vma->vma_off = pf->pf_pagenum;
@@ -381,7 +383,7 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 			}
 			if(lopage < vma->vma_start && vma->vma_end < lopage + npages 
 				&& lopage + npages > vma->vma_start){
-				vma->vma_start = lopage + npages; /*FIXME vma_off?*/
+				vma->vma_start = lopage + npages; 
 				pframe_t *pf = list_item(vma->vma_obj->mmo_respages.l_next, pframe_t, pf_link);
 				vma->vma_off = pf->pf_pagenum;
 			}
