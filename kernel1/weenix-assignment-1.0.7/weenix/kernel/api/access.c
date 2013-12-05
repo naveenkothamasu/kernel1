@@ -132,7 +132,7 @@ int addr_perm(struct proc *p, const void *vaddr, int perm)
 	if(Pvmarea==NULL)
 		return access;
 	int permissions= Pvmarea->vma_prot;
-	if(permissions == perm)
+	if(permissions & perm)
 		access=1;
 	return access;
 }
@@ -149,13 +149,13 @@ int addr_perm(struct proc *p, const void *vaddr, int perm)
 int range_perm(struct proc *p, const void *avaddr, size_t len, int perm)
 {
         /*NOT_YET_IMPLEMENTED("VM: range_perm");*/
-	/*XXX
-	uint32_t *temp = (uint32_t *) avaddr;
-	for( ;*temp <= *((uint32_t *)avaddr+len); temp += PAGE_SIZE){
+	
+	char *temp = (char *) avaddr;
+	for( ;temp <= ((char *)avaddr+len); temp += PAGE_SIZE){
 		if( 0 == addr_perm(p, (void *)temp, perm)){
 			return 0;
 		}
 	}
-	*/
+	
         return 1;
 }

@@ -86,10 +86,7 @@ do_fork(struct regs *regs)
 		}
 		/*aChild->vma_obj->mmo_ops->ref(aChild->vma_obj);*/
 	}
-	pt_unmap_range(curproc->p_pagedir, USER_MEM_LOW, USER_MEM_HIGH); /*XXX conditional */
-	tlb_flush_all();
-
-	dbginfo(DBG_VMMAP, vmmap_mapping_info, child->p_vmmap);
+		dbginfo(DBG_VMMAP, vmmap_mapping_info, child->p_vmmap);
 	child->p_start_brk = curproc->p_start_brk;
 	child->p_brk = curproc->p_brk;
 	for(; i < NFILES; i++){
@@ -114,6 +111,9 @@ do_fork(struct regs *regs)
 
 	/*regs->r_eip = temp;*/
 	sched_make_runnable(childthread);
-	
+	pt_unmap_range(curproc->p_pagedir, USER_MEM_LOW, USER_MEM_HIGH); /*XXX conditional */
+	tlb_flush_all();
+
+
 	return child->p_pid;
 }
