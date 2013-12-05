@@ -79,7 +79,7 @@ do_fork(struct regs *regs)
 			Child_shadowobj->mmo_shadowed = aParent->vma_obj;
 			Parent_shadowobj->mmo_shadowed = aParent->vma_obj;
 			aChild->vma_obj = Child_shadowobj;
-			aParent->vma_obj = Child_shadowobj;
+			aParent->vma_obj = Parent_shadowobj;
 
 		}else if(aParent->vma_flags == MAP_SHARED){
 			aChild->vma_obj = aParent->vma_obj;
