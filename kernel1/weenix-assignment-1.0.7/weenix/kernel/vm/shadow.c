@@ -118,8 +118,6 @@ shadow_put(mmobj_t *o)
 				}
                                 if(pframe_is_dirty(pageframe))
                                         pframe_clean(pageframe);
-                                else
-                                        pframe_free(pageframe);
                         }list_iterate_end();
                 	slab_obj_free(shadow_allocator,o);
                 }

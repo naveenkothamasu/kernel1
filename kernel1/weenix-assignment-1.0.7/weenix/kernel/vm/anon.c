@@ -103,8 +103,7 @@ anon_put(mmobj_t *o)
 					sched_sleep_on(&pageframe->pf_waitq);
 				if(pframe_is_dirty(pageframe))
 					pframe_clean(pageframe);
-				else
-					pframe_free(pageframe);
+					/*pframe_free(pageframe);*/
 			}list_iterate_end();
 		}
 	}
