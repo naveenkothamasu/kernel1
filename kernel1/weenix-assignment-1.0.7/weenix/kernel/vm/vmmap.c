@@ -160,22 +160,19 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
 	list_link_t *list = &map->vmm_list;
 	if(!list_empty( &map->vmm_list)){
 		if(dir == VMMAP_DIR_LOHI){
-			list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink ) {
-				start = vma->vma_start;
+			start = ADDR_TO_PN(USER_MEM_LOW);
+			for(; start < ADDR_TO_PN(USER_MEM_HIGH) ; start += npages){
 				if(vmmap_is_range_empty(map, start, npages)){
 					return start;
 				}	
-			} list_iterate_end();
+			}
 		}else if(dir == VMMAP_DIR_HILO){
-	
-     			for (link = list->l_prev;
-          			link != &map->vmm_list; link = link->l_prev){
-				vma = list_item( link, vmarea_t, vma_plink);
-				start = vma->vma_start;
+			start = ADDR_TO_PN(USER_MEM_HIGH);
+			for(; start > ADDR_TO_PN(USER_MEM_LOW) ; start -= npages){
 				if(vmmap_is_range_empty(map, start, npages)){
 					return start;
 				}	
-			} 
+			}
 		}
 	}	
         return -1;
@@ -282,6 +279,7 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 		if(s < 0){
 			return s;
 		}
+		lopage = s;
 	}else{
 		/*FIXME:another mapping ?*/
 		vmarea_t *vma;
