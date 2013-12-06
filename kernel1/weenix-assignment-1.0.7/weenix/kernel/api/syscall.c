@@ -94,7 +94,8 @@ sys_write(write_args_t *arg)
 		return -1;
 	}
 	void *buff=page_alloc();
-	writebytes = do_write(writekaddr.fd,writekaddr.buf,writekaddr.nbytes);
+	copy_from_user(buff, writekaddr.buf, writekaddr.nbytes);
+	writebytes = do_write(writekaddr.fd,buff,writekaddr.nbytes);
 	if(writebytes<0){
 		curthr->kt_errno = writebytes;
 		return -1;

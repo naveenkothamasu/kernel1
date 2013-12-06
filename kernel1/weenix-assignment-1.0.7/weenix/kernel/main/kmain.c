@@ -42,6 +42,8 @@
 
 #include "test/kshell/kshell.h"
 
+#include "fs/open.h"
+
 GDB_DEFINE_HOOK(boot)
 GDB_DEFINE_HOOK(initialized)
 GDB_DEFINE_HOOK(shutdown)
@@ -377,9 +379,12 @@ initproc_run(int arg1, void *arg2)
         while(kshell_execute_next(kshell));
 	*/
 	
-	char *argv[] = { NULL };
-    	char *envp[] = { NULL };
-	kernel_execve("/usr/bin/hello", argv, envp);
+	char *argv[] = {  NULL };
+    	char *envp[] = {  NULL };
+        
+	/*do_open("/dev/tty0", O_RDONLY);*/
+	
+	kernel_execve("/usr/bin/fork-and-wait", argv, envp);
 	
         /*kshell_destroy(kshell);*/
 
