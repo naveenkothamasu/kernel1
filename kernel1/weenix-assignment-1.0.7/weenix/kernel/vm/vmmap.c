@@ -156,24 +156,37 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
 	vmarea_t *vma;
 	pframe_t *pf;
 	uint32_t start = -1;
+	uint32_t end = -1;
 	int count = npages;
 	list_link_t *list = &map->vmm_list;
 	if(!list_empty( &map->vmm_list)){
 		if(dir == VMMAP_DIR_LOHI){
 			start = ADDR_TO_PN(USER_MEM_LOW);
-			for(; start < ADDR_TO_PN(USER_MEM_HIGH) ; start += npages){
-				if(vmmap_is_range_empty(map, start, npages)){
+				list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink ) {
+					if( vma->vma_start-start > npages){
+						return start;
+					}else{
+						start = vma->vma_end;
+					}
+				} list_iterate_end();
+				if(start + npages < ADDR_TO_PN(USER_MEM_HIGH)){
 					return start;
+				}
+			}else if(dir == VMMAP_DIR_HILO){
+				end = ADDR_TO_PN(USER_MEM_HIGH);
+				
+				list_iterate_reverse( &map->vmm_list, vma, vmarea_t, vma_plink ) {
+					if( (end - vma->vma_end) > npages){
+						return end-npages;
+					}else{
+						end = vma->vma_start;
+					}
+				} list_iterate_end();
+				if( (end - npages) > ADDR_TO_PN(USER_MEM_LOW)){
+					return end-npages;
 				}	
 			}
-		}else if(dir == VMMAP_DIR_HILO){
-			start = ADDR_TO_PN(USER_MEM_HIGH);
-			for(; start > ADDR_TO_PN(USER_MEM_LOW) ; start -= npages){
-				if(vmmap_is_range_empty(map, start, npages)){
-					return start;
-				}	
-			}
-		}
+		
 	}	
         return -1;
 }

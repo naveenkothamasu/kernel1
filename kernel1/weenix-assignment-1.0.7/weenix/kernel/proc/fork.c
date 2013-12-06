@@ -81,6 +81,8 @@ do_fork(struct regs *regs)
 			aChild->vma_obj = Child_shadowobj;
 			aParent->vma_obj = Parent_shadowobj;
 
+			pt_unmap_range(curproc->p_pagedir,(uintptr_t) PN_TO_ADDR(aParent->vma_start), (uintptr_t)PN_TO_ADDR(aChild->vma_end) ); 
+			tlb_flush_all();
 		}else if(aParent->vma_flags == MAP_SHARED){
 			aChild->vma_obj = aParent->vma_obj;
 		}
@@ -90,29 +92,24 @@ do_fork(struct regs *regs)
 	child->p_start_brk = curproc->p_start_brk;
 	child->p_brk = curproc->p_brk;
 	for(; i < NFILES; i++){
-		/*fref(child->p_files[i]);*/
 		child->p_files[i] = curproc->p_files[i];
+		if(NULL != child->p_files[i]){
+			fref(child->p_files[i]);
+		}
 	}
 	child->p_cwd=curproc->p_cwd;
-	/*vref(child->p_cwd);*/
+	vref(child->p_cwd);
 	kthread_t *childthread=kthread_clone(curthr);
 	childthread->kt_proc=child;
 	list_insert_tail(&(child->p_threads), &(childthread->kt_plink));
 	(childthread->kt_ctx).c_eip = (uint32_t)userland_entry;
 	regs->r_eax = 0;
-	/*
-	uint32_t temp = regs->r_eip;
-	regs->r_eip = (uint32_t) userland_entry;
-	*/
 	(childthread->kt_ctx).c_esp = fork_setup_stack(regs, childthread->kt_kstack); 
 	(childthread->kt_ctx).c_pdptr = childthread->kt_proc->p_pagedir;
         (childthread->kt_ctx).c_kstack = (uintptr_t)childthread->kt_kstack;
  	(childthread->kt_ctx).c_kstacksz = DEFAULT_STACK_SIZE;
 
-	/*regs->r_eip = temp;*/
 	sched_make_runnable(childthread);
-	pt_unmap_range(curproc->p_pagedir, USER_MEM_LOW, USER_MEM_HIGH); /*XXX conditional */
-	tlb_flush_all();
 
 	regs->r_eax=child->p_pid;
 	return child->p_pid;

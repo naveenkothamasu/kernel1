@@ -72,17 +72,17 @@ do_brk(void *addr, void **ret)
 			break;
 		}	
 	}list_iterate_end();
-	if( next_map_addr != NULL && *next_map_addr < USER_MEM_HIGH){
-		*next_map_addr = ADDR_TO_PN(USER_MEM_HIGH);
+	if( next_map_addr != NULL && (next_map_addr < (uintptr_t)USER_MEM_HIGH) ){
+		next_map_addr = ADDR_TO_PN(USER_MEM_HIGH);
 	}
 	if(next_map_addr != NULL &&
-		 ( (uintptr_t *)addr < start_brk) || ( (uintptr_t *)addr > *next_map_addr) ){
+		 ( ((uintptr_t *)addr < start_brk) ||  ((uintptr_t *)addr > next_map_addr)) ){
 		return -1;
 	}
 	
 	if(!PAGE_ALIGNED(start_brk)){
 		addr = PAGE_ALIGN_DOWN(start_brk);	
 	}
-	curproc->p_brk = addr;	
+	*ret = addr;
         return 0;
 }

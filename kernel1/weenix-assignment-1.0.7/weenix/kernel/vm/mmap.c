@@ -69,11 +69,9 @@ do_mmap(void *addr, size_t len, int prot, int flags,
 	/*TODO*/
 	int dir = 0;
 	/*TODO:Handle EPERM and flush the TLB */
-	if(len>PAGE_SIZE)
-		len=len/PAGE_SIZE;
-	tlb_flush((uintptr_t)addr);
-	int result=vmmap_map(curproc->p_vmmap,curproc->p_files[fd]->f_vnode, ADDR_TO_PN(addr), len, prot, flags, off, VMMAP_DIR_LOHI,(vmarea_t **)ret);
+	int result=vmmap_map(curproc->p_vmmap,curproc->p_files[fd]->f_vnode, (uintptr_t)ADDR_TO_PN(addr), (uintptr_t)ADDR_TO_PN(len), prot, flags, off, VMMAP_DIR_LOHI,(vmarea_t **)ret);
         /*NOT_YET_IMPLEMENTED("VM: do_mmap");*/
+	tlb_flush_range((uintptr_t)ADDR_TO_PN(addr), (uintptr_t)ADDR_TO_PN(len) );
         return result;
 }
 
