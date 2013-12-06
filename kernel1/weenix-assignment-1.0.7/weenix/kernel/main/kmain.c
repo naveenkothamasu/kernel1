@@ -114,7 +114,7 @@ extern void *vfstest_main(int argc, void *);
 		*/
 		char *a[] = {NULL};
 		char *e[] = {NULL};
-		kernel_execve("/usr/bin/fork-and-wait", a, e);
+		kernel_execve("/sbin/init", a, e);
 			
 		return 0;
 	}
@@ -365,26 +365,22 @@ initproc_run(int arg1, void *arg2)
 
 
     #ifdef __DRIVERS__
-/*	
         kshell_add_command("faber", faber, "faber tests");
         kshell_add_command("sunghan", sunghan, "sunghan tests");
         kshell_add_command("deadlock", deadlock, "sunghan deadlock tests");
         kshell_add_command("renametest",rename,"Renames dev/tty0 to tty0RENAMED");
 	kshell_add_command("vfstest", vfstest, "vfs tests");
-	*/	
         kshell_t *kshell = kshell_create(0);
         if (NULL == kshell) panic("init: Couldn't create kernel shell\n");
-	/*	
 	kshell_add_command("hello", hello, "vfs tests");
         while(kshell_execute_next(kshell));
-	*/
 	
 	char *argv[] = {  NULL };
     	char *envp[] = {  NULL };
         
 	/*do_open("/dev/tty0", O_RDONLY);*/
 	
-	kernel_execve("/usr/bin/fork-and-wait", argv, envp);
+	/*kernel_execve("/usr/bin/fork-and-wait", argv, envp);*/
 	
         /*kshell_destroy(kshell);*/
 

@@ -114,6 +114,6 @@ do_fork(struct regs *regs)
 	pt_unmap_range(curproc->p_pagedir, USER_MEM_LOW, USER_MEM_HIGH); /*XXX conditional */
 	tlb_flush_all();
 
-
-	return child->p_pid;
+	regs->r_eax=child->p_pid;
+	return 0;
 }
