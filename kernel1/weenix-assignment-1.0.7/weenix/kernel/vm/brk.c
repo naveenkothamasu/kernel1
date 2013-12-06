@@ -56,22 +56,40 @@
 int
 do_brk(void *addr, void **ret)
 {
-        /*NOT_YET_IMPLEMENTED("VM: do_brk");*/
-	uintptr_t *start_brk = (uintptr_t *) curproc->p_start_brk;
-	uintptr_t *old = (uintptr_t *)curproc->p_brk;
-	uintptr_t *next_map_addr;
+
+
+	/*
+		find the dynamic region using existing brk
+		check 
+	*/
+	
+	uintptr_t *old = curproc->p_brk;
 	vmmap_t *map = curproc->p_vmmap;
+	vmarea_t *old_vma = vmmap_lookup(map, ADDR_TO_PN(old));
 	vmarea_t *vma;
 	if(addr == NULL){
 		*ret = old;
 		return 0;
 	}
-	list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink){
-		if(vma->vma_start > ADDR_TO_PN(addr) ){
-			next_map_addr = (uintptr_t *) PN_TO_ADDR(vma->vma_start);
-			break;
-		}	
-	}list_iterate_end();
+
+	if(old_vma == NULL){
+		return -1;
+	}
+
+	if(ADDR_TO_PN(addr) < old_vma->vma_end){
+		/*XXX addr not page aligned*/	
+		*ret = addr;
+	}else{
+		uintptr_t *taddr=addr;
+		if(!PAGE_ALIGNED(addr)){
+			taddr = PAGE_ALIGN_UP(addr);
+		}
+		vmmap_map(map, NULL, old_vma->vma_start, ((uintptr_t) ADDR_TO_PN(taddr) - old_vma->vma_start)+1 ,old_vma->vma_prot, old_vma->vma_flags, old_vma->vma_off, VMMAP_DIR_LOHI, &vma);
+		curproc->p_brk=addr;
+		*ret = addr;
+	}
+
+	/*	
 	if( next_map_addr != NULL && (next_map_addr < (uintptr_t)USER_MEM_HIGH) ){
 		next_map_addr = ADDR_TO_PN(USER_MEM_HIGH);
 	}
@@ -80,9 +98,10 @@ do_brk(void *addr, void **ret)
 		return -1;
 	}
 	
-	if(!PAGE_ALIGNED(start_brk)){
-		addr = PAGE_ALIGN_DOWN(start_brk);	
+	if(!PAGE_ALIGNED(addr)){
+		addr = PAGE_ALIGN_DOWN(addr);	
 	}
 	*ret = addr;
+	*/
         return 0;
 }
