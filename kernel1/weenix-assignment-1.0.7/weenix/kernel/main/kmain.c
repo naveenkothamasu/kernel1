@@ -105,6 +105,13 @@ extern void *vfstest_main(int argc, void *);
 		do_rename("dev/tty0",newname);
 		return 0;	
 	}
+	int hello(kshell_t *kshell, int argc, char **argv){
+		KASSERT(kshell!=NULL);
+		char *a[] = { NULL };
+		char *e[] = { NULL };
+		kernel_execve("/usr/bin/vfstest", a, e);
+		return 0;	
+	}
 	
 	
     #endif /* __DRIVERS__ */
@@ -353,7 +360,7 @@ initproc_run(int arg1, void *arg2)
 
 
     #ifdef __DRIVERS__
-	/*
+	
         kshell_add_command("faber", faber, "faber tests");
         kshell_add_command("sunghan", sunghan, "sunghan tests");
         kshell_add_command("deadlock", deadlock, "sunghan deadlock tests");
@@ -361,16 +368,14 @@ initproc_run(int arg1, void *arg2)
 	kshell_add_command("vfstest", vfstest, "vfs tests");
         kshell_t *kshell = kshell_create(0);
         if (NULL == kshell) panic("init: Couldn't create kernel shell\n");
-	*/
-	/*kshell_add_command("hello", hello, "vfs tests");
-        while(kshell_execute_next(kshell));*/
+	kshell_add_command("hello", hello, "vfs tests");
+        while(kshell_execute_next(kshell));
 	
 	char *argv[] = {  NULL };
     	char *envp[] = {  NULL };
         
 	/*do_open("/dev/tty0", O_RDONLY);*/
 	
-	kernel_execve("/bin/uname", argv, envp);
 	
         /*kshell_destroy(kshell);*/
 

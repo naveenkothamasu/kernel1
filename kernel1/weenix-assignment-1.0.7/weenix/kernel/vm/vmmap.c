@@ -86,7 +86,7 @@ vmmap_destroy(vmmap_t *map)
 		vmarea_free(vma);	
 	} list_iterate_end();
 	map->vmm_proc = NULL;
-	slab_obj_free(vmmap_allocator,map);	
+	/*slab_obj_free(vmmap_allocator,map);*/
 }
 
 /* Add a vmarea to an address space. Assumes (i.e. asserts to some extent)
@@ -302,7 +302,7 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 			newvma->vma_flags = MAP_PRIVATE;
 		}
 		if( new != NULL){
-			*new = newvma;
+			*new = PN_TO_ADDR(newvma->vma_start);
 		}
 		if(file == NULL){
 			memobj = anon_create();
