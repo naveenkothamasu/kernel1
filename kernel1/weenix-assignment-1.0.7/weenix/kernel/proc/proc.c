@@ -225,6 +225,9 @@ proc_kill(proc_t *p, int status)
                  int fd=do_close(fd);
               }
         }
+	if(NULL != curproc->p_vmmap){
+		vmmap_destroy(curproc->p_vmmap);
+	}
 	if(p == curproc){
 		do_exit(status);	
 	}else{

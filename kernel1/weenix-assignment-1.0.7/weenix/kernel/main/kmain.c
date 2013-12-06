@@ -370,7 +370,7 @@ initproc_run(int arg1, void *arg2)
         
 	/*do_open("/dev/tty0", O_RDONLY);*/
 	
-	kernel_execve("/sbin/init", argv, envp);
+	kernel_execve("/bin/uname", argv, envp);
 	
         /*kshell_destroy(kshell);*/
 
