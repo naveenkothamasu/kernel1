@@ -106,18 +106,7 @@ extern void *vfstest_main(int argc, void *);
 		return 0;	
 	}
 	
-	int hello(kshell_t *kshell, int argc, char **argv){
-		/*
-		char *a = "ab cde fghi j";
-    		char *e[] = { NULL };
-		kernel_execve("/usr/bin/args", &a, e);
-		*/
-		char *a[] = {NULL};
-		char *e[] = {NULL};
-		kernel_execve("/sbin/init", a, e);
-			
-		return 0;
-	}
+	
     #endif /* __DRIVERS__ */
 /**
  * This is the first real C function ever called. It performs a lot of
@@ -274,7 +263,6 @@ idleproc_run(int arg1, void *arg2)
 	do_mknod("/dev/null", S_IFCHR, MKDEVID(1,0));	
 	do_mknod("/dev/zero", S_IFCHR, MKDEVID(1,1));	
 	do_mknod("/dev/tty0", S_IFCHR, MKDEVID(2,0));	
-	do_mknod("/dev/tty1", S_IFCHR, MKDEVID(2,1)); 
 	/*do_mknod("/dev/tty2", S_IFCHR, MKDEVID(2,3));tty first*/	
 	/*TODO: tty devide 2?*/
 #endif
@@ -365,6 +353,7 @@ initproc_run(int arg1, void *arg2)
 
 
     #ifdef __DRIVERS__
+	/*
         kshell_add_command("faber", faber, "faber tests");
         kshell_add_command("sunghan", sunghan, "sunghan tests");
         kshell_add_command("deadlock", deadlock, "sunghan deadlock tests");
@@ -372,15 +361,16 @@ initproc_run(int arg1, void *arg2)
 	kshell_add_command("vfstest", vfstest, "vfs tests");
         kshell_t *kshell = kshell_create(0);
         if (NULL == kshell) panic("init: Couldn't create kernel shell\n");
-	kshell_add_command("hello", hello, "vfs tests");
-        while(kshell_execute_next(kshell));
+	*/
+	/*kshell_add_command("hello", hello, "vfs tests");
+        while(kshell_execute_next(kshell));*/
 	
 	char *argv[] = {  NULL };
     	char *envp[] = {  NULL };
         
 	/*do_open("/dev/tty0", O_RDONLY);*/
 	
-	/*kernel_execve("/usr/bin/fork-and-wait", argv, envp);*/
+	kernel_execve("/sbin/init", argv, envp);
 	
         /*kshell_destroy(kshell);*/
 

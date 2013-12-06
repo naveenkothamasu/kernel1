@@ -131,13 +131,17 @@ sys_getdents(getdents_args_t *arg)
 	int i=0, loopcount = tempgetdent.count;
 	while(i<(int)(loopcount/sizeof(dirent_t))){
 		result=do_getdent(tempgetdent.fd,tempgetdent.dirp);
-		if(result<0){
+		if(result <= 0){
+	
 			curthr->kt_errno=result;
 			return -1;
+		}else{
+			return result;
 		}
 		i++;
 	}
-        return i;
+	
+	return 0;
 }
 
 #ifdef __MOUNTING__

@@ -37,7 +37,10 @@ do_mmap(void *addr, size_t len, int prot, int flags,
 	if(sizeof(len)==NULL || sizeof(off)==NULL || PAGE_ALIGNED(addr)==0){
 		return -EINVAL;
 	}
-	if(flags != MAP_SHARED || flags != MAP_PRIVATE || flags!= MAP_FIXED || flags!= MAP_ANON){
+	if(! ( (flags & MAP_SHARED) 
+		|| (flags & MAP_PRIVATE) 
+			|| (flags & MAP_FIXED)
+				 || (flags!= MAP_ANON )) ){
 		return -EINVAL;
 	}
 	if( fd < 0 || fd > NFILES){
@@ -47,20 +50,27 @@ do_mmap(void *addr, size_t len, int prot, int flags,
 	if(f == NULL){
 		return -ENOMEM;
 	}
-	if(curproc->p_files[fd]->f_mode != FMODE_READ && flags == MAP_PRIVATE){
+	if( !(curproc->p_files[fd]->f_mode & FMODE_READ) 
+		&& (flags & MAP_PRIVATE) ){
 		return -EACCES;
 	}
-	if( flags == MAP_SHARED && prot == PROT_WRITE && curproc->p_files[fd]->f_mode == (FMODE_WRITE || FMODE_READ) ){
+	/*
+	if( !( (flags & MAP_SHARED) 
+		&& (prot & PROT_WRITE) 
+			&& (curproc->p_files[fd]->f_mode & (FMODE_WRITE || FMODE_READ)) ) ){
 		return -EACCES;
 	}
-	if( flags == MAP_SHARED && prot == PROT_WRITE && curproc->p_files[fd]->f_mode!= FMODE_APPEND ){
+	if( !( (flags & MAP_SHARED) 
+		&& (prot & PROT_WRITE) 
+			&& (curproc->p_files[fd]->f_mode & FMODE_APPEND)) ){
 		return -EACCES;
 	}
+	*/
 	/*TODO*/
 	int dir = 0;
 	/*TODO:Handle EPERM and flush the TLB */
 	tlb_flush((uintptr_t)addr);
-	int result=vmmap_map(curproc->p_vmmap,curproc->p_files[fd]->f_vnode,0,0,prot,flags,off,NULL,(vmarea_t **)ret);
+	int result=vmmap_map(curproc->p_vmmap,curproc->p_files[fd]->f_vnode, ADDR_TO_PN(addr), len/ PAGE_SIZE, prot, flags, off, VMMAP_DIR_LOHI,(vmarea_t **)ret);
         /*NOT_YET_IMPLEMENTED("VM: do_mmap");*/
         return result;
 }
@@ -76,11 +86,11 @@ do_mmap(void *addr, size_t len, int prot, int flags,
 int
 do_munmap(void *addr, size_t len)
 {
-	if( PAGE_ALIGNED(addr)==0 || sizeof(len)==NULL){
+	if( PAGE_ALIGNED(addr)==0 || sizeof(len)== 0){
 		return -EINVAL;
 	}
 	tlb_flush((uintptr_t)addr);
-	int result=vmmap_remove(curproc->p_vmmap,0,0);
+	int result=vmmap_remove(curproc->p_vmmap, ADDR_TO_PN(addr), len/PAGE_SIZE);
 	return result;
        /* NOT_YET_IMPLEMENTED("VM: do_munmap");*/
 }

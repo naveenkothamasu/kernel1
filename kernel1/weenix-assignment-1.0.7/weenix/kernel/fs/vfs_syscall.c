@@ -683,6 +683,10 @@ do_getdent(int fd, struct dirent *dirp)
 		return -ENOTDIR; /*TODO: check the return value*/ 
 	}
 	int s = f->f_vnode->vn_ops->readdir(f->f_vnode, f->f_pos, dirp);	
+	if(s < 0){
+		fput(f);
+		return s;
+	}
 	if(s != 0){
 		fput(f);
 		do_lseek(fd,s,SEEK_CUR);

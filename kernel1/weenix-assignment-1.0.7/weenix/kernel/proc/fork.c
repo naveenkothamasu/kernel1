@@ -115,5 +115,5 @@ do_fork(struct regs *regs)
 	tlb_flush_all();
 
 	regs->r_eax=child->p_pid;
-	return 0;
+	return child->p_pid;
 }
