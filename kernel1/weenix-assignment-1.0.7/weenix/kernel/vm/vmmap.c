@@ -78,10 +78,12 @@ vmmap_destroy(vmmap_t *map)
 	vmarea_t *vma;
 	list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink ) {
 		mmobj_t *temp=vma->vma_obj;
+		/*
 		while(temp!=NULL){
 			temp->mmo_ops->put(temp);
 			temp=temp->mmo_shadowed;
 		}
+		*/
 		list_remove( &vma->vma_plink);
 		vmarea_free(vma);	
 	} list_iterate_end();
