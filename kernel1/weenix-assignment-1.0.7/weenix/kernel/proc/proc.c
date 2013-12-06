@@ -184,6 +184,9 @@ proc_cleanup(int status)
                  do_close(fd);
               }
         }
+	if(curproc->p_vmmap != NULL){
+		vmmap_destroy(curproc->p_vmmap);
+	}
 	list_t *list = &(curproc->p_children);
 	list_link_t *link = NULL;
 	for( link = list->l_next; link != list; link = list->l_next ){
