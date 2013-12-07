@@ -492,13 +492,13 @@ special_file_mmap(vnode_t *file, vmarea_t *vma, mmobj_t **ret)
 {
         /*NOT_YET_IMPLEMENTED("VM: special_file_mmap");*/
 	KASSERT(file);
-	dbg(DBG_PRINT, "GRADING3.A.5.a\n");
+	dbg(DBG_PRINT, "GRADING3A 5.a\n");
         KASSERT(S_ISCHR(file->vn_mode) && "because these ops only assigned if vnode represents a special file");
-	dbg(DBG_PRINT, "GRADING3.A.5.a\n");
+	dbg(DBG_PRINT, "GRADING3A 5.a\n");
         KASSERT((file->vn_cdev) && "because open shouldn\'t have let us arrive here if vn_cdev was NULL");
-	dbg(DBG_PRINT, "GRADING3.A.5.a\n");
+	dbg(DBG_PRINT, "GRADING3A 5.a\n");
         KASSERT(file->vn_cdev->cd_ops && file->vn_cdev->cd_ops->mmap);
-	dbg(DBG_PRINT, "GRADING3.A.5.a\n");
+	dbg(DBG_PRINT, "GRADING3A 5.a\n");
 
 	return file->vn_cdev->cd_ops->mmap( file, vma, ret);
 }
@@ -526,13 +526,13 @@ special_file_fillpage(vnode_t *file, off_t offset, void *pagebuf)
 {
         /*NOT_YET_IMPLEMENTED("VM: special_file_fillpage");*/
         KASSERT(file);
-	dbg(DBG_PRINT, "GRADING3.A.5.b\n");
+	dbg(DBG_PRINT, "GRADING3A 5.b\n");
         KASSERT(S_ISCHR(file->vn_mode));
-	dbg(DBG_PRINT, "GRADING3.A.5.b\n");
+	dbg(DBG_PRINT, "GRADING3A 5.b\n");
         KASSERT((file->vn_cdev));
-	dbg(DBG_PRINT, "GRADING3.A.5.b\n");
+	dbg(DBG_PRINT, "GRADING3A 5.b\n");
         KASSERT(file->vn_cdev->cd_ops && file->vn_cdev->cd_ops->fillpage);
-	dbg(DBG_PRINT, "GRADING3.A.5.b\n");
+	dbg(DBG_PRINT, "GRADING3A 5.b\n");
 	
 	vmarea_t *vma;
 	
@@ -549,13 +549,13 @@ special_file_dirtypage(vnode_t *file, off_t offset)
 {
         /*NOT_YET_IMPLEMENTED("VM: special_file_dirtypage");*/
 	KASSERT(file);
-	dbg(DBG_PRINT, "GRADING3.A.5.c\n");
+	dbg(DBG_PRINT, "GRADING3A 5.c\n");
         KASSERT(S_ISCHR(file->vn_mode));
-	dbg(DBG_PRINT, "GRADING3.A.5.c\n");
+	dbg(DBG_PRINT, "GRADING3A 5.c\n");
         KASSERT((file->vn_cdev));
-	dbg(DBG_PRINT, "GRADING3.A.5.c\n");
+	dbg(DBG_PRINT, "GRADING3A 5.c\n");
 	KASSERT(file->vn_cdev->cd_ops && file->vn_cdev->cd_ops->dirtypage);	
-	dbg(DBG_PRINT, "GRADING3.A.5.c\n");
+	dbg(DBG_PRINT, "GRADING3A 5.c\n");
 
         return file->vn_cdev->cd_ops->dirtypage( file, offset);
 }
@@ -570,11 +570,11 @@ special_file_cleanpage(vnode_t *file, off_t offset, void *pagebuf)
 {
         /*NOT_YET_IMPLEMENTED("VM: special_file_cleanpage");*/
         KASSERT(file);
-	dbg(DBG_PRINT, "GRADING3.A.5.d\n");
+	dbg(DBG_PRINT, "GRADING3A 5.d\n");
         KASSERT(S_ISCHR(file->vn_mode));
-	dbg(DBG_PRINT, "GRADING3.A.5.d\n");
+	dbg(DBG_PRINT, "GRADING3A 5.d\n");
         KASSERT((file->vn_cdev));
-	dbg(DBG_PRINT, "GRADING3.A.5.d\n");
+	dbg(DBG_PRINT, "GRADING3A 5.d\n");
         KASSERT(file->vn_cdev->cd_ops && file->vn_cdev->cd_ops->cleanpage);
 	dbg(DBG_PRINT, "GRADING3.A.5.d\n");
 

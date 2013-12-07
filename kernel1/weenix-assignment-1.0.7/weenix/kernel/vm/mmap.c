@@ -92,7 +92,7 @@ do_mmap(void *addr, size_t len, int prot, int flags,
         /*NOT_YET_IMPLEMENTED("VM: do_mmap");*/
 	tlb_flush_range((uintptr_t)ADDR_TO_PN(addr), (uintptr_t)(len) );
 	KASSERT(NULL != curproc->p_pagedir);
-	dbg(DBG_PRINT, "GRADING3.A.2.a\n");
+	dbg(DBG_PRINT, "GRADING3A 2.a\n");
         return result;
 }
 
@@ -121,7 +121,7 @@ do_munmap(void *addr, size_t len)
 	tlb_flush((uintptr_t)addr);
 		
 	KASSERT(NULL != curproc->p_pagedir);	
-	dbg(DBG_PRINT, "GRADING3.A.2.a\n");
+	dbg(DBG_PRINT, "GRADING3A 2.b\n");
 	return result;
        /* NOT_YET_IMPLEMENTED("VM: do_munmap");*/
 }

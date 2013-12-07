@@ -177,7 +177,7 @@ kthread_clone(kthread_t *thr)
 {
         /*NOT_YET_IMPLEMENTED("VM: kthread_clone");*/
 	KASSERT(KT_RUN == thr->kt_state);	
-	dbg(DBG_PRINT, "GRADING 3.A.8.a\n");
+	dbg(DBG_PRINT, "GRADING3A 8.a\n");
         context_t context; /*FIXME local variable fine?*/
 
         kthread_t *newthr = (kthread_t *)slab_obj_alloc(kthread_allocator);
@@ -194,7 +194,7 @@ kthread_clone(kthread_t *thr)
 
         /*context_setup(&(newthr->kt_ctx), NULL, NULL, NULL, newthr->kt_kstack, DEFAULT_STACK_SIZE, thr->kt_proc->p_pagedir);*/
 	KASSERT(KT_RUN == newthr->kt_state);
-	dbg(DBG_PRINT, "GRADING 3.A.8.a\n");
+	dbg(DBG_PRINT, "GRADING3A 8.a\n");
         
 	return newthr;
 }

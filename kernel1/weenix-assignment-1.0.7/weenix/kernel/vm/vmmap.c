@@ -74,7 +74,7 @@ vmmap_destroy(vmmap_t *map)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_destroy");*/
 	KASSERT(NULL != map);	
-	dbg(DBG_PRINT, "GRADING3.A.3.a\n");
+	dbg(DBG_PRINT, "GRADING3A 3.a\n");
 	vmarea_t *vma;
 	list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink ) {
 		mmobj_t *temp=vma->vma_obj;
@@ -100,16 +100,16 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_insert");*/
 	KASSERT(NULL != map && NULL != newvma);	
-	dbg(DBG_PRINT, "GRADING3.A.3.b\n");
+	dbg(DBG_PRINT, "GRADING3A 3.b\n");
 
  	KASSERT(NULL == newvma->vma_vmmap);
-	dbg(DBG_PRINT, "GRADING3.A.3.b\n");
+	dbg(DBG_PRINT, "GRADING3A 3.b\n");
 
         KASSERT(newvma->vma_start < newvma->vma_end);
-	dbg(DBG_PRINT, "GRADING3.A.3.b\n");
+	dbg(DBG_PRINT, "GRADING3A 3.b\n");
 
         KASSERT(ADDR_TO_PN(USER_MEM_LOW) <= newvma->vma_start && ADDR_TO_PN(USER_MEM_HIGH) >= newvma->vma_end);
-	dbg(DBG_PRINT, "GRADING3.A.3.b\n");
+	dbg(DBG_PRINT, "GRADING3A 3.b\n");
 	vmarea_t *temp = NULL;
 
 	newvma->vma_vmmap = map;
@@ -152,9 +152,9 @@ vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_find_range");*/
  	KASSERT(NULL != map);
-	dbg(DBG_PRINT, "GRADING3.A.3.C\n");
+	dbg(DBG_PRINT, "GRADING3A 3.c\n");
         KASSERT(0 < npages);	
-	dbg(DBG_PRINT, "GRADING3.A.3.C\n");
+	dbg(DBG_PRINT, "GRADING3A 3.c\n");
      	list_link_t *link = &map->vmm_list;
 	vmarea_t *vma;
 	pframe_t *pf;
@@ -202,7 +202,7 @@ vmmap_lookup(vmmap_t *map, uint32_t vfn)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_lookup");*/
         KASSERT(NULL != map);
-	dbg(DBG_PRINT, "GRADING3.A.3.d\n");
+	dbg(DBG_PRINT, "GRADING3A 3.d\n");
 	vmarea_t *vma;
 	list_iterate_begin( &map->vmm_list, vma, vmarea_t, vma_plink ) {
 		if( vfn < vma->vma_end && vma->vma_start <= vfn){
@@ -275,19 +275,19 @@ vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_map");*/
      	KASSERT(NULL != map);
-	dbg(DBG_PRINT, "GRADING3.A.3.f\n");
+	dbg(DBG_PRINT, "GRADING3A 3.f\n");
         KASSERT(0 < npages);
-	dbg(DBG_PRINT, "GRADING3.A.3.f\n");
+	dbg(DBG_PRINT, "GRADING3A 3.f\n");
         KASSERT(!(~(PROT_NONE | PROT_READ | PROT_WRITE | PROT_EXEC) & prot));
-	dbg(DBG_PRINT, "GRADING3.A.3.f\n");
+	dbg(DBG_PRINT, "GRADING3A 3.f\n");
         KASSERT((MAP_SHARED & flags) || (MAP_PRIVATE & flags));
-	dbg(DBG_PRINT, "GRADING3.A.3.f\n");
+	dbg(DBG_PRINT, "GRADING3A 3.f\n");
         KASSERT((0 == lopage) || (ADDR_TO_PN(USER_MEM_LOW) <= lopage));
-	dbg(DBG_PRINT, "GRADING3.A.3.f\n");
+	dbg(DBG_PRINT, "GRADING3A 3.f\n");
         KASSERT((0 == lopage) || (ADDR_TO_PN(USER_MEM_HIGH) >= (lopage + npages)));
-	dbg(DBG_PRINT, "GRADING3.A.3.f\n");
+	dbg(DBG_PRINT, "GRADING3A 3.f\n");
         KASSERT(PAGE_ALIGNED(off));
-	dbg(DBG_PRINT, "GRADING3.A.3.f\n");
+	dbg(DBG_PRINT, "GRADING3A 3.f\n");
 	int s;
 	struct mmobj *memobj;
 	if (lopage == 0){
@@ -432,9 +432,9 @@ int
 vmmap_is_range_empty(vmmap_t *map, uint32_t startvfn, uint32_t npages)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_is_range_empty");*/
-	uint32_t endvfn = startvfn+npages;
         KASSERT((startvfn < endvfn) && (ADDR_TO_PN(USER_MEM_LOW) <= startvfn) && (ADDR_TO_PN(USER_MEM_HIGH) >= endvfn));
-	dbg(DBG_PRINT, "GRADING3.A.3.e\n");
+	dbg(DBG_PRINT, "GRADING3A 3.e\n");
+	uint32_t endvfn = startvfn+npages;
 	vmarea_t *vma;
 	if(list_empty(&map->vmm_list)){
 		return 1;
