@@ -296,7 +296,7 @@ void
 proc_thread_exited(void *retval)
 {
         /*NOT_YET_IMPLEMENTED("PROCS: proc_thread_exited");*/
-	proc_cleanup((int)retval);
+	proc_cleanup(*(int *)retval);
 	sched_switch();
 }
 

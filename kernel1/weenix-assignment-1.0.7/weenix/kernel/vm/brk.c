@@ -84,7 +84,7 @@ do_brk(void *addr, void **ret)
 		if(!PAGE_ALIGNED(addr)){
 			taddr = PAGE_ALIGN_UP(addr);
 		}
-		vmmap_map(map, NULL, old_vma->vma_start, ((uintptr_t) ADDR_TO_PN(taddr) - old_vma->vma_start)+1 ,old_vma->vma_prot, old_vma->vma_flags, old_vma->vma_off, VMMAP_DIR_LOHI, &vma);
+		vmmap_map(map, NULL, old_vma->vma_end, ((uintptr_t) ADDR_TO_PN(taddr) - old_vma->vma_end)+1 ,old_vma->vma_prot, old_vma->vma_flags, old_vma->vma_off, VMMAP_DIR_LOHI, &vma);
 		curproc->p_brk=addr;
 		*ret = addr;
 	}

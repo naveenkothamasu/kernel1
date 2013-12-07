@@ -63,7 +63,7 @@ handle_pagefault(uintptr_t vaddr, uint32_t cause)
 	if(vma == NULL ||  !(cause & FAULT_USER)){
 		/*XXX permission checks*/
 		curproc->p_status = EFAULT;
-		proc_kill(curproc, NULL);
+		proc_kill(curproc, EFAULT);
 	}
 	pframe_t *pf;
 	uintptr_t pagenum =  ADDR_TO_PN(vaddr) - vma->vma_start+vma->vma_off;
