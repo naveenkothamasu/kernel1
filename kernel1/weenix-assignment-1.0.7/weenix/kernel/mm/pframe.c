@@ -412,10 +412,10 @@ pframe_unpin(pframe_t *pf)
 {
         /*NOT_YET_IMPLEMENTED("VM: pframe_unpin");*/
 	KASSERT(!pframe_is_free(pf));	
-	dbg(DBG_PRINT, "GRADING A.1.b\n");
+	dbg(DBG_PRINT, "GRADING3.A.1.b\n");
 	
 	KASSERT(pf->pf_pincount > 0);
-	dbg(DBG_PRINT, "GRADING A.1.b\n");
+	dbg(DBG_PRINT, "GRADING3.A.1.b\n");
 
 	--pf->pf_pincount;
 	--npinned;

@@ -48,8 +48,11 @@ do_mmap(void *addr, size_t len, int prot, int flags,
 		
 		return EINVAL;
 	}
-	if( (flags & MAP_ANON) && fd < 0 || fd > NFILES){
-		return EBADF;
+	vnode_t *vn = NULL;
+	if( !(flags & MAP_ANON) && (fd < 0 || fd > NFILES)){
+			return EBADF;
+	}else{
+		vn = curproc->p_files[fd]->f_vnode; 
 	}
 	file_t *f=fget(-1);
 	if(f == NULL){
@@ -85,9 +88,11 @@ do_mmap(void *addr, size_t len, int prot, int flags,
 		*/
 	}
 	/*TODO:Handle EPERM and flush the TLB */
-	int result=vmmap_map(curproc->p_vmmap,curproc->p_files[fd]->f_vnode, (uintptr_t)ADDR_TO_PN(addr), (uintptr_t)len, prot, flags, off, VMMAP_DIR_LOHI,(vmarea_t **)ret);
+	int result=vmmap_map(curproc->p_vmmap, vn, (uintptr_t)ADDR_TO_PN(addr), (uintptr_t)len, prot, flags, off, VMMAP_DIR_LOHI,(vmarea_t **)ret);
         /*NOT_YET_IMPLEMENTED("VM: do_mmap");*/
 	tlb_flush_range((uintptr_t)ADDR_TO_PN(addr), (uintptr_t)(len) );
+	KASSERT(NULL != curproc->p_pagedir);
+	dbg(DBG_PRINT, "GRADING3.A.2.a\n");
         return result;
 }
 
@@ -107,6 +112,8 @@ do_munmap(void *addr, size_t len)
 	}
 	tlb_flush((uintptr_t)addr);
 	int result=vmmap_remove(curproc->p_vmmap, ADDR_TO_PN(addr), len/PAGE_SIZE);
+	KASSERT(NULL != curproc->p_pagedir);	
+	dbg(DBG_PRINT, "GRADING3.A.2.a\n");
 	return result;
        /* NOT_YET_IMPLEMENTED("VM: do_munmap");*/
 }

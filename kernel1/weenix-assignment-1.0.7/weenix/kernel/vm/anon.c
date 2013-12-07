@@ -41,7 +41,7 @@ anon_init()
 {
 	anon_allocator = slab_allocator_create("anonobject",sizeof(mmobj_t));
         KASSERT(anon_allocator);
-	dbg(DBG_PRINT, "GRADING 3.A.4.a \n");
+	dbg(DBG_PRINT, "GRADING3.A.4.a\n");
         /*NOT_YET_IMPLEMENTED("VM: anon_init");*/
 }
 
@@ -75,7 +75,7 @@ anon_ref(mmobj_t *o)
 {
        /* NOT_YET_IMPLEMENTED("VM: anon_ref");*/
 	KASSERT(o && (0 < o->mmo_refcount) && (&anon_mmobj_ops == o->mmo_ops));	
-	dbg(DBG_PRINT, "GRADING 3.A.4.b \n");
+	dbg(DBG_PRINT, "GRADING3.A.4.b\n");
 	o->mmo_refcount++;
 }
 
@@ -92,7 +92,7 @@ anon_put(mmobj_t *o)
 {
         /*NOT_YET_IMPLEMENTED("VM: anon_put");*/
 	KASSERT(o && (0 < o->mmo_refcount) && (&anon_mmobj_ops == o->mmo_ops)); 
-	dbg(DBG_PRINT, "GRADING 3.A.4.c \n");
+	dbg(DBG_PRINT, "GRADING 3.A.4.c\n");
 	if(o->mmo_refcount-o->mmo_nrespages==1){
 		if(!list_empty(&(o->mmo_respages))){
 			pframe_t *pageframe;
@@ -136,9 +136,9 @@ anon_fillpage(mmobj_t *o, pframe_t *pf)
 {
         /*NOT_YET_IMPLEMENTED("VM: anon_fillpage");*/
 	KASSERT(pframe_is_busy(pf));
-	dbg(DBG_PRINT, "GRADING 3.A.4.d \n");
+	dbg(DBG_PRINT, "GRADING3.A.4.d\n");
         KASSERT(!pframe_is_pinned(pf));
-	dbg(DBG_PRINT, "GRADING 3.A.4.d \n");
+	dbg(DBG_PRINT, "GRADING 3.A.4.d\n");
 
 	pframe_t *pageframe=pframe_get_resident(pf->pf_obj,pf->pf_pagenum);
 	if(pageframe == NULL){

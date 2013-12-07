@@ -55,7 +55,7 @@ shadow_init()
         /*NOT_YET_IMPLEMENTED("VM: shadow_init");*/
 	shadow_allocator = slab_allocator_create("sahdowobject", sizeof(mmobj_t));
 	KASSERT(shadow_allocator);
-        dbg(DBG_PRINT, "GRADING 3.A.6.a \n");
+        dbg(DBG_PRINT, "GRADING3.A.6.a\n");
 }
 
 /*
@@ -87,7 +87,7 @@ shadow_ref(mmobj_t *o)
 {
         /*NOT_YET_IMPLEMENTED("VM: shadow_ref");*/
 	KASSERT(o && (0 < o->mmo_refcount) && (&shadow_mmobj_ops == o->mmo_ops));
-	dbg(DBG_PRINT, "GRADING 3.A.6.b \n");
+	dbg(DBG_PRINT, "GRADING3.A.6.b\n");
 	o->mmo_refcount++;
 }
 
@@ -104,7 +104,7 @@ shadow_put(mmobj_t *o)
 {
         /*NOT_YET_IMPLEMENTED("VM: shadow_put");*/
         KASSERT(o && (0 < o->mmo_refcount) && (&shadow_mmobj_ops == o->mmo_ops));
-        dbg(DBG_PRINT, "GRADING 3.A.6.c \n");
+        dbg(DBG_PRINT, "GRADING3.A.6.c\n");
         o->mmo_refcount--;
         if(o->mmo_refcount == o->mmo_nrespages){
                 if(!list_empty(&(o->mmo_respages))){
@@ -172,9 +172,9 @@ shadow_fillpage(mmobj_t *o, pframe_t *pf)
 {
         /*NOT_YET_IMPLEMENTED("VM: shadow_fillpage");*/
 	KASSERT(pframe_is_busy(pf));
-	dbg(DBG_PRINT, "GRADING3.A.6.d \n");
+	dbg(DBG_PRINT, "GRADING3.A.6.d\n");
         KASSERT(!pframe_is_pinned(pf));
-	dbg(DBG_PRINT, "GRADING3.A.6.d \n");
+	dbg(DBG_PRINT, "GRADING3.A.6.d\n");
 
 	pframe_t *src=NULL;
 	

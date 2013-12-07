@@ -54,10 +54,23 @@ do_fork(struct regs *regs)
 {
         /*NOT_YET_IMPLEMENTED("VM: do_fork");*/
 	int i = 0;
+
+	KASSERT(regs != NULL);
+	dbg(DBG_PRINT, "GRADING3.A.7.a\n");
+        KASSERT(curproc != NULL);
+	dbg(DBG_PRINT, "GRADING3.A.7.a\n");
+        KASSERT(curproc->p_state == PROC_RUNNING);
+	dbg(DBG_PRINT, "GRADING3.A.7.a\n");
+	
 	proc_t *child = proc_create("child");
 	if(child == NULL){
 		return -1;
 	}
+	KASSERT(child->p_state == PROC_RUNNING);
+	dbg(DBG_PRINT, "GRADING3.A.7.a\n");
+	KASSERT(child->p_pagedir != NULL);
+	dbg(DBG_PRINT, "GRADING3.A.7.a\n");
+
 	child->p_vmmap=vmmap_clone(curproc->p_vmmap);
 	dbginfo(DBG_VMMAP, vmmap_mapping_info, curproc->p_vmmap);
 	list_link_t *pList = &(curproc->p_vmmap->vmm_list);
@@ -100,6 +113,10 @@ do_fork(struct regs *regs)
 	child->p_cwd=curproc->p_cwd;
 	vref(child->p_cwd);
 	kthread_t *childthread=kthread_clone(curthr);
+
+	KASSERT(childthread->kt_kstack != NULL);
+	dbg(DBG_PRINT, "GRADING3.A.7.a\n");
+
 	childthread->kt_proc=child;
 	list_insert_tail(&(child->p_threads), &(childthread->kt_plink));
 	(childthread->kt_ctx).c_eip = (uint32_t)userland_entry;
