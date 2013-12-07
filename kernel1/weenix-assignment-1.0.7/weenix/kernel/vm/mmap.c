@@ -40,21 +40,26 @@ do_mmap(void *addr, size_t len, int prot, int flags,
 	if(! ( (flags & MAP_SHARED) 
 		|| (flags & MAP_PRIVATE) 
 			|| (flags & MAP_FIXED)
-				 || (flags!= MAP_ANON )) ){
-		return -EINVAL;
+				 || (flags & MAP_ANON )) ){
+		return EINVAL;
 	}
-	if( fd < 0 || fd > NFILES){
-		return -EBADF;
+	if( (flags & MAP_SHARED)
+		 && (flags & MAP_PRIVATE) ){
+		
+		return EINVAL;
+	}
+	if( (flags & MAP_ANON) && fd < 0 || fd > NFILES){
+		return EBADF;
 	}
 	file_t *f=fget(-1);
 	if(f == NULL){
-		return -ENOMEM;
+		return ENOMEM;
 	}
 	if( !(curproc->p_files[fd]->f_mode & FMODE_READ) 
 		&& (flags & MAP_PRIVATE) ){
-		return -EACCES;
+		return EACCES;
 	}
-	/*
+	/*	
 	if( !( (flags & MAP_SHARED) 
 		&& (prot & PROT_WRITE) 
 			&& (curproc->p_files[fd]->f_mode & (FMODE_WRITE || FMODE_READ)) ) ){
@@ -66,15 +71,23 @@ do_mmap(void *addr, size_t len, int prot, int flags,
 		return -EACCES;
 	}
 	*/
+	
 	/*TODO*/
 	int dir = 0;
-	if(len > PAGE_SIZE){
+	if(len >= PAGE_SIZE){
 		len = (size_t)ADDR_TO_PN(len);
+		/*
+		if(len % PAGE_SIZE){
+			len = len / PAGE_SIZE;
+		}else{
+			len = len / P
+		}
+		*/
 	}
 	/*TODO:Handle EPERM and flush the TLB */
 	int result=vmmap_map(curproc->p_vmmap,curproc->p_files[fd]->f_vnode, (uintptr_t)ADDR_TO_PN(addr), (uintptr_t)len, prot, flags, off, VMMAP_DIR_LOHI,(vmarea_t **)ret);
         /*NOT_YET_IMPLEMENTED("VM: do_mmap");*/
-	tlb_flush_range((uintptr_t)ADDR_TO_PN(addr), (uintptr_t)ADDR_TO_PN(len) );
+	tlb_flush_range((uintptr_t)ADDR_TO_PN(addr), (uintptr_t)(len) );
         return result;
 }
 
