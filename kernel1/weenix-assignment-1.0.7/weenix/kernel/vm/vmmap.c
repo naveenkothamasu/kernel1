@@ -382,14 +382,15 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 	vmarea_t *vma;
 	if(!list_empty(&map->vmm_list)){
         	list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink) {
-			if(vma->vma_start < lopage && lopage + npages < vma->vma_end){
+			if( (vma->vma_start < lopage) && ( (lopage + npages) < vma->vma_end) ){
+				uint32_t temp = vma->vma_end;
 				vma->vma_end = lopage;
 				vmarea_t *newvma = vmarea_alloc();	
 				if(newvma == NULL){
 					return NULL;
 				}
 				newvma->vma_start = lopage +npages; 
-				newvma->vma_end = vma->vma_end;
+				newvma->vma_end = temp;
 				pframe_t *pf = list_item(newvma->vma_obj->mmo_respages.l_next, pframe_t, pf_link);
 				vma->vma_off = pf->pf_pagenum;
 				vmmap_insert(map, newvma);	
