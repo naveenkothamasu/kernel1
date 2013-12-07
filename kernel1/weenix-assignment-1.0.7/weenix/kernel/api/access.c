@@ -153,7 +153,7 @@ int range_perm(struct proc *p, const void *avaddr, size_t len, int perm)
 	char *temp = (char *) avaddr;
 	for( ;temp <= ((char *)avaddr+len); temp += PAGE_SIZE){
 		if( 0 == addr_perm(p, (void *)temp, perm)){
-			return 0;
+			return 1;
 		}
 	}
 	

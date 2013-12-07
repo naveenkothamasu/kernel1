@@ -381,6 +381,7 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_remove");*/
 	vmarea_t *vma;
+	int passed = 0;
 	if(!list_empty(&map->vmm_list)){
         	list_iterate_begin(&map->vmm_list, vma, vmarea_t, vma_plink) {
 			if( (vma->vma_start < lopage) && ( (lopage + npages) < vma->vma_end) ){
@@ -395,27 +396,32 @@ vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 				pframe_t *pf = list_item(newvma->vma_obj->mmo_respages.l_next, pframe_t, pf_link);
 				vma->vma_off = pf->pf_pagenum;
 				vmmap_insert(map, newvma);	
+				passed =1;
 			}
 			if( vma->vma_start < lopage && vma->vma_end < lopage + npages 
 				&& vma->vma_end > lopage){
 				vma->vma_end = lopage;
+				passed =1;
 			}
 			if(lopage < vma->vma_start && vma->vma_end < lopage + npages 
 				&& lopage + npages > vma->vma_start){
 				vma->vma_start = lopage + npages; 
 				pframe_t *pf = list_item(vma->vma_obj->mmo_respages.l_next, pframe_t, pf_link);
 				vma->vma_off = pf->pf_pagenum;
+				passed =1;
 			}
 			if(lopage <= vma->vma_start && vma->vma_end <= lopage + npages ){
 				vma->vma_obj->mmo_ops->put(vma->vma_obj);
 				list_remove( &vma->vma_plink);
 				vmarea_free(vma);	
+				passed =1;
 			}
 		} list_iterate_end();
 		
 	}
 	dbginfo(DBG_VMMAP, vmmap_mapping_info, map);
-        return 0;
+        
+	return passed;
 }
 
 /*

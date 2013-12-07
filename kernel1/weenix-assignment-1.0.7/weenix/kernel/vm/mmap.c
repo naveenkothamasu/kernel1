@@ -110,8 +110,16 @@ do_munmap(void *addr, size_t len)
 	if( PAGE_ALIGNED(addr)==0 || sizeof(len)== 0){
 		return -EINVAL;
 	}
+	if(len >= PAGE_SIZE){
+		len = (size_t)ADDR_TO_PN(len);
+	}
+	int result=vmmap_remove(curproc->p_vmmap, ADDR_TO_PN(addr),(uint32_t) len);
+	if(result == 0){
+		return -EINVAL;
+	}
+	
 	tlb_flush((uintptr_t)addr);
-	int result=vmmap_remove(curproc->p_vmmap, ADDR_TO_PN(addr), len/PAGE_SIZE);
+		
 	KASSERT(NULL != curproc->p_pagedir);	
 	dbg(DBG_PRINT, "GRADING3.A.2.a\n");
 	return result;
