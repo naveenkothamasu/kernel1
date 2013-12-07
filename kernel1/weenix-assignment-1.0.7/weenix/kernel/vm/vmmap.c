@@ -432,9 +432,9 @@ int
 vmmap_is_range_empty(vmmap_t *map, uint32_t startvfn, uint32_t npages)
 {
         /*NOT_YET_IMPLEMENTED("VM: vmmap_is_range_empty");*/
+	uint32_t endvfn = startvfn+npages;
         KASSERT((startvfn < endvfn) && (ADDR_TO_PN(USER_MEM_LOW) <= startvfn) && (ADDR_TO_PN(USER_MEM_HIGH) >= endvfn));
 	dbg(DBG_PRINT, "GRADING3A 3.e\n");
-	uint32_t endvfn = startvfn+npages;
 	vmarea_t *vma;
 	if(list_empty(&map->vmm_list)){
 		return 1;
