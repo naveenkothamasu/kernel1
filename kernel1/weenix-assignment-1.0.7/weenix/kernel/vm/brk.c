@@ -71,6 +71,10 @@ do_brk(void *addr, void **ret)
 		*ret = old;
 		return 0;
 	}
+	if( ((uintptr_t)addr < (uintptr_t)curproc->p_start_brk)
+		 || ( (uintptr_t)addr > (uintptr_t)USER_MEM_HIGH)){
+		return ENOMEM;
+	}
 
 	if(old_vma == NULL){
 		return -1;

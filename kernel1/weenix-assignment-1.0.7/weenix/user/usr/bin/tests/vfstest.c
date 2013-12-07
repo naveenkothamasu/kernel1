@@ -900,10 +900,10 @@ int main(int argc, char **argv)
 int vfstest_main(int argc, char **argv)
 #endif
 {
-        /*if (argc != 1) {
+        if (argc != 1) {
                 fprintf(stderr, "USAGE: vfstest\n");
                 return 1;
-        }*/
+        }
 
         test_init();
 
@@ -911,7 +911,7 @@ int vfstest_main(int argc, char **argv)
         vfstest_start();
 	
         syscall_success(chdir(root_dir));
-
+/*
         vfstest_stat();
 
         vfstest_chdir();
@@ -928,12 +928,12 @@ int vfstest_main(int argc, char **argv)
         vfstest_read();
 	
         vfstest_getdents();
-	
 
 #ifdef __VM__
         vfstest_s5fs_vm();
 #endif
 
+*/	
         /*vfstest_infinite();*/
 
         syscall_success(chdir(".."));
